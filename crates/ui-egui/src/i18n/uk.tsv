@@ -5022,3 +5022,8 @@ axis	Y Axis	Вісь Y
 	Inter	Inter
 	Lexend (Oracle)	Lexend (Oracle)
 	Add to Oracle Library	Додати до бібліотеки Oracle
+@msg	Opened in {name}: save it there to update it here	Відкрито в {name}: збережіть там, щоб оновити тут
+	Send to Oracle Edit	Надіслати до Oracle Edit
+	Send to Oracle Brand Guide	Надіслати до Oracle Brand Guide
+@msg	Sent to {name}	Надіслано до {name}
+@msg	the document couldn't be stored in the Oracle Library	Не вдалося зберегти документ у бібліотеці Oracle

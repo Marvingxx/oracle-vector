@@ -5398,3 +5398,8 @@ axis	Y Axis	Sumbu Y
 	Inter	Inter
 	Lexend (Oracle)	Lexend (Oracle)
 	Add to Oracle Library	Tambahkan ke Pustaka Oracle
+@msg	Opened in {name}: save it there to update it here	Dibuka di {name}: simpan di sana untuk memperbaruinya di sini
+	Send to Oracle Edit	Kirim ke Oracle Edit
+	Send to Oracle Brand Guide	Kirim ke Oracle Brand Guide
+@msg	Sent to {name}	Terkirim ke {name}
+@msg	the document couldn't be stored in the Oracle Library	Dokumen tidak dapat disimpan ke Pustaka Oracle

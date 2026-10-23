@@ -5412,3 +5412,8 @@ axis	Y Axis	Y tengely
 	Inter	Inter
 	Lexend (Oracle)	Lexend (Oracle)
 	Add to Oracle Library	Hozzáadás az Oracle-könyvtárhoz
+@msg	Opened in {name}: save it there to update it here	Megnyitva itt: {name}; mentse ott, és itt is frissül
+	Send to Oracle Edit	Küldés az Oracle Editbe
+	Send to Oracle Brand Guide	Küldés az Oracle Brand Guide-ba
+@msg	Sent to {name}	Elküldve ide: {name}
+@msg	the document couldn't be stored in the Oracle Library	A dokumentumot nem sikerült az Oracle-könyvtárba menteni

@@ -38,6 +38,8 @@ pub mod icons;
 pub mod io;
 #[cfg(not(target_arch = "wasm32"))]
 pub mod library_send;
+#[cfg(not(target_arch = "wasm32"))]
+pub mod send_to;
 pub mod menus;
 pub mod native_menu;
 pub mod opening;
@@ -539,6 +541,9 @@ pub struct OracleVectorApp {
     /// This frame carries input the control channel injected ([`Self::raw_input_hook`]): it runs
     /// confined to [`Self::automation_roots`].
     synthetic_frame: bool,
+    /// When the Oracle inbox (Send to from the other Oracle apps) was last looked at.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub inbox_last: f64,
     /// The Oracle Library window (Window › Oracle Library).
     #[cfg(not(target_arch = "wasm32"))]
     pub oracle_library: oracle_library_ui::InAppLibrary,
@@ -648,6 +653,8 @@ impl OracleVectorApp {
             synthetic_frame: false,
             #[cfg(not(target_arch = "wasm32"))]
             oracle_library: oracle_library_ui::InAppLibrary::new("oracle-vector"),
+            #[cfg(not(target_arch = "wasm32"))]
+            inbox_last: f64::NEG_INFINITY,
         }
     }
 
@@ -1348,6 +1355,9 @@ impl OracleVectorApp {
         // Native only: the web host reads dropped files asynchronously and feeds the inboxes.
         #[cfg(not(target_arch = "wasm32"))]
         self.take_dropped_files(ctx);
+        // What the other Oracle apps sent (Send to): placed, linked.
+        #[cfg(not(target_arch = "wasm32"))]
+        crate::send_to::poll(self, ctx);
         // The Oracle Library window; what is dragged out of it arrives as dropped files.
         #[cfg(not(target_arch = "wasm32"))]
         self.oracle_library.ui(ctx, i18n::current().code() == "fr");

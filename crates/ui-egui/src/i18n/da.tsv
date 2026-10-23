@@ -5398,3 +5398,8 @@ axis	Y Axis	Y-akse
 	Inter	Inter
 	Lexend (Oracle)	Lexend (Oracle)
 	Add to Oracle Library	Føj til Oracle-biblioteket
+@msg	Opened in {name}: save it there to update it here	Åbnet i {name}: gem det der for at opdatere det her
+	Send to Oracle Edit	Send til Oracle Edit
+	Send to Oracle Brand Guide	Send til Oracle Brand Guide
+@msg	Sent to {name}	Sendt til {name}
+@msg	the document couldn't be stored in the Oracle Library	Dokumentet kunne ikke gemmes i Oracle-biblioteket

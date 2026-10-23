@@ -49,6 +49,8 @@ log = { workspace = true }
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 # The Oracle Library window: the user's asset folder, searchable, dragged onto the artboard.
 oracle-library-ui = { path = "../../../oracle-library/ui" }
+# Edit Original of another Oracle app's document opens it in that app (panels/links.rs).
+oracle-suite-link = { path = "../../../oracle-library/link" }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 # `now_ms` (src/lib.rs) reads the page's `performance.now()` with this crate in the web build. It is

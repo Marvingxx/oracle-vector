@@ -5038,3 +5038,8 @@ axis	Y Axis	Ось Y
 	Inter	Inter
 	Lexend (Oracle)	Lexend (Oracle)
 	Add to Oracle Library	Добавить в библиотеку Oracle
+@msg	Opened in {name}: save it there to update it here	Открыто в {name}: сохраните там, чтобы обновить здесь
+	Send to Oracle Edit	Отправить в Oracle Edit
+	Send to Oracle Brand Guide	Отправить в Oracle Brand Guide
+@msg	Sent to {name}	Отправлено в {name}
+@msg	the document couldn't be stored in the Oracle Library	Не удалось сохранить документ в библиотеке Oracle

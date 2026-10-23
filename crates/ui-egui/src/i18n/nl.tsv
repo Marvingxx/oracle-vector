@@ -5441,3 +5441,8 @@ axis	Y Axis	Y-as
 	Inter	Inter
 	Lexend (Oracle)	Lexend (Oracle)
 	Add to Oracle Library	Toevoegen aan Oracle-bibliotheek
+@msg	Opened in {name}: save it there to update it here	Geopend in {name}: sla het daar op om het hier bij te werken
+	Send to Oracle Edit	Naar Oracle Edit sturen
+	Send to Oracle Brand Guide	Naar Oracle Brand Guide sturen
+@msg	Sent to {name}	Verstuurd naar {name}
+@msg	the document couldn't be stored in the Oracle Library	Het document kon niet in de Oracle-bibliotheek worden opgeslagen

@@ -5335,3 +5335,8 @@ axis	Y Axis	Y ღერძი
 	Inter	Inter
 	Lexend (Oracle)	Lexend (Oracle)
 	Add to Oracle Library	Oracle-ის ბიბლიოთეკაში დამატება
+@msg	Opened in {name}: save it there to update it here	გაიხსნა {name}-ში: შეინახეთ იქ, რომ აქაც განახლდეს
+	Send to Oracle Edit	Oracle Edit-ში გაგზავნა
+	Send to Oracle Brand Guide	Oracle Brand Guide-ში გაგზავნა
+@msg	Sent to {name}	გაიგზავნა {name}-ში
+@msg	the document couldn't be stored in the Oracle Library	დოკუმენტის Oracle-ის ბიბლიოთეკაში შენახვა ვერ მოხერხდა

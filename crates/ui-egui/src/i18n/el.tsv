@@ -5378,3 +5378,8 @@ axis	Y Axis	Άξονας Y
 	Inter	Inter
 	Lexend (Oracle)	Lexend (Oracle)
 	Add to Oracle Library	Προσθήκη στη βιβλιοθήκη Oracle
+@msg	Opened in {name}: save it there to update it here	Άνοιξε στο {name}: αποθηκεύστε το εκεί για να ενημερωθεί εδώ
+	Send to Oracle Edit	Αποστολή στο Oracle Edit
+	Send to Oracle Brand Guide	Αποστολή στο Oracle Brand Guide
+@msg	Sent to {name}	Στάλθηκε στο {name}
+@msg	the document couldn't be stored in the Oracle Library	Δεν ήταν δυνατή η αποθήκευση του εγγράφου στη βιβλιοθήκη Oracle

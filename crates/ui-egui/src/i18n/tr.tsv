@@ -5390,3 +5390,8 @@ axis	Y Axis	Y ekseni
 	Inter	Inter
 	Lexend (Oracle)	Lexend (Oracle)
 	Add to Oracle Library	Oracle Kitaplığına ekle
+@msg	Opened in {name}: save it there to update it here	{name} içinde açıldı: burada güncellemek için orada kaydedin
+	Send to Oracle Edit	Oracle Edit'e gönder
+	Send to Oracle Brand Guide	Oracle Brand Guide'a gönder
+@msg	Sent to {name}	{name} uygulamasına gönderildi
+@msg	the document couldn't be stored in the Oracle Library	Belge Oracle Kitaplığına kaydedilemedi

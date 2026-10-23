@@ -5266,3 +5266,8 @@ axis	Y Axis	Y 轴
 	Inter	Inter
 	Lexend (Oracle)	Lexend (Oracle)
 	Add to Oracle Library	添加到 Oracle 资源库
+@msg	Opened in {name}: save it there to update it here	已在 {name} 中打开：在那里保存即可在此更新
+	Send to Oracle Edit	发送到 Oracle Edit
+	Send to Oracle Brand Guide	发送到 Oracle Brand Guide
+@msg	Sent to {name}	已发送到 {name}
+@msg	the document couldn't be stored in the Oracle Library	无法将文档存入 Oracle 资源库

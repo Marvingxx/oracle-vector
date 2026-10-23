@@ -207,6 +207,16 @@ pub(crate) fn open_file(app: &mut OracleVectorApp, p: &Value, reveal: bool) -> R
         crate::dialogs::settle(app);
         return Ok(json!({ "path": path }));
     }
+    // Another Oracle app's document (an Oracle Edit `.pcraft`): opened in that app; saving it there
+    // updates the image here (the link watch).
+    #[cfg(not(target_arch = "wasm32"))]
+    if !reveal && oracle_vector_engine::oracle_files::is_foreign_picture(&path) {
+        app.refuse_automation("links.editOriginal")?;
+        let owner = oracle_suite_link::edit_original(std::path::Path::new(&path))?;
+        let name = owner.name();
+        app.status(format!("Opened in {name}: save it there to update it here"));
+        return Ok(json!({ "path": path, "openedIn": owner.id() }));
+    }
     if reveal {
         crate::io::reveal_path(app, &path)?;
     } else {

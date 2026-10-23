@@ -5343,3 +5343,8 @@ axis	Y Axis	Eixo Y
 	Inter	Inter
 	Lexend (Oracle)	Lexend (Oracle)
 	Add to Oracle Library	Adicionar à Biblioteca Oracle
+@msg	Opened in {name}: save it there to update it here	Aberto no {name}: salve lá para atualizar aqui
+	Send to Oracle Edit	Enviar para o Oracle Edit
+	Send to Oracle Brand Guide	Enviar para o Oracle Brand Guide
+@msg	Sent to {name}	Enviado para {name}
+@msg	the document couldn't be stored in the Oracle Library	Não foi possível guardar o documento na Biblioteca Oracle

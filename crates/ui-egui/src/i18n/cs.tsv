@@ -5426,3 +5426,8 @@ axis	Y Axis	osa Y
 	Inter	Inter
 	Lexend (Oracle)	Lexend (Oracle)
 	Add to Oracle Library	Přidat do knihovny Oracle
+@msg	Opened in {name}: save it there to update it here	Otevřeno v {name}: uložte to tam a aktualizuje se i zde
+	Send to Oracle Edit	Odeslat do Oracle Edit
+	Send to Oracle Brand Guide	Odeslat do Oracle Brand Guide
+@msg	Sent to {name}	Odesláno do {name}
+@msg	the document couldn't be stored in the Oracle Library	Dokument nebylo možné uložit do knihovny Oracle

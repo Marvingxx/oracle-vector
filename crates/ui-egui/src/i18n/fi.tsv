@@ -5457,3 +5457,8 @@ axis	Y Axis	Y-akseli
 	Inter	Inter
 	Lexend (Oracle)	Lexend (Oracle)
 	Add to Oracle Library	Lisää Oracle-kirjastoon
+@msg	Opened in {name}: save it there to update it here	Avattu sovelluksessa {name}: tallenna se siellä, niin se päivittyy täällä
+	Send to Oracle Edit	Lähetä Oracle Editiin
+	Send to Oracle Brand Guide	Lähetä Oracle Brand Guideen
+@msg	Sent to {name}	Lähetetty: {name}
+@msg	the document couldn't be stored in the Oracle Library	Asiakirjaa ei voitu tallentaa Oracle-kirjastoon

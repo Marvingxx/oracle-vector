@@ -5104,3 +5104,8 @@ axis	Y Axis	Y 軸
 	Inter	Inter
 	Lexend (Oracle)	Lexend (Oracle)
 	Add to Oracle Library	Oracle ライブラリに追加
+@msg	Opened in {name}: save it there to update it here	{name} で開きました: そこで保存するとここでも更新されます
+	Send to Oracle Edit	Oracle Edit に送る
+	Send to Oracle Brand Guide	Oracle Brand Guide に送る
+@msg	Sent to {name}	{name} に送りました
+@msg	the document couldn't be stored in the Oracle Library	ドキュメントを Oracle ライブラリに保存できませんでした

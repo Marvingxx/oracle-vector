@@ -3063,7 +3063,6 @@ dependencies = [
  "oracle-suite-link",
  "resvg",
  "rfd",
- "winsafe",
 ]
 
 [[package]]
@@ -3545,6 +3544,7 @@ dependencies = [
  "image",
  "log",
  "oracle-library-ui",
+ "oracle-suite-link",
  "oracle-vector-brush",
  "oracle-vector-cad",
  "oracle-vector-color",
