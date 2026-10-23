@@ -2,5 +2,4 @@ The Oracle name, the Oracle logo (the red disc with a four-pointed star) and the
 wordmark in this folder are the project's brand marks. They are not covered by the
 MIT/Apache-2.0 license of the source code.
 
-The wordmark's lettering is drawn from Archivo (SIL Open Font License 1.1, see
-assets/fonts/OFL-Archivo.txt), converted to outlines.
+The wordmark's lettering is drawn from Archivo (SIL Open Font License 1.1), converted to outlines.
