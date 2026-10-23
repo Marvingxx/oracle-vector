@@ -5395,3 +5395,4 @@ axis	Y Axis	Y ekseni
 	Send to Oracle Brand Guide	Oracle Brand Guide'a gönder
 @msg	Sent to {name}	{name} uygulamasına gönderildi
 @msg	the document couldn't be stored in the Oracle Library	Belge Oracle Kitaplığına kaydedilemedi
+	Send to Oracle Motion	Oracle Motion'a gönder

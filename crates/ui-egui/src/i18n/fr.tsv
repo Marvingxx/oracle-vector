@@ -5430,3 +5430,4 @@ axis	Y Axis	Axe Y
 	Send to Oracle Brand Guide	Envoyer vers Oracle Brand Guide
 @msg	Sent to {name}	Envoyé vers {name}
 @msg	the document couldn't be stored in the Oracle Library	Le document n'a pas pu être rangé dans la Bibliothèque Oracle
+	Send to Oracle Motion	Envoyer vers Oracle Motion

@@ -5340,3 +5340,4 @@ axis	Y Axis	Y ღერძი
 	Send to Oracle Brand Guide	Oracle Brand Guide-ში გაგზავნა
 @msg	Sent to {name}	გაიგზავნა {name}-ში
 @msg	the document couldn't be stored in the Oracle Library	დოკუმენტის Oracle-ის ბიბლიოთეკაში შენახვა ვერ მოხერხდა
+	Send to Oracle Motion	Oracle Motion-ში გაგზავნა

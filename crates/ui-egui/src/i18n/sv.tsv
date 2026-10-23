@@ -5387,3 +5387,4 @@ axis	Y Axis	Y-axel
 	Send to Oracle Brand Guide	Skicka till Oracle Brand Guide
 @msg	Sent to {name}	Skickat till {name}
 @msg	the document couldn't be stored in the Oracle Library	Dokumentet kunde inte sparas i Oracle-biblioteket
+	Send to Oracle Motion	Skicka till Oracle Motion

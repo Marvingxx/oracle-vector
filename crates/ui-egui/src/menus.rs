@@ -379,6 +379,7 @@ pub const UI_COMMANDS: &[(&str, &str, &str, &str)] = &[
     ("window.oracleLibrary", "Oracle Library", "", "{} show or hide the Oracle Library window: the asset folder, searchable, dragged onto the artboard"),
     ("file.sendToEdit", "Send to Oracle Edit", "", "{} the active document, placed linked in Oracle Edit's open document (Oracle Edit is started if needed): a vector smart object that follows its saves"),
     ("file.sendToGuide", "Send to Oracle Brand Guide", "", "{} the active document, placed linked in the Brand Guide's open document (started if needed)"),
+    ("file.sendToMotion", "Send to Oracle Motion", "", "{} the active document, imported into Oracle Motion's open composition (started if needed): it follows its saves"),
     ("file.addToLibrary", "Add to Oracle Library", "", "{} the active document, as it is now, into the Oracle Library (its \"Mes créations\" folder): the other Oracle apps place it linked"),
     (
         "window.toolbarColumns",
@@ -1512,6 +1513,8 @@ pub fn run_ui_command(app: &mut OracleVectorApp, id: &str, p: &Value) -> Option<
         "file.sendToEdit" => crate::send_to::send_active(app, oracle_suite_link::App::Edit),
         #[cfg(not(target_arch = "wasm32"))]
         "file.sendToGuide" => crate::send_to::send_active(app, oracle_suite_link::App::Guide),
+        #[cfg(not(target_arch = "wasm32"))]
+        "file.sendToMotion" => crate::send_to::send_active(app, oracle_suite_link::App::Motion),
         "window.toolbarColumns" => opt_bool(p, "double").map(|on| {
             let on = on.unwrap_or(!app.ui.toolbar_double);
             app.ui.toolbar_double = on;
@@ -2557,6 +2560,7 @@ pub fn menu_tree_named(english_names: bool) -> Vec<(&'static str, Vec<Item>)> {
                 c("Add to Oracle Library", "file.addToLibrary"),
                 c("Send to Oracle Edit", "file.sendToEdit"),
                 c("Send to Oracle Brand Guide", "file.sendToGuide"),
+                c("Send to Oracle Motion", "file.sendToMotion"),
                 c("Save as Template…", "file.saveAsTemplate"),
                 c("Save as PDF…", "file.export.pdf"),
                 c("Save for Office Documents…", "document.exportForOffice"),

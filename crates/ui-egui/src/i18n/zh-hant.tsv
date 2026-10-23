@@ -5066,3 +5066,4 @@ axis	Y Axis	Y 軸
 	Send to Oracle Brand Guide	傳送到 Oracle Brand Guide
 @msg	Sent to {name}	已傳送到 {name}
 @msg	the document couldn't be stored in the Oracle Library	無法將文件存入 Oracle 資源庫
+	Send to Oracle Motion	傳送到 Oracle Motion

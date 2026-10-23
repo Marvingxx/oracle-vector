@@ -5431,3 +5431,4 @@ axis	Y Axis	osa Y
 	Send to Oracle Brand Guide	Odeslat do Oracle Brand Guide
 @msg	Sent to {name}	Odesláno do {name}
 @msg	the document couldn't be stored in the Oracle Library	Dokument nebylo možné uložit do knihovny Oracle
+	Send to Oracle Motion	Odeslat do Oracle Motion

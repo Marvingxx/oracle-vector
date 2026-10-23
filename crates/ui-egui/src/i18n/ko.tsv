@@ -5010,3 +5010,4 @@ axis	Y Axis	Y축
 	Send to Oracle Brand Guide	Oracle Brand Guide로 보내기
 @msg	Sent to {name}	{name}(으)로 보냈습니다
 @msg	the document couldn't be stored in the Oracle Library	문서를 Oracle 라이브러리에 저장할 수 없습니다
+	Send to Oracle Motion	Oracle Motion으로 보내기

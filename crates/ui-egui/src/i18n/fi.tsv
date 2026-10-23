@@ -5462,3 +5462,4 @@ axis	Y Axis	Y-akseli
 	Send to Oracle Brand Guide	Lähetä Oracle Brand Guideen
 @msg	Sent to {name}	Lähetetty: {name}
 @msg	the document couldn't be stored in the Oracle Library	Asiakirjaa ei voitu tallentaa Oracle-kirjastoon
+	Send to Oracle Motion	Lähetä Oracle Motioniin

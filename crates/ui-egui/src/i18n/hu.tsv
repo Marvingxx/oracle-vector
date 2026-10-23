@@ -5417,3 +5417,4 @@ axis	Y Axis	Y tengely
 	Send to Oracle Brand Guide	Küldés az Oracle Brand Guide-ba
 @msg	Sent to {name}	Elküldve ide: {name}
 @msg	the document couldn't be stored in the Oracle Library	A dokumentumot nem sikerült az Oracle-könyvtárba menteni
+	Send to Oracle Motion	Küldés az Oracle Motionba

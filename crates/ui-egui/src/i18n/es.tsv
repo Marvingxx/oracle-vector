@@ -5373,3 +5373,4 @@ axis	Y Axis	Eje Y
 	Send to Oracle Brand Guide	Enviar a Oracle Brand Guide
 @msg	Sent to {name}	Enviado a {name}
 @msg	the document couldn't be stored in the Oracle Library	No se pudo guardar el documento en la biblioteca Oracle
+	Send to Oracle Motion	Enviar a Oracle Motion

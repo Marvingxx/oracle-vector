@@ -5043,3 +5043,4 @@ axis	Y Axis	Ось Y
 	Send to Oracle Brand Guide	Отправить в Oracle Brand Guide
 @msg	Sent to {name}	Отправлено в {name}
 @msg	the document couldn't be stored in the Oracle Library	Не удалось сохранить документ в библиотеке Oracle
+	Send to Oracle Motion	Отправить в Oracle Motion

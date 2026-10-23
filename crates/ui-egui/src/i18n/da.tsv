@@ -5403,3 +5403,4 @@ axis	Y Axis	Y-akse
 	Send to Oracle Brand Guide	Send til Oracle Brand Guide
 @msg	Sent to {name}	Sendt til {name}
 @msg	the document couldn't be stored in the Oracle Library	Dokumentet kunne ikke gemmes i Oracle-biblioteket
+	Send to Oracle Motion	Send til Oracle Motion

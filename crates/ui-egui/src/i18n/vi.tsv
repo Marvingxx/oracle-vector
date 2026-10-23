@@ -5027,3 +5027,4 @@ axis	Y Axis	Trục Y
 	Send to Oracle Brand Guide	Gửi sang Oracle Brand Guide
 @msg	Sent to {name}	Đã gửi sang {name}
 @msg	the document couldn't be stored in the Oracle Library	Không thể lưu tài liệu vào Thư viện Oracle
+	Send to Oracle Motion	Gửi sang Oracle Motion

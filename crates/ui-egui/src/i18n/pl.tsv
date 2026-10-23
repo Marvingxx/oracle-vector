@@ -5283,3 +5283,4 @@ axis	Y Axis	Oś Y
 	Send to Oracle Brand Guide	Wyślij do Oracle Brand Guide
 @msg	Sent to {name}	Wysłano do {name}
 @msg	the document couldn't be stored in the Oracle Library	Nie udało się zapisać dokumentu w bibliotece Oracle
+	Send to Oracle Motion	Wyślij do Oracle Motion
