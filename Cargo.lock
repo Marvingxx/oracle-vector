@@ -3076,7 +3076,7 @@ dependencies = [
 
 [[package]]
 name = "oracle-vector"
-version = "0.15.0"
+version = "0.16.0"
 dependencies = [
  "arboard",
  "block2 0.6.2",
@@ -3115,7 +3115,7 @@ dependencies = [
 
 [[package]]
 name = "oracle-vector-affinity"
-version = "0.15.0"
+version = "0.16.0"
 dependencies = [
  "crc32fast",
  "flate2",
@@ -3126,7 +3126,7 @@ dependencies = [
 
 [[package]]
 name = "oracle-vector-brush"
-version = "0.15.0"
+version = "0.16.0"
 dependencies = [
  "kurbo 0.13.1",
  "oracle-vector-color",
@@ -3138,7 +3138,7 @@ dependencies = [
 
 [[package]]
 name = "oracle-vector-cad"
-version = "0.15.0"
+version = "0.16.0"
 dependencies = [
  "image",
  "kurbo 0.13.1",
@@ -3154,7 +3154,7 @@ dependencies = [
 
 [[package]]
 name = "oracle-vector-cli"
-version = "0.15.0"
+version = "0.16.0"
 dependencies = [
  "log",
  "objc2-core-foundation",
@@ -3176,7 +3176,7 @@ dependencies = [
 
 [[package]]
 name = "oracle-vector-color"
-version = "0.15.0"
+version = "0.16.0"
 dependencies = [
  "kurbo 0.13.1",
  "moxcms",
@@ -3188,7 +3188,7 @@ dependencies = [
 
 [[package]]
 name = "oracle-vector-doc"
-version = "0.15.0"
+version = "0.16.0"
 dependencies = [
  "chrono",
  "hayro-ccitt",
@@ -3207,7 +3207,7 @@ dependencies = [
 
 [[package]]
 name = "oracle-vector-effects"
-version = "0.15.0"
+version = "0.16.0"
 dependencies = [
  "image",
  "kurbo 0.13.1",
@@ -3223,7 +3223,7 @@ dependencies = [
 
 [[package]]
 name = "oracle-vector-engine"
-version = "0.15.0"
+version = "0.16.0"
 dependencies = [
  "craft-docpath",
  "crc32fast",
@@ -3262,7 +3262,7 @@ dependencies = [
 
 [[package]]
 name = "oracle-vector-eps"
-version = "0.15.0"
+version = "0.16.0"
 dependencies = [
  "fax",
  "flate2",
@@ -3285,7 +3285,7 @@ dependencies = [
 
 [[package]]
 name = "oracle-vector-format"
-version = "0.15.0"
+version = "0.16.0"
 dependencies = [
  "flate2",
  "oracle-vector-doc",
@@ -3300,7 +3300,7 @@ dependencies = [
 
 [[package]]
 name = "oracle-vector-geom"
-version = "0.15.0"
+version = "0.16.0"
 dependencies = [
  "kurbo 0.13.1",
  "oracle-vector-testkit",
@@ -3312,7 +3312,7 @@ dependencies = [
 
 [[package]]
 name = "oracle-vector-mcp"
-version = "0.15.0"
+version = "0.16.0"
 dependencies = [
  "image",
  "log",
@@ -3331,7 +3331,7 @@ dependencies = [
 
 [[package]]
 name = "oracle-vector-metafile"
-version = "0.15.0"
+version = "0.16.0"
 dependencies = [
  "image",
  "kurbo 0.13.1",
@@ -3345,7 +3345,7 @@ dependencies = [
 
 [[package]]
 name = "oracle-vector-pathops"
-version = "0.15.0"
+version = "0.16.0"
 dependencies = [
  "kurbo 0.13.1",
  "linesweeper",
@@ -3357,7 +3357,7 @@ dependencies = [
 
 [[package]]
 name = "oracle-vector-pdf"
-version = "0.15.0"
+version = "0.16.0"
 dependencies = [
  "aes",
  "chrono",
@@ -3388,7 +3388,7 @@ dependencies = [
 
 [[package]]
 name = "oracle-vector-plugins"
-version = "0.15.0"
+version = "0.16.0"
 dependencies = [
  "oracle-vector-color",
  "oracle-vector-doc",
@@ -3402,7 +3402,7 @@ dependencies = [
 
 [[package]]
 name = "oracle-vector-render"
-version = "0.15.0"
+version = "0.16.0"
 dependencies = [
  "flate2",
  "gif 0.14.2",
@@ -3429,14 +3429,14 @@ dependencies = [
 
 [[package]]
 name = "oracle-vector-scriptcheck"
-version = "0.15.0"
+version = "0.16.0"
 dependencies = [
  "proptest",
 ]
 
 [[package]]
 name = "oracle-vector-svg"
-version = "0.15.0"
+version = "0.16.0"
 dependencies = [
  "craft-docpath",
  "flate2",
@@ -3461,7 +3461,7 @@ dependencies = [
 
 [[package]]
 name = "oracle-vector-testkit"
-version = "0.15.0"
+version = "0.16.0"
 dependencies = [
  "fax",
  "image",
@@ -3479,7 +3479,7 @@ dependencies = [
 
 [[package]]
 name = "oracle-vector-text"
-version = "0.15.0"
+version = "0.16.0"
 dependencies = [
  "harfrust 0.13.3",
  "icu_segmenter",
@@ -3499,7 +3499,7 @@ dependencies = [
 
 [[package]]
 name = "oracle-vector-three-d"
-version = "0.15.0"
+version = "0.16.0"
 dependencies = [
  "oracle-vector-geom",
  "oracle-vector-pathops",
@@ -3507,7 +3507,7 @@ dependencies = [
 
 [[package]]
 name = "oracle-vector-tools"
-version = "0.15.0"
+version = "0.16.0"
 dependencies = [
  "image",
  "kurbo 0.13.1",
@@ -3523,7 +3523,7 @@ dependencies = [
 
 [[package]]
 name = "oracle-vector-trace"
-version = "0.15.0"
+version = "0.16.0"
 dependencies = [
  "image",
  "kurbo 0.13.1",
@@ -3535,7 +3535,7 @@ dependencies = [
 
 [[package]]
 name = "oracle-vector-ui-egui"
-version = "0.15.0"
+version = "0.16.0"
 dependencies = [
  "bytemuck",
  "craft-ui",
@@ -3573,7 +3573,7 @@ dependencies = [
 
 [[package]]
 name = "oracle-vector-web"
-version = "0.15.0"
+version = "0.16.0"
 dependencies = [
  "eframe",
  "egui",
@@ -6220,7 +6220,7 @@ checksum = "9440ea3e5aeabb0ac63af70daf835274065238cdd0cec83418f417eae38bacee"
 
 [[package]]
 name = "xtask"
-version = "0.15.0"
+version = "0.16.0"
 dependencies = [
  "serde_json",
 ]
