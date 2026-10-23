@@ -1,39 +1,39 @@
 //! Headless frames of the Appearance panel and the panels that follow its active item.
 
 use serde_json::{Value, json};
-use vectorcraft_doc::Unit;
-use vectorcraft_engine::Session;
+use oracle_vector_doc::Unit;
+use oracle_vector_engine::Session;
 
 use super::*;
 
-pub(super) fn app_with_rect() -> VectorcraftApp {
-    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+pub(super) fn app_with_rect() -> OracleVectorApp {
+    let mut app = OracleVectorApp::new(Session::new(), Default::default());
     run(&mut app, "file.new", json!({"width": 200, "height": 200}));
     let id = run(&mut app, "shape.rectangle", json!({"x": 10, "y": 10, "width": 100, "height": 100}))["id"].clone();
     run(&mut app, "select.set", json!({ "ids": [id] }));
     app
 }
 
-pub(super) fn run(app: &mut VectorcraftApp, id: &str, p: Value) -> Value {
+pub(super) fn run(app: &mut OracleVectorApp, id: &str, p: Value) -> Value {
     app.session.execute(id, &p).unwrap_or_else(|e| panic!("{id}: {e}"))
 }
 
 /// Every text drawn while `f` runs one headless frame.
-fn frame_texts(app: &mut VectorcraftApp, f: impl FnMut(&mut VectorcraftApp, &mut egui::Ui)) -> Vec<String> {
+fn frame_texts(app: &mut OracleVectorApp, f: impl FnMut(&mut OracleVectorApp, &mut egui::Ui)) -> Vec<String> {
     let ctx = egui::Context::default();
     frame_in(&ctx, app, f)
 }
 
-fn frame_in(ctx: &egui::Context, app: &mut VectorcraftApp, f: impl FnMut(&mut VectorcraftApp, &mut egui::Ui)) -> Vec<String> {
+fn frame_in(ctx: &egui::Context, app: &mut OracleVectorApp, f: impl FnMut(&mut OracleVectorApp, &mut egui::Ui)) -> Vec<String> {
     frame_events(ctx, app, vec![], f).into_iter().map(|(s, _)| s).collect()
 }
 
 /// One headless frame with input `events`: every text drawn, with its screen rect.
 pub(super) fn frame_events(
     ctx: &egui::Context,
-    app: &mut VectorcraftApp,
+    app: &mut OracleVectorApp,
     events: Vec<egui::Event>,
-    f: impl FnMut(&mut VectorcraftApp, &mut egui::Ui),
+    f: impl FnMut(&mut OracleVectorApp, &mut egui::Ui),
 ) -> Vec<(String, egui::Rect)> {
     frame_raw(ctx, app, egui::RawInput { events, ..Default::default() }, f)
 }
@@ -41,9 +41,9 @@ pub(super) fn frame_events(
 /// One headless frame with input `raw`: every text drawn, with its screen rect.
 pub(super) fn frame_raw(
     ctx: &egui::Context,
-    app: &mut VectorcraftApp,
+    app: &mut OracleVectorApp,
     raw: egui::RawInput,
-    mut f: impl FnMut(&mut VectorcraftApp, &mut egui::Ui),
+    mut f: impl FnMut(&mut OracleVectorApp, &mut egui::Ui),
 ) -> Vec<(String, egui::Rect)> {
     let mut out = ctx.run_ui(raw, |ui| f(app, ui));
     out.textures_delta.clear();
@@ -62,7 +62,7 @@ pub(super) fn frame_raw(
 }
 
 /// Click at `pos` over three frames of `f` (hover, press, release).
-pub(super) fn click(ctx: &egui::Context, app: &mut VectorcraftApp, pos: egui::Pos2, mut f: impl FnMut(&mut VectorcraftApp, &mut egui::Ui)) {
+pub(super) fn click(ctx: &egui::Context, app: &mut OracleVectorApp, pos: egui::Pos2, mut f: impl FnMut(&mut OracleVectorApp, &mut egui::Ui)) {
     let button = |pressed| egui::Event::PointerButton { pos, button: egui::PointerButton::Primary, pressed, modifiers: Default::default() };
     for e in [egui::Event::PointerMoved(pos), button(true), button(false)] {
         frame_events(ctx, app, vec![e], &mut f);
@@ -110,7 +110,7 @@ fn cmd_slash_is_add_new_fill_and_cmd_alt_slash_add_new_stroke() {
     use crate::shortcut_editor::{command_for_key, default_command_shortcut};
     let mac = cfg!(target_os = "macos");
     let (cmd, alt) = (egui::Modifiers::COMMAND, egui::Modifiers::ALT);
-    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    let mut app = OracleVectorApp::new(Session::new(), Default::default());
     for (id, key, label, mods, shown) in [
         ("appearance.addFill", "Cmd+/", "Add New Fill", cmd, if mac { "⌘/" } else { "Ctrl+/" }),
         ("appearance.addStroke", "Cmd+Alt+/", "Add New Stroke", cmd | alt, if mac { "⌥⌘/" } else { "Ctrl+Alt+/" }),
@@ -132,14 +132,14 @@ fn cmd_slash_is_add_new_fill_and_cmd_alt_slash_add_new_stroke() {
 /// and on type. With nothing selected the buttons are off, and the keys leave the objects as they are.
 #[test]
 fn cmd_slash_adds_a_fill_and_cmd_alt_slash_a_stroke_as_the_panel_buttons_do() {
-    fn press(app: &mut VectorcraftApp, modifiers: egui::Modifiers) {
+    fn press(app: &mut OracleVectorApp, modifiers: egui::Modifiers) {
         let ctx = egui::Context::default();
         let ev = egui::Event::Key { key: egui::Key::Slash, physical_key: None, pressed: true, repeat: false, modifiers };
         let mut out = ctx.run_ui(egui::RawInput { events: vec![ev], ..Default::default() }, |ui| crate::shortcuts::handle(app, ui.ctx()));
         out.textures_delta.clear();
     }
     /// The Appearance panel's button named `label`: the center of its rect and whether it is on.
-    fn button(ctx: &egui::Context, app: &mut VectorcraftApp, label: &str) -> (egui::Pos2, bool) {
+    fn button(ctx: &egui::Context, app: &mut OracleVectorApp, label: &str) -> (egui::Pos2, bool) {
         let mut out = ctx.run_ui(egui::RawInput::default(), |ui| appearance::show(app, ui));
         out.textures_delta.clear();
         let nodes = &out.platform_output.accesskit_update.as_ref().expect("an accessibility tree").nodes;
@@ -151,7 +151,7 @@ fn cmd_slash_adds_a_fill_and_cmd_alt_slash_a_stroke_as_the_panel_buttons_do() {
         (egui::pos2((b.x0 + b.x1) as f32 * 0.5, (b.y0 + b.y1) as f32 * 0.5), !n.is_disabled())
     }
     /// A rectangle and a line of type, with the rectangle (`type_too`: both) selected.
-    fn two_objects(type_too: bool) -> (VectorcraftApp, Vec<Value>) {
+    fn two_objects(type_too: bool) -> (OracleVectorApp, Vec<Value>) {
         let mut app = app_with_rect();
         let rect = first_selected(&app).expect("the rectangle").id.0;
         let text = run(&mut app, "text.create", json!({"x": 10, "y": 150, "text": "Hi"}))["id"].clone();
@@ -159,9 +159,9 @@ fn cmd_slash_adds_a_fill_and_cmd_alt_slash_a_stroke_as_the_panel_buttons_do() {
         run(&mut app, "select.set", json!({ "ids": ids }));
         (app, vec![json!(rect), text])
     }
-    let stacks = |app: &VectorcraftApp, ids: &[Value]| -> Vec<vectorcraft_doc::Appearance> {
+    let stacks = |app: &OracleVectorApp, ids: &[Value]| -> Vec<oracle_vector_doc::Appearance> {
         let d = &app.session.active().expect("a document").doc;
-        ids.iter().map(|id| (*d.node(vectorcraft_doc::NodeId(id.as_u64().expect("an id"))).expect("the object").appearance).clone()).collect()
+        ids.iter().map(|id| (*d.node(oracle_vector_doc::NodeId(id.as_u64().expect("an id"))).expect("the object").appearance).clone()).collect()
     };
     let cmd = egui::Modifiers::COMMAND;
     for (type_too, mods, label, fill) in [
@@ -224,7 +224,7 @@ fn item_effect_rows_toggle_their_eye() {
     // The eye sits in the first column of the effect's row (the label is indented one level).
     let eye = egui::pos2(label.left() - 12.0 - 24.0 - appearance::EYE_W / 2.0, label.center().y);
     click(&ctx, &mut app, eye, appearance::show);
-    let visible = |app: &VectorcraftApp| current_stroke_effects(app)[0].visible;
+    let visible = |app: &OracleVectorApp| current_stroke_effects(app)[0].visible;
     assert!(!visible(&app));
     click(&ctx, &mut app, eye, appearance::show);
     assert!(visible(&app));
@@ -233,13 +233,13 @@ fn item_effect_rows_toggle_their_eye() {
     assert_eq!(app.session.appearance_item(), Some(1));
 }
 
-fn current_stroke_effects(app: &VectorcraftApp) -> Vec<vectorcraft_doc::Effect> {
+fn current_stroke_effects(app: &OracleVectorApp) -> Vec<oracle_vector_doc::Effect> {
     first_selected(app).unwrap().appearance.items[1].effects().clone()
 }
 
 #[test]
 fn blend_separators_follow_the_groups() {
-    use vectorcraft_color::BlendMode;
+    use oracle_vector_color::BlendMode;
     let starts: Vec<BlendMode> =
         (0..BlendMode::ALL.len()).filter(|i| crate::widgets::blend_separator_before(*i)).map(|i| BlendMode::ALL[i]).collect();
     assert_eq!(starts, [BlendMode::Darken, BlendMode::Lighten, BlendMode::Overlay, BlendMode::Difference, BlendMode::Hue]);
@@ -281,7 +281,7 @@ fn opacity_popup_blend_dropdown_sets_the_blend_mode() {
     click(&ctx, &mut app, text_rect(&texts, "Normal").center(), appearance::show);
     let texts = frame_events(&ctx, &mut app, vec![], appearance::show);
     click(&ctx, &mut app, text_rect(&texts, "Multiply").center(), appearance::show);
-    assert_eq!(first_selected(&app).unwrap().blend, vectorcraft_color::BlendMode::Multiply);
+    assert_eq!(first_selected(&app).unwrap().blend, oracle_vector_color::BlendMode::Multiply);
     // The popup is still open after choosing.
     let texts = frame_events(&ctx, &mut app, vec![], appearance::show);
     assert!(texts.iter().any(|(t, _)| t == "Multiply"), "{texts:?}");

@@ -1,9 +1,9 @@
 [package]
-name = "vectorcraft-color"
+name = "oracle-vector-color"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "VectorCraft color"
+description = "Oracle Vector color"
 
 [lints]
 workspace = true

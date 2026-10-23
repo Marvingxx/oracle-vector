@@ -2,16 +2,16 @@
 
 use serde_json::json;
 
-use crate::{VectorcraftApp, canvas};
+use crate::{OracleVectorApp, canvas};
 
-fn app_with_doc() -> VectorcraftApp {
-    let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), crate::Services::default());
+fn app_with_doc() -> OracleVectorApp {
+    let mut app = OracleVectorApp::new(oracle_vector_engine::Session::new(), crate::Services::default());
     app.run("file.new", json!({})).unwrap();
     app
 }
 
 /// Draw one canvas frame; whether it drew the document (else the Home screen).
-fn shows_document(app: &mut VectorcraftApp) -> bool {
+fn shows_document(app: &mut OracleVectorApp) -> bool {
     app.canvas_rect = None;
     let ctx = egui::Context::default();
     crate::theme::install_fonts(&ctx);
@@ -41,7 +41,7 @@ fn home_shows_over_open_documents_until_a_document_is_chosen() {
 
 /// Draw one canvas frame; whether it drew any text (the Home screen's labels; an empty window
 /// draws none).
-fn draws_text(app: &mut VectorcraftApp) -> bool {
+fn draws_text(app: &mut OracleVectorApp) -> bool {
     fn has_text(s: &egui::Shape) -> bool {
         match s {
             egui::Shape::Text(_) => true,
@@ -62,7 +62,7 @@ fn draws_text(app: &mut VectorcraftApp) -> bool {
 /// shows an empty window instead of the Home screen, and the Home button still opens it.
 #[test]
 fn home_screen_without_documents_follows_its_preference() {
-    let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), crate::Services::default());
+    let mut app = OracleVectorApp::new(oracle_vector_engine::Session::new(), crate::Services::default());
     assert!(app.session.active().is_none());
     assert!(draws_text(&mut app), "Home with no document open (the default)");
     assert!(crate::menus::home_showing(&app));
@@ -101,7 +101,7 @@ fn cmd_alt_n_is_new_without_dialog() {
     assert_eq!((chord.modifiers, chord.logical_key), (egui::Modifiers::COMMAND | egui::Modifiers::ALT, egui::Key::N));
     let shown = crate::menus::pretty_shortcut("Cmd+Alt+N");
     assert_eq!(shown, if cfg!(target_os = "macos") { "⌥⌘N" } else { "Ctrl+Alt+N" });
-    let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), crate::Services::default());
+    let mut app = OracleVectorApp::new(oracle_vector_engine::Session::new(), crate::Services::default());
     let listed = app.run("shortcuts.list", json!({"query": "file.newWithoutDialog"})).unwrap();
     let rows: Vec<_> = listed.as_array().expect("rows").iter().map(|r| (r["label"].clone(), r["group"].clone(), r["default"].clone())).collect();
     assert_eq!(rows, [(json!("New Without Dialog"), json!("File"), json!("Cmd+Alt+N"))], "Keyboard Shortcuts lists it under File");
@@ -113,20 +113,20 @@ fn cmd_alt_n_is_new_without_dialog() {
 /// entry), named as the dialog names it, and does not open the dialog.
 #[test]
 fn cmd_alt_n_makes_a_document_without_the_new_document_dialog() {
-    use vectorcraft_doc::ColorMode;
-    fn press(app: &mut VectorcraftApp) {
+    use oracle_vector_doc::ColorMode;
+    fn press(app: &mut OracleVectorApp) {
         let ctx = egui::Context::default();
         let modifiers = egui::Modifiers::COMMAND | egui::Modifiers::ALT;
         let ev = egui::Event::Key { key: egui::Key::N, physical_key: None, pressed: true, repeat: false, modifiers };
         let mut out = ctx.run_ui(egui::RawInput { events: vec![ev], ..Default::default() }, |ui| crate::shortcuts::handle(app, ui.ctx()));
         out.textures_delta.clear();
     }
-    let made = |app: &VectorcraftApp| {
+    let made = |app: &OracleVectorApp| {
         let d = &app.session.active().expect("a document").doc;
         let r = d.artboards[0].rect;
         (d.title.clone(), r.width(), r.height(), d.color_mode, d.raster_effects_ppi)
     };
-    let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), crate::Services::default());
+    let mut app = OracleVectorApp::new(oracle_vector_engine::Session::new(), crate::Services::default());
     assert!(app.session.active().is_none());
     let name = app.session.peek_untitled();
     press(&mut app);
@@ -148,7 +148,7 @@ fn cmd_alt_n_makes_a_document_without_the_new_document_dialog() {
 }
 
 /// One Home screen frame (no document open) with `events`: the texts drawn and where.
-fn home_texts(app: &mut VectorcraftApp, ctx: &egui::Context, events: Vec<egui::Event>) -> Vec<(String, egui::Rect)> {
+fn home_texts(app: &mut OracleVectorApp, ctx: &egui::Context, events: Vec<egui::Event>) -> Vec<(String, egui::Rect)> {
     fn walk(s: &egui::Shape, out: &mut Vec<(String, egui::Rect)>) {
         match s {
             egui::Shape::Text(t) => out.push((t.galley.text().to_string(), t.visual_bounding_rect())),
@@ -169,12 +169,12 @@ fn home_texts(app: &mut VectorcraftApp, ctx: &egui::Context, events: Vec<egui::E
 /// and one that can't be opened says so. With none, there is no Recent Files section.
 #[test]
 fn home_lists_recent_files_and_a_click_opens_one() {
-    let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), crate::Services::default());
+    let mut app = OracleVectorApp::new(oracle_vector_engine::Session::new(), crate::Services::default());
     let ctx = egui::Context::default();
     crate::theme::install_fonts(&ctx);
     let has = |texts: &[(String, egui::Rect)], s: &str| texts.iter().any(|(t, _)| t == s);
     assert!(!has(&home_texts(&mut app, &ctx, vec![]), "Recent Files"), "none: no section");
-    let dir = std::env::temp_dir().join("vectorcraft-home-recent");
+    let dir = std::env::temp_dir().join("oracle-vector-home-recent");
     let missing = dir.join("Gone.svg").to_string_lossy().into_owned();
     app.ui.recent_files = (0..9).map(|i| dir.join(format!("Drawing {i}.svg")).to_string_lossy().into_owned()).collect();
     app.ui.recent_files.insert(0, missing);
@@ -191,7 +191,7 @@ fn home_lists_recent_files_and_a_click_opens_one() {
 }
 
 /// One Home screen frame with `events`: the filled rectangles drawn in `fill`, and the cursor.
-fn home_fills(app: &mut VectorcraftApp, ctx: &egui::Context, events: Vec<egui::Event>, fill: egui::Color32) -> (Vec<egui::Rect>, egui::CursorIcon) {
+fn home_fills(app: &mut OracleVectorApp, ctx: &egui::Context, events: Vec<egui::Event>, fill: egui::Color32) -> (Vec<egui::Rect>, egui::CursorIcon) {
     fn walk(s: &egui::Shape, fill: egui::Color32, out: &mut Vec<egui::Rect>) {
         match s {
             egui::Shape::Rect(r) if r.fill == fill => out.push(r.rect),
@@ -212,10 +212,10 @@ fn home_fills(app: &mut VectorcraftApp, ctx: &egui::Context, events: Vec<egui::E
 /// and folder) with a pointing hand, and a click there opens the file like a click on its name.
 #[test]
 fn a_recent_file_row_lights_up_and_opens_from_anywhere_on_it() {
-    let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), crate::Services::default());
+    let mut app = OracleVectorApp::new(oracle_vector_engine::Session::new(), crate::Services::default());
     let ctx = egui::Context::default();
     crate::theme::install_fonts(&ctx);
-    let dir = std::env::temp_dir().join("vectorcraft-home-recent-row");
+    let dir = std::env::temp_dir().join("oracle-vector-home-recent-row");
     app.ui.recent_files = vec![dir.join("Gone.svg").to_string_lossy().into_owned()];
     let texts = home_texts(&mut app, &ctx, vec![]);
     let rect_of = |s: &str| texts.iter().find(|(t, _)| t == s).map(|(_, r)| *r).unwrap();
@@ -239,7 +239,7 @@ fn a_recent_file_row_lights_up_and_opens_from_anywhere_on_it() {
 /// One Home screen frame in a `w`×`h` window at `time` with `events`: the texts visible (inside
 /// their clip rect and the window) and where.
 fn visible_home_texts(
-    app: &mut VectorcraftApp,
+    app: &mut OracleVectorApp,
     ctx: &egui::Context,
     (w, h): (f32, f32),
     time: f64,
@@ -266,15 +266,15 @@ fn visible_home_texts(
 /// into view still opens its preset.
 #[test]
 fn home_scrolls_in_a_short_window() {
-    let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), crate::Services::default());
+    let mut app = OracleVectorApp::new(oracle_vector_engine::Session::new(), crate::Services::default());
     let ctx = egui::Context::default();
     crate::theme::install_fonts(&ctx);
-    let dir = std::env::temp_dir().join("vectorcraft-home-scroll");
+    let dir = std::env::temp_dir().join("oracle-vector-home-scroll");
     app.ui.recent_files = (0..6).map(|i| dir.join(format!("Drawing {i}.svg")).to_string_lossy().into_owned()).collect();
     let size = (800.0, 300.0);
     let has = |texts: &[(String, egui::Rect)], s: &str| texts.iter().any(|(t, _)| t == s);
     let texts = visible_home_texts(&mut app, &ctx, size, 0.0, vec![]);
-    assert!(has(&texts, "Welcome to VectorCraft"), "{texts:?}");
+    assert!(has(&texts, "Welcome to Oracle Vector"), "{texts:?}");
     assert!(!has(&texts, "Community"), "below the fold at first");
     let at = egui::pos2(400.0, 150.0);
     let wheel = egui::Event::MouseWheel {
@@ -289,7 +289,7 @@ fn home_scrolls_in_a_short_window() {
         texts = visible_home_texts(&mut app, &ctx, size, f64::from(i) * 0.1, vec![]);
     }
     assert!(has(&texts, "Community"), "the wheel reaches the bottom: {texts:?}");
-    assert!(!has(&texts, "Welcome to VectorCraft"), "the top scrolled away");
+    assert!(!has(&texts, "Welcome to Oracle Vector"), "the top scrolled away");
     // The last preset card, scrolled into view, still takes a click.
     let card = texts.iter().find(|(t, _)| t.starts_with("Social Square Post")).map(|(_, r)| r.center()).unwrap();
     let press = |pressed| egui::Event::PointerButton { pos: card, button: egui::PointerButton::Primary, pressed, modifiers: Default::default() };
@@ -307,11 +307,11 @@ fn home_recent_reopen_focuses_an_already_open_document() {
         write: Some(Box::new(|p: &str, b: &[u8]| std::fs::write(p, b).map_err(|e| e.to_string()))),
         ..Default::default()
     };
-    let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), services);
+    let mut app = OracleVectorApp::new(oracle_vector_engine::Session::new(), services);
     let d = std::env::temp_dir().join(format!("vc-home-reopen-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&d);
     std::fs::create_dir_all(&d).unwrap();
-    let path = d.join("doc.vectorcraft").to_string_lossy().to_string();
+    let path = d.join("doc.oracle-vector").to_string_lossy().to_string();
     app.run("file.new", json!({"width": 100, "height": 100})).unwrap();
     app.run("shape.rectangle", json!({"x": 1, "y": 2, "width": 10, "height": 10})).unwrap();
     app.run("file.saveAs", json!({"path": path})).unwrap();

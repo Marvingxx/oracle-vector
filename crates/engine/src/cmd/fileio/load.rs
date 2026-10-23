@@ -3,9 +3,9 @@
 use std::io::Cursor;
 
 use serde_json::{Value, json};
-use vectorcraft_doc::{Document, ImageBlob, ImageObject, Node, NodeKind};
-use vectorcraft_geom::Affine;
-use vectorcraft_render::effects::pixel::LoadedTexture;
+use oracle_vector_doc::{Document, ImageBlob, ImageObject, Node, NodeKind};
+use oracle_vector_geom::Affine;
+use oracle_vector_render::effects::pixel::LoadedTexture;
 
 use super::super::*;
 use super::pdfimport::LoadOptions;
@@ -36,7 +36,7 @@ impl Loaded {
     /// one that an SVG, PDF, `.ai` or EPS file carries, `restored`), which keeps the grid it was
     /// saved with.
     pub(crate) fn with_grid_prefs(mut self, prefs: &Prefs) -> Self {
-        if !self.restored && !matches!(self.format.id, "vectorcraft" | "template") {
+        if !self.restored && !matches!(self.format.id, "oracle-vector" | "template") {
             self.doc.grid = prefs.grid();
         }
         self
@@ -68,17 +68,17 @@ pub fn file_name(name: &str) -> String {
 /// extension of `name`.
 pub fn detect(name: &str, bytes: &[u8]) -> Option<&'static Format> {
     let by_name = format_for_name(name).filter(|f| f.read);
-    if vectorcraft_affinity::is_affinity(bytes) {
+    if oracle_vector_affinity::is_affinity(bytes) {
         return format("affinity");
     }
-    if vectorcraft_format::sniff(bytes) {
+    if oracle_vector_format::sniff(bytes) {
         // A template keeps its meaning from the extension, like .ait.
-        return by_name.filter(|f| f.id == "template").or_else(|| format("vectorcraft"));
+        return by_name.filter(|f| f.id == "template").or_else(|| format("oracle-vector"));
     }
-    if vectorcraft_svg::is_svgz(bytes) {
+    if oracle_vector_svg::is_svgz(bytes) {
         return format("svgz");
     }
-    if vectorcraft_pdf::is_postscript(bytes) {
+    if oracle_vector_pdf::is_postscript(bytes) {
         // PostScript (.eps, .ps, and .ai saved without PDF compatibility) by any name; .ai, .ait
         // and .ps keep their meaning (a template, a PostScript file), read as PostScript all the
         // same.
@@ -88,10 +88,10 @@ pub fn detect(name: &str, bytes: &[u8]) -> Option<&'static Format> {
         // .ai and .ait files are PDF inside; the extension keeps the template meaning.
         return by_name.filter(|f| matches!(f.id, "ai" | "ait")).or_else(|| format("pdf"));
     }
-    if vectorcraft_cad::is_dxf(bytes) {
+    if oracle_vector_cad::is_dxf(bytes) {
         return format("dxf");
     }
-    if let Some(kind) = vectorcraft_metafile::sniff(bytes) {
+    if let Some(kind) = oracle_vector_metafile::sniff(bytes) {
         return format(kind.id());
     }
     if psdread::is_psd(bytes) {
@@ -142,8 +142,8 @@ fn restore_or_import(
 
 /// A native file's document and details, the colour profiles it carries installed where missing
 /// (with a warning for each that can't be used).
-pub(crate) fn native_file(bytes: &[u8]) -> Result<(Document, vectorcraft_format::FileInfo, Vec<String>)> {
-    let f = vectorcraft_format::load_file(bytes).map_err(err)?;
+pub(crate) fn native_file(bytes: &[u8]) -> Result<(Document, oracle_vector_format::FileInfo, Vec<String>)> {
+    let f = oracle_vector_format::load_file(bytes).map_err(err)?;
     let mut warnings = super::native::install_profiles(f.profiles);
     warnings.extend(f.depth_notes);
     Ok((f.doc, f.info, warnings))
@@ -164,9 +164,9 @@ fn through_editing_data(bytes: &[u8], opts: &LoadOptions, doc: Document, warning
     if opts.pages.is_some() || !opts.layers || !opts.editing_data {
         return (doc, warnings, false);
     }
-    let Some(private) = vectorcraft_pdf::illustrator_data(bytes, opts.password.as_deref()) else { return (doc, warnings, false) };
-    let outlined = opts.text_as == vectorcraft_pdf::TextAs::Outlines;
-    let (doc, mut warnings, read) = vectorcraft_eps::layered_ai(&private, doc, warnings, outlined, opts.trust_editing_data, unit);
+    let Some(private) = oracle_vector_pdf::illustrator_data(bytes, opts.password.as_deref()) else { return (doc, warnings, false) };
+    let outlined = opts.text_as == oracle_vector_pdf::TextAs::Outlines;
+    let (doc, mut warnings, read) = oracle_vector_eps::layered_ai(&private, doc, warnings, outlined, opts.trust_editing_data, unit);
     // The layers weren't read (or couldn't be): the notes of reading the PDF part still hold.
     if !read {
         return (doc, warnings, false);
@@ -174,12 +174,12 @@ fn through_editing_data(bytes: &[u8], opts: &LoadOptions, doc: Document, warning
     // The layers' text objects hold type and the stroked paths around it, which can include stroked
     // glyphs the PDF part kept as outlines: without any such glyph in the document, the warnings on
     // outlines are dropped.
-    if !vectorcraft_pdf::holds_outlines(&doc) {
-        warnings.retain(|w| !vectorcraft_pdf::is_outlines_note(w));
+    if !oracle_vector_pdf::holds_outlines(&doc) {
+        warnings.retain(|w| !oracle_vector_pdf::is_outlines_note(w));
     }
     // The layers hold the art that the PDF part leaves out or, in a PDF, that the import clipped
     // to the page.
-    warnings.retain(|w| w != vectorcraft_pdf::OFF_ARTBOARD_NOTE && w != vectorcraft_pdf::PAST_PAGE_NOTE);
+    warnings.retain(|w| w != oracle_vector_pdf::OFF_ARTBOARD_NOTE && w != oracle_vector_pdf::PAST_PAGE_NOTE);
     (doc, warnings, true)
 }
 
@@ -190,23 +190,23 @@ fn from_editing_data_alone(bytes: &[u8], opts: &LoadOptions) -> Option<Result<(D
     if opts.pages.is_some() || !opts.layers || !opts.editing_data {
         return None;
     }
-    let private = vectorcraft_pdf::illustrator_data(bytes, opts.password.as_deref())?;
+    let private = oracle_vector_pdf::illustrator_data(bytes, opts.password.as_deref())?;
     Some(
-        vectorcraft_eps::ai_alone(&private)
+        oracle_vector_eps::ai_alone(&private)
             .map_err(|why| err(format!("this file was saved without PDF compatibility, and its editing data can't be read ({why})"))),
     )
 }
 
 /// Is `e` the error of a file whose pages are only a placeholder
-/// ([`vectorcraft_pdf::PdfError::PlaceholderOnly`])?
+/// ([`oracle_vector_pdf::PdfError::PlaceholderOnly`])?
 pub(crate) fn is_placeholder(e: &EngineError) -> bool {
-    e.to_string() == vectorcraft_pdf::PdfError::PlaceholderOnly.to_string()
+    e.to_string() == oracle_vector_pdf::PdfError::PlaceholderOnly.to_string()
 }
 
 /// Do `opts` read every page of the PDF `bytes`: no `pages`, or a range that names each one?
 fn every_page(bytes: &[u8], opts: &LoadOptions) -> bool {
     let Some(range) = &opts.pages else { return true };
-    vectorcraft_pdf::info(bytes, opts.password.as_deref()).is_ok_and(|i| parse_range(range, i.pages.len()).is_ok_and(|p| p.len() == i.pages.len()))
+    oracle_vector_pdf::info(bytes, opts.password.as_deref()).is_ok_and(|i| parse_range(range, i.pages.len()).is_ok_and(|p| p.len() == i.pages.len()))
 }
 
 /// A page read from a PDF or `.ai` (`read`, as [`super::page_document`] reads it) → (document,
@@ -233,7 +233,7 @@ pub(crate) fn page_or_editing_data(
 pub fn load_with(name: &str, bytes: &[u8], opts: &LoadOptions) -> Result<Loaded> {
     let format = detect(name, bytes).ok_or_else(|| match super::unsupported(&super::extension(name)) {
         Some(u) => err(format!("can't open `{}`: {}", file_name(name), u.hint)),
-        None => err(format!("can't open `{name}`: not a format VectorCraft reads (see document.formats)")),
+        None => err(format!("can't open `{name}`: not a format Oracle Vector reads (see document.formats)")),
     })?;
     let title = file_name(name);
     let mut converted = false;
@@ -241,22 +241,22 @@ pub fn load_with(name: &str, bytes: &[u8], opts: &LoadOptions) -> Result<Loaded>
     let mut editing_data = false;
     let (mut doc, mut warnings, restored) = match format.id {
         // EPS, .ps and PostScript .ai: the document our EPS files carry, else the PostScript read.
-        _ if matches!(format.id, "eps" | "ps") || vectorcraft_pdf::is_postscript(bytes) => {
-            let editing = vectorcraft_eps::has_native(bytes).then_some((true, || vectorcraft_eps::native(bytes)));
+        _ if matches!(format.id, "eps" | "ps") || oracle_vector_pdf::is_postscript(bytes) => {
+            let editing = oracle_vector_eps::has_native(bytes).then_some((true, || oracle_vector_eps::native(bytes)));
             restore_or_import(editing, || {
-                let r = vectorcraft_eps::import_trusting(bytes, opts.editing_data, opts.trust_editing_data)
+                let r = oracle_vector_eps::import_trusting(bytes, opts.editing_data, opts.trust_editing_data)
                     .map_err(|e| err(format!("can't open `{}`: {e}", file_name(name))))?;
                 Ok((r.document, r.warnings))
             })?
         }
-        "vectorcraft" | "template" => {
+        "oracle-vector" | "template" => {
             let (d, info, warnings) = native_file(bytes)?;
-            converted = info.is_old() || super::extension(name) == vectorcraft_format::LEGACY_EXTENSION;
+            converted = info.is_old() || super::extension(name) == oracle_vector_format::LEGACY_EXTENSION;
             (d, warnings, false)
         }
         "svg" | "svgz" => {
-            let text = vectorcraft_svg::text_of(bytes).map_err(err)?;
-            let editing = vectorcraft_svg::editing(&text).map(|e| (e.intact, move || vectorcraft_format::base64_decode(&e.data)));
+            let text = oracle_vector_svg::text_of(bytes).map_err(err)?;
+            let editing = oracle_vector_svg::editing(&text).map(|e| (e.intact, move || oracle_vector_format::base64_decode(&e.data)));
             // Relative links are found in the SVG's folder (when `name` is a path).
             let folder = std::path::Path::new(name).parent().map(|f| f.to_string_lossy()).filter(|f| !f.is_empty()).map(|f| absolute_path(&f));
             restore_or_import(editing, || import_svg(&text, folder.as_deref()))?
@@ -266,7 +266,7 @@ pub fn load_with(name: &str, bytes: &[u8], opts: &LoadOptions) -> Result<Loaded>
             let editing = opts
                 .pages
                 .is_none()
-                .then(|| vectorcraft_pdf::editing_with(bytes, opts.password.as_deref()))
+                .then(|| oracle_vector_pdf::editing_with(bytes, opts.password.as_deref()))
                 .flatten()
                 .map(|e| (e.intact, move || Some(e.data)));
             restore_or_import(editing, || match super::pdfimport::import(bytes, opts, format.id != "pdf") {
@@ -312,7 +312,7 @@ pub fn load_with(name: &str, bytes: &[u8], opts: &LoadOptions) -> Result<Loaded>
     // it carries, opens with the File Info it gives (a PostScript `.ai` gives none).
     if matches!(format.id, "pdf" | "ai" | "ait")
         && !restored
-        && let Some(info) = vectorcraft_pdf::file_info(bytes, opts.password.as_deref())
+        && let Some(info) = oracle_vector_pdf::file_info(bytes, opts.password.as_deref())
     {
         super::super::fileinfo::read_pdf(&mut doc.metadata, info);
     }
@@ -329,7 +329,7 @@ pub fn load_with(name: &str, bytes: &[u8], opts: &LoadOptions) -> Result<Loaded>
     }
     // Imports are named after the file; a native document keeps its own title (the tab shows the
     // file name once it has a path).
-    if !matches!(format.id, "vectorcraft" | "template") || doc.title.is_empty() {
+    if !matches!(format.id, "oracle-vector" | "template") || doc.title.is_empty() {
         doc.title = title;
     }
     warnings.extend(doc.images.values().filter_map(|b| too_large_note(&b.bytes)));
@@ -338,7 +338,7 @@ pub fn load_with(name: &str, bytes: &[u8], opts: &LoadOptions) -> Result<Loaded>
 
 /// Import SVG text, reading the files its images link to (relative links from `folder`, the SVG's
 /// own): rasters stay linked, SVG files become art, missing ones placeholders (see
-/// [`vectorcraft_svg::ImportOptions`]).
+/// [`oracle_vector_svg::ImportOptions`]).
 pub(crate) fn import_svg(text: &str, folder: Option<&str>) -> Result<(Document, Vec<String>)> {
     // The importer reads on a thread of its own (for its stack): what may be read is what may be
     // read here.
@@ -355,7 +355,7 @@ pub(crate) fn import_svg(text: &str, folder: Option<&str>) -> Result<(Document, 
             Some((bytes, link))
         })
     };
-    vectorcraft_svg::import_with(text, &vectorcraft_svg::ImportOptions { folder, read: Some(&read) }).map_err(err)
+    oracle_vector_svg::import_with(text, &oracle_vector_svg::ImportOptions { folder, read: Some(&read) }).map_err(err)
 }
 
 /// Open a file's bytes as the new active document (what `document.open` does) →
@@ -475,7 +475,7 @@ pub(crate) fn source<'a>(p: &'a Value, cmd: &str) -> Result<Source<'a>> {
     match (str_param(p, "path"), str_param(p, "dataBase64")) {
         (Some(path), _) => Ok(Source { name: path, bytes: read_file(path)?, path: Some(path) }),
         (None, Some(b64)) => {
-            let bytes = vectorcraft_format::base64_decode(b64).ok_or_else(|| bad(cmd, "bad base64"))?;
+            let bytes = oracle_vector_format::base64_decode(b64).ok_or_else(|| bad(cmd, "bad base64"))?;
             Ok(Source { name: str_param(p, "name").unwrap_or("Untitled"), bytes, path: None })
         }
         _ => Err(bad(cmd, "give path, or name and dataBase64")),
@@ -499,7 +499,7 @@ pub(super) fn new_from_template(s: &mut Session, p: &Value) -> Result<Value> {
 /// The most memory decoding one image may take: a 60 in print sheet at 300 ppi (18000 × 6600 px)
 /// is ~475 MB as RGBA, past the decoder's 512 MB default once it is converted. The web app keeps
 /// that default: wasm32 has 4 GB to address and aborts when an allocation fails.
-pub(crate) use vectorcraft_doc::MAX_RASTER_ALLOC;
+pub(crate) use oracle_vector_doc::MAX_RASTER_ALLOC;
 
 /// What to say of encoded image `bytes` that need more than [`MAX_RASTER_ALLOC`] to decode,
 /// counted as RGBA (4 bytes a pixel) or as the decoder gives them when that is more (its header
@@ -507,7 +507,7 @@ pub(crate) use vectorcraft_doc::MAX_RASTER_ALLOC;
 /// images within the allowance, and for bytes that aren't an image.
 pub(crate) fn too_large_note(bytes: &[u8]) -> Option<String> {
     use image::ImageDecoder as _;
-    if let Some((w, h)) = vectorcraft_doc::cmyk::oversized_tiff(bytes) {
+    if let Some((w, h)) = oracle_vector_doc::cmyk::oversized_tiff(bytes) {
         return Some(format!("an image of {w} × {h} pixels is too large to draw"));
     }
     let d = image::ImageReader::new(Cursor::new(bytes)).with_guessed_format().ok()?.into_decoder().ok()?;
@@ -520,11 +520,11 @@ pub(crate) fn too_large_note(bytes: &[u8]) -> Option<String> {
 
 /// Decode an image's header (and, for formats stored as PNG, its pixels). CMYK TIFFs are kept as
 /// they are, with their ink amounts ([`ImageBlob::cmyk`]), except that ones storing one plane per
-/// ink are written again with their inks together ([`vectorcraft_doc::cmyk::stored_cmyk_tiff`]);
+/// ink are written again with their inks together ([`oracle_vector_doc::cmyk::stored_cmyk_tiff`]);
 /// CMYK TIFFs with an alpha channel, which the decoder can't read, become RGBA in the active color
 /// settings' CMYK, as do CMYK Photoshop documents, whose merged image is read ([`psdread`]).
 /// 1-bit TIFFs compressed with CCITT Group 3, which the decoder can't read either, become RGBA
-/// too ([`vectorcraft_doc::cmyk::group3_tiff_rgba`]).
+/// too ([`oracle_vector_doc::cmyk::group3_tiff_rgba`]).
 /// Grayscale TIFFs with an alpha channel or other extra channels, which the decoder can't read
 /// either, become RGBA too, whether they store their channels together or one plane per channel.
 /// A Targa file, which starts with no signature, is recognized by its header
@@ -532,14 +532,14 @@ pub(crate) fn too_large_note(bytes: &[u8]) -> Option<String> {
 /// ([`super::tgaread::fix_alpha`]). An image stored as PNG whose decoded samples, or whose pixels
 /// as RGBA, need more than [`MAX_RASTER_ALLOC`] is refused as too large to draw.
 /// A TIFF with more strips or tiles than the decoder can count
-/// ([`vectorcraft_doc::cmyk::oversized_tiff`]) is refused as too large to draw.
+/// ([`oracle_vector_doc::cmyk::oversized_tiff`]) is refused as too large to draw.
 pub fn raster_image(bytes: &[u8]) -> Result<RasterImage> {
     let ppi = super::ppi::resolution(bytes);
-    if let Some((w, h)) = vectorcraft_doc::cmyk::oversized_tiff(bytes) {
+    if let Some((w, h)) = oracle_vector_doc::cmyk::oversized_tiff(bytes) {
         return Err(err(format!("an image of {w} × {h} pixels is too large to draw")));
     }
     if psdread::is_psd(bytes) {
-        let cms = vectorcraft_color::cms::active();
+        let cms = oracle_vector_color::cms::active();
         return as_png(psdread::decode(bytes, MAX_RASTER_ALLOC, |c| cms.cmyk_to_srgb(c, false)).map_err(err)?, ppi);
     }
     let mut reader = image::ImageReader::new(Cursor::new(bytes)).with_guessed_format().map_err(err)?;
@@ -549,11 +549,11 @@ pub fn raster_image(bytes: &[u8]) -> Result<RasterImage> {
     let mut limits = image::Limits::default();
     limits.max_alloc = Some(MAX_RASTER_ALLOC);
     reader.limits(limits);
-    let kind = reader.format().ok_or_else(|| err("not an image VectorCraft reads (see document.formats)"))?;
+    let kind = reader.format().ok_or_else(|| err("not an image Oracle Vector reads (see document.formats)"))?;
     let f = image_format(kind).ok_or_else(|| err(format!("{kind:?} images can't be opened (see document.formats)")))?;
     let kept = match f.id {
         "png" | "jpg" | "gif" | "webp" => Some(bytes.to_vec()),
-        "tiff" => vectorcraft_doc::cmyk::stored_cmyk_tiff(bytes, ppi),
+        "tiff" => oracle_vector_doc::cmyk::stored_cmyk_tiff(bytes, ppi),
         _ => None,
     };
     if let Some(kept) = kept {
@@ -561,12 +561,12 @@ pub fn raster_image(bytes: &[u8]) -> Result<RasterImage> {
         return stored(kept, f.mime, (width, height), ppi);
     }
     let extra_samples = || {
-        let cms = vectorcraft_color::cms::active();
-        vectorcraft_doc::cmyk::extra_samples_tiff_rgba(bytes, |c| cms.cmyk_to_srgb(c, false))
+        let cms = oracle_vector_color::cms::active();
+        oracle_vector_doc::cmyk::extra_samples_tiff_rgba(bytes, |c| cms.cmyk_to_srgb(c, false))
     };
     let mut img = match (f.id == "tiff").then(extra_samples).flatten() {
         Some(img) => img,
-        None => match (f.id == "tiff").then(|| vectorcraft_doc::cmyk::group3_tiff_rgba(bytes)).flatten() {
+        None => match (f.id == "tiff").then(|| oracle_vector_doc::cmyk::group3_tiff_rgba(bytes)).flatten() {
             Some(read) => read.map_err(err)?,
             None => {
                 use image::ImageDecoder as _;
@@ -613,7 +613,7 @@ pub fn texture_image(bytes: &[u8]) -> Result<String> {
     }
     let texture = match blob.cmyk() {
         Some(inks) => {
-            let cms = vectorcraft_color::cms::active();
+            let cms = oracle_vector_color::cms::active();
             let rgba: Vec<u8> = (inks.data.as_chunks::<4>().0.iter())
                 .flat_map(|c| {
                     let rgb = cms.cmyk_to_srgb(c.map(|v| f32::from(v) / 255.0), false);
@@ -663,7 +663,7 @@ pub(super) fn raster_doc(name: &str, bytes: &[u8]) -> Result<Document> {
 
 /// Does this import note say that the file has something the document doesn't?
 fn is_loss(note: &str) -> bool {
-    note == vectorcraft_pdf::OFF_ARTBOARD_NOTE || vectorcraft_eps::is_loss(note)
+    note == oracle_vector_pdf::OFF_ARTBOARD_NOTE || oracle_vector_eps::is_loss(note)
 }
 
 /// Writing the file `target` for document `st`: not over the file `st` was read from when reading

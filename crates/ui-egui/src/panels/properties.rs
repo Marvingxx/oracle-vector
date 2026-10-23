@@ -2,18 +2,18 @@
 
 use egui::Ui;
 use serde_json::json;
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::{LiveShape, NodeKind, Unit};
-use vectorcraft_engine::cmd::newdoc;
+use oracle_vector_color::{Color, Paint};
+use oracle_vector_doc::{LiveShape, NodeKind, Unit};
+use oracle_vector_engine::cmd::newdoc;
 
 use super::{corner_radius_row, first_selected, pstate, set_pstate};
 use crate::theme::Tokens;
 use crate::widgets::{self, dim_label, divider, section_header};
-use crate::{VectorcraftApp, icons};
+use crate::{OracleVectorApp, icons};
 
 /// The panel for what is selected: the selection's kind as its heading, then its sections (Edit
 /// Artboards' with the Artboard tool, the document's with nothing selected).
-pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn show(app: &mut OracleVectorApp, ui: &mut Ui) {
     let t = Tokens::get(ui.ctx());
     let Some(st) = app.session.active() else {
         dim_label(ui, tl!("No document open"));
@@ -153,7 +153,7 @@ pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
 /// and edit the masked content", <https://www.adobe.com/learn/illustrator/web/crop-using-masks>):
 /// they select its clipping path or its clipped art for the selection tools, as Object › Clipping
 /// Mask does. Edit Contents only when the group clips something.
-fn clip_group_buttons(app: &mut VectorcraftApp, ui: &mut Ui, has_contents: bool) {
+fn clip_group_buttons(app: &mut OracleVectorApp, ui: &mut Ui, has_contents: bool) {
     let w = (ui.available_width() - 6.0) / 2.0;
     ui.horizontal(|ui| {
         if widgets::flat_button(ui, tl!("Edit Clipping Path"), w).clicked() {
@@ -167,7 +167,7 @@ fn clip_group_buttons(app: &mut VectorcraftApp, ui: &mut Ui, has_contents: bool)
 
 /// The one selected image: its file (or Embedded), colour mode and resolution, and the Links
 /// panel's actions for it.
-fn image_section(app: &mut VectorcraftApp, ui: &mut Ui) {
+fn image_section(app: &mut OracleVectorApp, ui: &mut Ui) {
     let t = Tokens::get(ui.ctx());
     let Some(i) = crate::place::selected_image_info(app) else { return };
     let (name, details) = crate::place::image_summary(i);
@@ -191,7 +191,7 @@ fn image_section(app: &mut VectorcraftApp, ui: &mut Ui) {
 
 /// The one selected Image Trace object: its preset (choosing another traces it again with that
 /// one), view, a button to reveal the tracing controls, Expand and Release.
-fn trace_section(app: &mut VectorcraftApp, ui: &mut Ui, preset: &str, view: vectorcraft_doc::TraceView) {
+fn trace_section(app: &mut OracleVectorApp, ui: &mut Ui, preset: &str, view: oracle_vector_doc::TraceView) {
     section_header(ui, tl!("Image Trace"));
     ui.horizontal(|ui| {
         dim_label(ui, tl!("Preset:"));
@@ -213,7 +213,7 @@ fn trace_section(app: &mut VectorcraftApp, ui: &mut Ui, preset: &str, view: vect
 
 /// Whether the selection uses more than one colour (`recolor.colors`), which offers the Recolor
 /// quick action; cached per document revision.
-fn multi_color(app: &mut VectorcraftApp, ctx: &egui::Context) -> bool {
+fn multi_color(app: &mut OracleVectorApp, ctx: &egui::Context) -> bool {
     let Some(st) = app.session.active() else { return false };
     let key = (st.uid, st.revision);
     match pstate::<Option<((u64, u64), bool)>>(ctx, "props-multi-color") {
@@ -233,7 +233,7 @@ fn multi_color(app: &mut VectorcraftApp, ctx: &egui::Context) -> bool {
 /// W or H, preset or orientation goes to every selected artboard, in one undo step), its Fill (background color), Move
 /// and Scale Artwork with Artboard, New Artboard and Delete Artboard, and Quick Actions: Rearrange All (#681) and
 /// Exit back to the Selection tool (#530).
-fn artboard_sections(app: &mut VectorcraftApp, ui: &mut Ui) {
+fn artboard_sections(app: &mut OracleVectorApp, ui: &mut Ui) {
     let units = app.session.general_unit();
     let origin = app.ruler_origin();
     let n = app.session.active().map_or(0, |d| d.doc.artboards.len());
@@ -305,7 +305,7 @@ fn artboard_sections(app: &mut VectorcraftApp, ui: &mut Ui) {
 }
 
 /// Rearrange All (#681): opens Rearrange All Artboards; disabled with fewer than two artboards.
-fn rearrange_button(app: &mut VectorcraftApp, ui: &mut Ui, artboards: usize, w: f32) {
+fn rearrange_button(app: &mut OracleVectorApp, ui: &mut Ui, artboards: usize, w: f32) {
     if ui.add_enabled_ui(artboards > 1, |ui| widgets::flat_button(ui, tl!("Rearrange All"), w)).inner.clicked() {
         super::artboards::open_rearrange(app);
     }
@@ -322,7 +322,7 @@ fn turned(landscape: bool, pw: f64, ph: f64) -> (f64, f64) {
 /// bar. A preset sizes each selected artboard in its own orientation; an orientation swaps the
 /// width and height of each selected artboard that is not square and not already in it. Each
 /// top-left corner stays put.
-pub(crate) fn artboard_size_row(app: &mut VectorcraftApp, ui: &mut Ui, i: usize, w: f64, h: f64) {
+pub(crate) fn artboard_size_row(app: &mut OracleVectorApp, ui: &mut Ui, i: usize, w: f64, h: f64) {
     let Some(choice) = artboard_size_controls(app, ui, w, h) else { return };
     let scale_art = super::artboards::scale_art(app);
     let indices = super::artboards::resized_with(app, i);
@@ -351,14 +351,14 @@ impl ArtboardSizeChoice {
 }
 
 /// Shared existing presets/orientation UI. Dialogs keep the chosen size in their draft until OK.
-pub(crate) fn artboard_size_controls(app: &VectorcraftApp, ui: &mut Ui, w: f64, h: f64) -> Option<ArtboardSizeChoice> {
+pub(crate) fn artboard_size_controls(app: &OracleVectorApp, ui: &mut Ui, w: f64, h: f64) -> Option<ArtboardSizeChoice> {
     artboard_size_controls_inner(app, ui, w, h, None).0
 }
 
 /// The dialog's shared preset/orientation picker with optional artwork and selection fits.
 /// The second return value is a chosen Fit: false for all artwork, true for selected artwork.
 pub(crate) fn artboard_size_controls_with_fit(
-    app: &VectorcraftApp,
+    app: &OracleVectorApp,
     ui: &mut Ui,
     w: f64,
     h: f64,
@@ -369,7 +369,7 @@ pub(crate) fn artboard_size_controls_with_fit(
 
 /// Properties and Control keep their ordinary picker; Artboard Options adds two Fit entries.
 fn artboard_size_controls_inner(
-    app: &VectorcraftApp,
+    app: &OracleVectorApp,
     ui: &mut Ui,
     w: f64,
     h: f64,
@@ -429,7 +429,7 @@ fn artboard_size_controls_inner(
 /// Artboard `i`'s Fill, its background `color`: the chip shows it (the None paint when the artboard
 /// has none) and a click on it opens the Color Picker for the artboard. The list sets None, White or
 /// Black (in the document's color mode) or opens the Color Picker.
-fn artboard_fill_row(app: &mut VectorcraftApp, ui: &mut Ui, i: usize, color: Option<Color>) {
+fn artboard_fill_row(app: &mut OracleVectorApp, ui: &mut Ui, i: usize, color: Option<Color>) {
     let fills = super::artboards::fill_colors(app);
     let shown = super::artboards::fill_name(app, color);
     let mut options = super::artboards::FILLS.to_vec();
@@ -457,7 +457,7 @@ fn artboard_fill_row(app: &mut VectorcraftApp, ui: &mut Ui, i: usize, color: Opt
     }
 }
 
-fn document_sections(app: &mut VectorcraftApp, ui: &mut Ui) {
+fn document_sections(app: &mut OracleVectorApp, ui: &mut Ui) {
     let units = app.session.general_unit();
     section_header(ui, tl!("Document"));
     ui.horizontal(|ui| {
@@ -467,15 +467,27 @@ fn document_sections(app: &mut VectorcraftApp, ui: &mut Ui) {
             app.run("document.setUnits", json!({"units": labels[i]})).ok();
         }
     });
-    let w = (ui.available_width() - 6.0) / 2.0;
-    ui.horizontal(|ui| {
+    // Side by side, or one above the other when a localized label wouldn't fit half the panel.
+    let full = ui.available_width();
+    let fits = |ui: &egui::Ui, label: &str| {
+        let width = ui.painter().layout_no_wrap(label.to_owned(), egui::FontId::proportional(12.5), egui::Color32::WHITE).size().x;
+        width + 16.0 <= (full - 6.0) / 2.0
+    };
+    let paired = fits(ui, tl!("Document Setup")) && fits(ui, tl!("Edit Artboards"));
+    let w = if paired { (full - 6.0) / 2.0 } else { full };
+    let mut buttons = |ui: &mut egui::Ui| {
         if widgets::flat_button(ui, tl!("Document Setup"), w).clicked() {
             app.run("file.documentSetup", json!({})).ok();
         }
         if widgets::flat_button(ui, tl!("Edit Artboards"), w).clicked() {
             app.select_tool("artboard");
         }
-    });
+    };
+    if paired {
+        ui.horizontal(|ui| buttons(ui));
+    } else {
+        ui.vertical(|ui| buttons(ui));
+    }
     let artboards = app.session.active().map_or(0, |d| d.doc.artboards.len());
     if artboards > 1 {
         rearrange_button(app, ui, artboards, w);
@@ -543,7 +555,7 @@ fn document_sections(app: &mut VectorcraftApp, ui: &mut Ui) {
     });
 }
 
-pub fn transform_section(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn transform_section(app: &mut OracleVectorApp, ui: &mut Ui) {
     if app.session.active().is_none() {
         return;
     }
@@ -624,9 +636,9 @@ pub fn transform_section(app: &mut VectorcraftApp, ui: &mut Ui) {
         && let NodeKind::Path { live: Some(live), .. } = &n.kind
     {
         match &**live {
-            vectorcraft_doc::LiveShape::Rectangle { .. } => corner_radius_row(app, ui, &n, "radius"),
-            vectorcraft_doc::LiveShape::Polygon { .. } => super::transform::polygon_rows(app, ui, &n, live, "props-polygon"),
-            vectorcraft_doc::LiveShape::Ellipse { pie, .. } => {
+            oracle_vector_doc::LiveShape::Rectangle { .. } => corner_radius_row(app, ui, &n, "radius"),
+            oracle_vector_doc::LiveShape::Polygon { .. } => super::transform::polygon_rows(app, ui, &n, live, "props-polygon"),
+            oracle_vector_doc::LiveShape::Ellipse { pie, .. } => {
                 widgets::subheader(ui, tl!("Ellipse Properties:"));
                 super::transform::pie_rows(app, ui, *pie, "props-pie");
             }
@@ -635,7 +647,7 @@ pub fn transform_section(app: &mut VectorcraftApp, ui: &mut Ui) {
     }
 }
 
-fn appearance_section(app: &mut VectorcraftApp, ui: &mut Ui) {
+fn appearance_section(app: &mut OracleVectorApp, ui: &mut Ui) {
     let Some(n) = first_selected(app) else { return };
     section_header(ui, tl!("Appearance"));
     fill_stroke_rows(app, ui);
@@ -663,7 +675,7 @@ fn appearance_section(app: &mut VectorcraftApp, ui: &mut Ui) {
 /// The Fill and Stroke rows, with the Control bar's widgets: the chips (a click opens the
 /// swatches, Shift-click the mixer), the Stroke link that opens the Stroke panel as a popover
 /// and the weight spinner with its presets. With nothing selected they set up the next object.
-fn fill_stroke_rows(app: &mut VectorcraftApp, ui: &mut Ui) {
+fn fill_stroke_rows(app: &mut OracleVectorApp, ui: &mut Ui) {
     let t = Tokens::get(ui.ctx());
     let weight = super::stroke::shown_weight(app, super::current_stroke(app).as_ref(), &super::stroke_mixed(app, ui.ctx()));
     let fw = super::field_width(ui);
@@ -679,7 +691,7 @@ fn fill_stroke_rows(app: &mut VectorcraftApp, ui: &mut Ui) {
     });
 }
 
-pub fn type_sections(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn type_sections(app: &mut OracleVectorApp, ui: &mut Ui) {
     let Some(n) = first_selected(app) else {
         dim_label(ui, tl!("Select a text object"));
         return;
@@ -712,17 +724,17 @@ pub fn type_sections(app: &mut VectorcraftApp, ui: &mut Ui) {
 #[cfg(test)]
 mod tests {
     use egui::{Event, PointerButton, Pos2, Rect, vec2};
-    use vectorcraft_engine::Session;
+    use oracle_vector_engine::Session;
 
     use super::*;
 
     /// One frame of the panel with `events` → the texts painted, with their rects.
-    fn frame(app: &mut VectorcraftApp, ctx: &egui::Context, events: Vec<Event>) -> Vec<(String, Rect)> {
+    fn frame(app: &mut OracleVectorApp, ctx: &egui::Context, events: Vec<Event>) -> Vec<(String, Rect)> {
         panel_frame(app, ctx, events, show)
     }
 
     /// One frame of `draw` with `events` → the texts painted, with their rects.
-    fn panel_frame(app: &mut VectorcraftApp, ctx: &egui::Context, events: Vec<Event>, draw: fn(&mut VectorcraftApp, &mut Ui)) -> Vec<(String, Rect)> {
+    fn panel_frame(app: &mut OracleVectorApp, ctx: &egui::Context, events: Vec<Event>, draw: fn(&mut OracleVectorApp, &mut Ui)) -> Vec<(String, Rect)> {
         let raw = egui::RawInput { screen_rect: Some(Rect::from_min_size(Pos2::ZERO, vec2(300.0, 700.0))), events, ..Default::default() };
         let mut out = ctx.run_ui(raw, |ui| draw(app, ui));
         out.textures_delta.clear();
@@ -739,7 +751,7 @@ mod tests {
     }
 
     /// Clicks the text `label` where the last frame painted it, over two frames (press, release).
-    fn click(app: &mut VectorcraftApp, ctx: &egui::Context, texts: &[(String, Rect)], label: &str) {
+    fn click(app: &mut OracleVectorApp, ctx: &egui::Context, texts: &[(String, Rect)], label: &str) {
         let at = texts.iter().find(|(t, _)| t == label).map(|(_, r)| r.center()).unwrap_or_else(|| panic!("no {label:?} in {texts:?}"));
         let b = |pressed| Event::PointerButton { pos: at, button: PointerButton::Primary, pressed, modifiers: Default::default() };
         frame(app, ctx, vec![Event::PointerMoved(at), b(true)]);
@@ -752,7 +764,7 @@ mod tests {
     /// group selected with another object, has neither.
     #[test]
     fn one_clip_group_has_edit_clipping_path_and_edit_contents_at_the_top() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 400, "height": 300})).unwrap();
         let art = app.run("shape.rectangle", json!({"x": 100, "y": 80, "width": 200, "height": 140})).unwrap()["id"].clone();
         let mask = app.run("shape.ellipse", json!({"x": 150, "y": 100, "width": 100, "height": 100})).unwrap()["id"].clone();
@@ -760,7 +772,7 @@ mod tests {
         let group = app.run("object.clippingMask.make", json!({})).unwrap()["id"].clone();
         app.run("select.set", json!({"ids": [group]})).unwrap();
         let ctx = egui::Context::default();
-        let selected = |app: &VectorcraftApp| app.session.active().unwrap().selection.objects.iter().map(|n| json!(n.0)).collect::<Vec<_>>();
+        let selected = |app: &OracleVectorApp| app.session.active().unwrap().selection.objects.iter().map(|n| json!(n.0)).collect::<Vec<_>>();
         let labels = |texts: &[(String, Rect)]| texts.iter().map(|(t, _)| t.clone()).collect::<Vec<_>>();
         let texts = frame(&mut app, &ctx, vec![]);
         let shown = labels(&texts);
@@ -773,7 +785,7 @@ mod tests {
         let texts = frame(&mut app, &ctx, vec![]);
         click(&mut app, &ctx, &texts, "Edit Clipping Path");
         assert_eq!(selected(&app), std::slice::from_ref(&mask), "Edit Clipping Path selects the clipping path");
-        let neither = |app: &mut VectorcraftApp| {
+        let neither = |app: &mut OracleVectorApp| {
             let shown = labels(&frame(app, &ctx, vec![]));
             !shown.iter().any(|t| t == "Edit Clipping Path" || t == "Edit Contents")
         };
@@ -805,7 +817,7 @@ mod tests {
     /// #3451: the Properties panel Transform section shows ellipse pie angles and Invert Pie.
     #[test]
     fn transform_section_shows_ellipse_pie_properties() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 300, "height": 300})).unwrap();
         app.run("shape.ellipse", json!({"x": 50, "y": 50, "width": 120, "height": 80})).unwrap();
         let ctx = egui::Context::default();
@@ -823,7 +835,7 @@ mod tests {
     #[test]
     fn the_document_checkboxes_show_their_boxes_and_toggle() {
         for brightness in crate::theme::Brightness::ALL {
-            let mut app = VectorcraftApp::new(Session::new(), Default::default());
+            let mut app = OracleVectorApp::new(Session::new(), Default::default());
             app.run("file.new", json!({"width": 200, "height": 100})).unwrap();
             let ctx = egui::Context::default();
             crate::theme::install_fonts(&ctx);
@@ -839,7 +851,7 @@ mod tests {
                 .count();
             assert!(boxes >= 3, "{brightness:?}: {boxes} checkbox outlines");
         }
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 100})).unwrap();
         let ctx = egui::Context::default();
         crate::theme::install_fonts(&ctx);
@@ -856,7 +868,7 @@ mod tests {
     /// Draw as Points or Lines radio buttons.
     #[test]
     fn the_gradient_tool_shows_the_gradient_type_and_draw() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 100})).unwrap();
         let id = app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 50, "height": 40})).unwrap()["id"].as_u64().unwrap();
         app.run("paint.setFill", json!({"gradient": {}})).unwrap();
@@ -872,16 +884,16 @@ mod tests {
         let texts = frame(&mut app, &ctx, vec![]);
         assert!(has(&texts, "Draw:") && has(&texts, "Points") && has(&texts, "Lines"), "{texts:?}");
         click(&mut app, &ctx, &texts, "Lines");
-        let fill = app.session.doc().unwrap().doc.node(vectorcraft_doc::NodeId(id)).unwrap().appearance.fill_paint();
-        let vectorcraft_color::Paint::Gradient(g) = fill else { panic!("{fill:?}") };
-        assert_eq!(super::super::gradient::shown_points(&g).mode, vectorcraft_color::FreeformMode::Lines);
+        let fill = app.session.doc().unwrap().doc.node(oracle_vector_doc::NodeId(id)).unwrap().appearance.fill_paint();
+        let oracle_vector_color::Paint::Gradient(g) = fill else { panic!("{fill:?}") };
+        assert_eq!(super::super::gradient::shown_points(&g).mode, oracle_vector_color::FreeformMode::Lines);
     }
 
     /// #696: the number fields are all as wide: the Transform fields, the rotation, the corner
     /// radius, Opacity and the stroke weight.
     #[test]
     fn the_number_fields_are_all_as_wide() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 100})).unwrap();
         app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 50, "height": 40})).unwrap();
         let ctx = egui::Context::default();
@@ -909,7 +921,7 @@ mod tests {
     /// corner shows each corner's own radius.
     #[test]
     fn the_corner_radius_link_shows_a_field_per_corner() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 100})).unwrap();
         app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 50, "height": 40})).unwrap();
         app.run("object.setLiveShape", json!({"radius": 7, "corners": [2]})).unwrap();
@@ -936,7 +948,7 @@ mod tests {
     /// stays open while they are toggled.
     #[test]
     fn transform_more_options_toggles_scale_corners_and_strokes() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 100})).unwrap();
         app.run("shape.rectangle", json!({"x": 10, "y": 20, "width": 30, "height": 40})).unwrap();
         let ctx = egui::Context::default();
@@ -973,9 +985,9 @@ mod tests {
     /// Both panels forward the Move Artwork toggle when their actual X field is edited.
     #[test]
     fn artboard_coordinate_fields_move_art_in_properties_and_transform() {
-        for draw in [show as fn(&mut VectorcraftApp, &mut Ui), super::super::transform::show] {
+        for draw in [show as fn(&mut OracleVectorApp, &mut Ui), super::super::transform::show] {
             for move_art in [false, true] {
-                let mut app = VectorcraftApp::new(Session::new(), Default::default());
+                let mut app = OracleVectorApp::new(Session::new(), Default::default());
                 app.run("file.new", json!({"width": 200, "height": 100})).unwrap();
                 let id = app.run("shape.rectangle", json!({"x": 10, "y": 20, "width": 30, "height": 40})).unwrap()["id"].as_u64().unwrap();
                 app.select_tool("artboard");
@@ -996,19 +1008,19 @@ mod tests {
                 );
                 let d = &app.session.doc().unwrap().doc;
                 assert_eq!(d.artboards[0].rect.x0, 1.0, "the focused X field steps its position");
-                assert_eq!(d.node(vectorcraft_doc::NodeId(id)).unwrap().geometric_bounds().unwrap().x0, if move_art { 11.0 } else { 10.0 });
+                assert_eq!(d.node(oracle_vector_doc::NodeId(id)).unwrap().geometric_bounds().unwrap().x0, if move_art { 11.0 } else { 10.0 });
                 app.run("edit.undo", json!({})).unwrap();
                 let d = &app.session.doc().unwrap().doc;
                 assert_eq!(d.artboards[0].rect.x0, 0.0);
-                assert_eq!(d.node(vectorcraft_doc::NodeId(id)).unwrap().geometric_bounds().unwrap().x0, 10.0);
+                assert_eq!(d.node(oracle_vector_doc::NodeId(id)).unwrap().geometric_bounds().unwrap().x0, 10.0);
             }
         }
     }
 
     /// Three landscape artboards, with Artboards 1 and 3 selected with the Artboard tool (Artboard
     /// 1 active): 200 × 100, 200 × 100 and 300 × 150.
-    fn two_selected_artboards() -> VectorcraftApp {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    fn two_selected_artboards() -> OracleVectorApp {
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 100, "artboards": 3})).unwrap();
         app.run("artboard.setProps", json!({"index": 2, "width": 300, "height": 150})).unwrap();
         app.select_tool("artboard");
@@ -1018,7 +1030,7 @@ mod tests {
     }
 
     /// Each artboard's (x0, y0, width, height).
-    fn boards(app: &VectorcraftApp) -> Vec<(f64, f64, f64, f64)> {
+    fn boards(app: &OracleVectorApp) -> Vec<(f64, f64, f64, f64)> {
         app.session.doc().unwrap().doc.artboards.iter().map(|a| (a.rect.x0, a.rect.y0, a.rect.width(), a.rect.height())).collect()
     }
 
@@ -1027,7 +1039,7 @@ mod tests {
     /// corner; the Transform panel resizes each about its own center, its default reference point.
     #[test]
     fn artboard_width_resizes_every_selected_artboard_in_properties_and_transform() {
-        for (draw, centered) in [(show as fn(&mut VectorcraftApp, &mut Ui), false), (super::super::transform::show, true)] {
+        for (draw, centered) in [(show as fn(&mut OracleVectorApp, &mut Ui), false), (super::super::transform::show, true)] {
             let mut app = two_selected_artboards();
             let before = boards(&app);
             let undo = app.session.doc().unwrap().history.undo.len();
@@ -1062,23 +1074,23 @@ mod tests {
     /// #775: type's Paragraph section has Hyphenate, and its checkbox turns it on.
     #[test]
     fn type_paragraph_section_hyphenates() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 100})).unwrap();
         app.run("text.create", json!({"x": 10, "y": 50, "text": "Paragraph"})).unwrap();
         let ctx = egui::Context::default();
         frame(&mut app, &ctx, vec![]);
         let texts = frame(&mut app, &ctx, vec![]);
         click(&mut app, &ctx, &texts, "Hyphenate");
-        let hyphenate = |app: &VectorcraftApp| crate::panels::character::text_style(app).unwrap().1.hyphenate;
+        let hyphenate = |app: &OracleVectorApp| crate::panels::character::text_style(app).unwrap().1.hyphenate;
         assert!(hyphenate(&app));
     }
 
     /// Variable fonts get the same Variable Font button in Properties as in the Character panel.
     #[test]
     fn properties_variable_font_button_for_variable_type() {
-        use vectorcraft_text::test_fonts::{TWO_AXIS_FAMILY, two_axis_font};
-        vectorcraft_text::FontDb::global().add_font(two_axis_font().unwrap());
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        use oracle_vector_text::test_fonts::{TWO_AXIS_FAMILY, two_axis_font};
+        oracle_vector_text::FontDb::global().add_font(two_axis_font().unwrap());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 300, "height": 200})).unwrap();
         let plain = app.run("text.create", json!({"x": 20, "y": 50, "text": "Static"})).unwrap()["id"].clone();
         let id = app.run("text.create", json!({"x": 20, "y": 120, "text": "lIn", "font": TWO_AXIS_FAMILY})).unwrap()["id"].clone();
@@ -1091,7 +1103,7 @@ mod tests {
 
     #[test]
     fn edit_artboards_adds_artboards_and_exits() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 100})).unwrap();
         let ctx = egui::Context::default();
         let texts = frame(&mut app, &ctx, vec![]);
@@ -1100,7 +1112,7 @@ mod tests {
         let texts = frame(&mut app, &ctx, vec![]);
         assert!(texts.iter().any(|(t, _)| t == "Artboard 1") && texts.iter().any(|(t, _)| t == "200 pt"), "{texts:?}");
         click(&mut app, &ctx, &texts, "New Artboard");
-        let boards = |app: &VectorcraftApp| app.session.active().unwrap().doc.artboards.len();
+        let boards = |app: &OracleVectorApp| app.session.active().unwrap().doc.artboards.len();
         assert_eq!(boards(&app), 2);
         let texts = frame(&mut app, &ctx, vec![]);
         assert!(texts.iter().any(|(t, _)| t == "Artboard 2"), "the new artboard is the active one: {texts:?}");
@@ -1117,7 +1129,7 @@ mod tests {
     /// keeps the name and runs no command.
     #[test]
     fn edit_artboards_renames_the_active_artboard() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 100, "artboards": 3})).unwrap();
         app.select_tool("artboard");
         super::super::artboards::select(&mut app, 1);
@@ -1128,7 +1140,7 @@ mod tests {
         let key = |key, modifiers| vec![Event::Key { key, physical_key: None, pressed: true, repeat: false, modifiers }];
         // Click the field showing Artboard 2's name, select all of it, type `typed`, then send each
         // frame's events of `end` → the number of commands run.
-        let rename = |app: &mut VectorcraftApp, typed: Vec<Event>, end: Vec<Vec<Event>>| {
+        let rename = |app: &mut OracleVectorApp, typed: Vec<Event>, end: Vec<Vec<Event>>| {
             frame(app, &ctx, vec![]);
             let texts = frame(app, &ctx, vec![]);
             let name = app.session.doc().unwrap().doc.artboards[1].name.clone();
@@ -1170,7 +1182,7 @@ mod tests {
     /// artboard, as double-clicking the Artboard tool's button does (`tool.options {tool: "artboard"}`).
     #[test]
     fn edit_artboards_opens_the_active_artboards_options() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 100, "artboards": 3})).unwrap();
         app.select_tool("artboard");
         super::super::artboards::select(&mut app, 1);
@@ -1209,15 +1221,15 @@ mod tests {
     /// artboard.
     #[test]
     fn edit_artboards_fill_sets_the_background_color() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 100, "artboards": 2})).unwrap();
         app.select_tool("artboard");
         super::super::artboards::select(&mut app, 1);
-        let colors = |app: &VectorcraftApp| app.session.doc().unwrap().doc.artboards.iter().map(|a| a.color).collect::<Vec<_>>();
-        let undo = |app: &VectorcraftApp| app.session.doc().unwrap().history.undo.len();
+        let colors = |app: &OracleVectorApp| app.session.doc().unwrap().doc.artboards.iter().map(|a| a.color).collect::<Vec<_>>();
+        let undo = |app: &OracleVectorApp| app.session.doc().unwrap().history.undo.len();
         let ctx = egui::Context::default();
         // Open the list showing `shown` and choose `option` → the number of commands run.
-        let choose = |app: &mut VectorcraftApp, shown: &str, option: &str| {
+        let choose = |app: &mut OracleVectorApp, shown: &str, option: &str| {
             frame(app, &ctx, vec![]);
             let texts = frame(app, &ctx, vec![]);
             click(app, &ctx, &texts, shown);
@@ -1255,8 +1267,8 @@ mod tests {
         assert_eq!(app.ui.dialog.as_ref().map(|d| d.fields.get("artboard")), Some(Some(&json!(1))), "the chip opens it too");
     }
 
-    fn artboard_deletion_app(count: usize) -> VectorcraftApp {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    fn artboard_deletion_app(count: usize) -> OracleVectorApp {
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 100, "artboards": count})).unwrap();
         for i in 0..count {
             app.run("shape.rectangle", json!({"x": i * 250 + 10, "y": 10, "width": 30, "height": 20})).unwrap();
@@ -1267,9 +1279,9 @@ mod tests {
     }
 
     fn artboard_deletion_click(
-        app: &mut VectorcraftApp,
+        app: &mut OracleVectorApp,
         ctx: &egui::Context,
-        draw: fn(&mut VectorcraftApp, &mut Ui),
+        draw: fn(&mut OracleVectorApp, &mut Ui),
         label: Option<&str>,
         modifiers: egui::Modifiers,
     ) {
@@ -1297,7 +1309,7 @@ mod tests {
         panel_frame(app, ctx, vec![Event::ModifiersChanged(egui::Modifiers::NONE)], draw);
     }
 
-    fn select_artboard_rows(app: &mut VectorcraftApp, ctx: &egui::Context, indices: &[usize]) {
+    fn select_artboard_rows(app: &mut OracleVectorApp, ctx: &egui::Context, indices: &[usize]) {
         for (at, i) in indices.iter().enumerate() {
             let modifiers = if at == 0 { egui::Modifiers::NONE } else { egui::Modifiers::COMMAND };
             artboard_deletion_click(app, ctx, super::super::artboards::show, Some(&format!("Artboard {}", i + 1)), modifiers);
@@ -1306,7 +1318,7 @@ mod tests {
         assert_eq!(super::super::artboards::picked(app, count), indices, "the rows are selected before deletion");
     }
 
-    fn assert_artboard_deletion(draw: fn(&mut VectorcraftApp, &mut Ui), label: Option<&str>) {
+    fn assert_artboard_deletion(draw: fn(&mut OracleVectorApp, &mut Ui), label: Option<&str>) {
         for indices in [vec![0, 2], vec![2], vec![3], vec![2, 3], vec![0, 1, 2, 3]] {
             let mut app = artboard_deletion_app(4);
             let ctx = egui::Context::default();
@@ -1360,7 +1372,7 @@ mod tests {
         }
     }
 
-    fn assert_artboard_deletion_guard(draw: fn(&mut VectorcraftApp, &mut Ui), label: Option<&str>) {
+    fn assert_artboard_deletion_guard(draw: fn(&mut OracleVectorApp, &mut Ui), label: Option<&str>) {
         let mut app = artboard_deletion_app(1);
         // Leave a redo entry to ensure a disabled action preserves both history branches.
         app.run("artboard.setProps", json!({"index": 0, "name": "Temporary"})).unwrap();
@@ -1418,7 +1430,7 @@ mod tests {
     }
 
     /// Click the actual panel footer's New button (24 points, with a 4-point gap before Trash).
-    fn artboard_history_new(app: &mut VectorcraftApp, ctx: &egui::Context) {
+    fn artboard_history_new(app: &mut OracleVectorApp, ctx: &egui::Context) {
         let mut bounds = Rect::NOTHING;
         for _ in 0..2 {
             let raw = egui::RawInput { screen_rect: Some(Rect::from_min_size(Pos2::ZERO, vec2(300.0, 700.0))), ..Default::default() };
@@ -1441,7 +1453,7 @@ mod tests {
     }
 
     /// Keep the panel and its natural focus in the same context throughout Undo and deletion.
-    fn artboard_history_key(app: &mut VectorcraftApp, ctx: &egui::Context, key: egui::Key, modifiers: egui::Modifiers) {
+    fn artboard_history_key(app: &mut OracleVectorApp, ctx: &egui::Context, key: egui::Key, modifiers: egui::Modifiers) {
         for pressed in [true, false] {
             let events = vec![Event::ModifiersChanged(modifiers), Event::Key { key, physical_key: None, pressed, repeat: false, modifiers }];
             let raw = egui::RawInput { screen_rect: Some(Rect::from_min_size(Pos2::ZERO, vec2(300.0, 700.0))), events, ..Default::default() };
@@ -1621,14 +1633,14 @@ mod tests {
     /// (only with several artboards) and from Edit Artboards' Quick Actions.
     #[test]
     fn rearrange_all_opens_the_dialog() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 100})).unwrap();
         let ctx = egui::Context::default();
         assert!(!frame(&mut app, &ctx, vec![]).iter().any(|(t, _)| t == "Rearrange All"), "one artboard: nothing to rearrange");
         app.run("artboard.new", json!({})).unwrap();
         let texts = frame(&mut app, &ctx, vec![]);
         click(&mut app, &ctx, &texts, "Rearrange All");
-        let kind = |app: &VectorcraftApp| app.ui.dialog.as_ref().map(|d| d.kind.clone());
+        let kind = |app: &OracleVectorApp| app.ui.dialog.as_ref().map(|d| d.kind.clone());
         assert_eq!(kind(&app).as_deref(), Some(crate::dialogs::rearrange_artboards::KIND));
         app.ui.dialog = None;
         app.select_tool("artboard");
@@ -1641,7 +1653,7 @@ mod tests {
     /// orientation; the other orientation swaps its width and height, its corner staying put.
     #[test]
     fn edit_artboards_shows_the_preset_and_flips_the_orientation() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"preset": "Letter"})).unwrap();
         app.run("artboard.setProps", json!({"index": 0, "x": 10, "y": 20})).unwrap();
         app.select_tool("artboard");
@@ -1700,7 +1712,7 @@ mod tests {
         let before = boards(&app);
         let undo = app.session.doc().unwrap().history.undo.len();
         let ctx = egui::Context::default();
-        let portrait = |app: &mut VectorcraftApp| {
+        let portrait = |app: &mut OracleVectorApp| {
             frame(app, &ctx, vec![]);
             let texts = frame(app, &ctx, vec![]);
             let at = orientation_button(&ctx, &texts, false);
@@ -1738,7 +1750,7 @@ mod tests {
         let ctx = egui::Context::default();
         // A frame on a wide screen, with the texts of nested shapes too (the open list and its
         // submenu), and the center of `label` among them (menu items carry a check-mark column).
-        let run = |app: &mut VectorcraftApp, events: Vec<Event>| {
+        let run = |app: &mut OracleVectorApp, events: Vec<Event>| {
             fn walk(s: &egui::Shape, v: &mut Vec<(String, Rect)>) {
                 match s {
                     egui::Shape::Text(t) => v.push((t.galley.text().to_string(), Rect::from_min_size(t.pos, t.galley.size()))),
@@ -1778,7 +1790,7 @@ mod tests {
     /// (here the other orientation) takes the art on the artboard along.
     #[test]
     fn edit_artboards_scales_the_art_with_scale_artwork_with_artboard() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 100})).unwrap();
         let r = app.run("shape.rectangle", json!({"x": 20, "y": 20, "width": 40, "height": 40})).unwrap()["id"].as_u64().unwrap();
         app.select_tool("artboard");
@@ -1809,7 +1821,7 @@ mod tests {
         let d = &app.session.active().unwrap().doc;
         let ab = d.artboards[0].rect;
         assert_eq!((ab.width(), ab.height()), (100.0, 200.0));
-        let b = d.node(vectorcraft_doc::NodeId(r)).unwrap().geometric_bounds().unwrap();
+        let b = d.node(oracle_vector_doc::NodeId(r)).unwrap().geometric_bounds().unwrap();
         assert_eq!((b.x0, b.y0, b.width(), b.height()), (10.0, 40.0, 20.0, 80.0));
     }
 }

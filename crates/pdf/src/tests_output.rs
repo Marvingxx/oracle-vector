@@ -7,10 +7,10 @@ use std::sync::Arc;
 use craft_pdf::syntax::Pdf;
 use craft_pdf::syntax::object::{Array, Dict, Name, ObjectIdentifier, Stream};
 use serde_json::{Value, json};
-use vectorcraft_color::cms::{self, Cms, ColorSettings, DEVICE_CMYK, GENERIC_CMYK, SRGB};
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::{Appearance, ColorMode, Document, ImageBlob, ImageObject, Node, NodeKind};
-use vectorcraft_geom::{Affine, Rect, shapes};
+use oracle_vector_color::cms::{self, Cms, ColorSettings, DEVICE_CMYK, GENERIC_CMYK, SRGB};
+use oracle_vector_color::{Color, Paint};
+use oracle_vector_doc::{Appearance, ColorMode, Document, ImageBlob, ImageObject, Node, NodeKind};
+use oracle_vector_geom::{Affine, Rect, shapes};
 
 use crate::*;
 

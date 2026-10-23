@@ -1,15 +1,15 @@
 # Effects parity
 
-> **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-21 · **Change:** minor (3D: original Standard, Diffuse, Top Left and Right lighting presets; command access, effective-setting recognition and preview/history; scores and estimates unchanged; G2: Effect › Sketch › Note Paper; Halftone Pattern and Note Paper defaults documented as unverified VectorCraft choices; G2: Effect › Artistic › Smudge Stick, Sponge and Watercolor; Sketch › Bas Relief, Charcoal, Photocopy and Stamp, #2533; Photoshop filters 46/57, 11 remaining (8–14 h); G2: Sketch › Chrome; Sketch › Chalk & Charcoal, Graphic Pen and Reticulation and Artistic › Plastic Wrap, #2972, #2967, #2976, #3034: 37/57 Photoshop effects; 3D lighting: one to ten colored lights, smooth colored Inflate, legacy white-light appearance preserved; surface batching and restored seam minimum; scores and estimates unchanged; Zig Zag's Smooth points make a continuous wave, #2343; G2: Effect › Sketch › Halftone Pattern; Photoshop filters 46/57, 11 remaining (8–14 h); Round Corners also rounds corners where a curve meets a line or another curve, with Live Corners' cut; straight corners unchanged; score unchanged; Revolve: automatic smooth shading and default-on Cap with continuous rims; wide shadows and glows at high zoom, #1706; stacked Transform effects, #1705; 3D on nonzero compound paths, #1724; pattern tiles redraw, #1723; scores unchanged; Roughen's Smooth turn-backs, #1643; Scribble per region, #1648; score unchanged; Warp Arc bends in the object's proportions, #1578; Zig Zag ridges evenly spaced, #1558; effect parameters checked, #1592; score unchanged; raster effects after a pattern, radial or freeform gradient fill export at their place and size, #1536; score unchanged; 3D and Materials on outlined type and other shapes of many small curves, #1481; Twist 0° to 360°, #1524; twisted walls keep their faces, #1525; score unchanged; 3D and Materials: Inflate takes Twist, Taper and Cap; score unchanged; 3D and Materials: Perspective as the documented 0°–160° angle; 3D and Materials: the documented light settings) · **Target:** Adobe Illustrator 2026 (30.x)
+> **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-21 · **Change:** minor (3D: original Standard, Diffuse, Top Left and Right lighting presets; command access, effective-setting recognition and preview/history; scores and estimates unchanged; G2: Effect › Sketch › Note Paper; Halftone Pattern and Note Paper defaults documented as unverified Oracle Vector choices; G2: Effect › Artistic › Smudge Stick, Sponge and Watercolor; Sketch › Bas Relief, Charcoal, Photocopy and Stamp, #2533; Photoshop filters 46/57, 11 remaining (8–14 h); G2: Sketch › Chrome; Sketch › Chalk & Charcoal, Graphic Pen and Reticulation and Artistic › Plastic Wrap, #2972, #2967, #2976, #3034: 37/57 Photoshop effects; 3D lighting: one to ten colored lights, smooth colored Inflate, legacy white-light appearance preserved; surface batching and restored seam minimum; scores and estimates unchanged; Zig Zag's Smooth points make a continuous wave, #2343; G2: Effect › Sketch › Halftone Pattern; Photoshop filters 46/57, 11 remaining (8–14 h); Round Corners also rounds corners where a curve meets a line or another curve, with Live Corners' cut; straight corners unchanged; score unchanged; Revolve: automatic smooth shading and default-on Cap with continuous rims; wide shadows and glows at high zoom, #1706; stacked Transform effects, #1705; 3D on nonzero compound paths, #1724; pattern tiles redraw, #1723; scores unchanged; Roughen's Smooth turn-backs, #1643; Scribble per region, #1648; score unchanged; Warp Arc bends in the object's proportions, #1578; Zig Zag ridges evenly spaced, #1558; effect parameters checked, #1592; score unchanged; raster effects after a pattern, radial or freeform gradient fill export at their place and size, #1536; score unchanged; 3D and Materials on outlined type and other shapes of many small curves, #1481; Twist 0° to 360°, #1524; twisted walls keep their faces, #1525; score unchanged; 3D and Materials: Inflate takes Twist, Taper and Cap; score unchanged; 3D and Materials: Perspective as the documented 0°–160° angle; 3D and Materials: the documented light settings) · **Target:** Adobe Illustrator 2026 (30.x)
 
-Every entry of Illustrator's Effect menu, by its public feature name, against VectorCraft's effects catalogue
+Every entry of Illustrator's Effect menu, by its public feature name, against Oracle Vector's effects catalogue
 (`effect_catalog()` in `crates/effects/src/lib.rs`) and the Effect menu built from it
 (`crates/ui-egui/src/menus.rs`). Counts are **measured** from the catalogue; "depth" notes are estimated.
 Part of [target-app-parity.md](target-app-parity.md); open work is in [gaps.md](gaps.md).
 
 ## Summary
 
-| Group | Illustrator | VectorCraft | % | Remaining (h) |
+| Group | Illustrator | Oracle Vector | % | Remaining (h) |
 |---|---:|---:|---:|---:|
 | Illustrator effects (vector and stylize) | 50 | 46 | 92% | 6–10 |
 | Photoshop effects (raster, Effect Gallery) | 57 | 54 | 95% | 2–4 |
@@ -50,7 +50,7 @@ its resolution, PDF export warns once per object with the requested and the lowe
 | Video | De-Interlace, NTSC Colors | 2/2 | — |
 | Effect Gallery | the combined browser and stack dialog | 0/1 | all |
 
-The pixel-filter pipeline (`vectorcraft_effects::pixel`) is in place: each new filter is one function, a
+The pixel-filter pipeline (`oracle_vector_effects::pixel`) is in place: each new filter is one function, a
 catalogue row, a menu entry and translations. Measured throughput: 0.7–1.2 agent hours per filter
 (see [calibration](target-app-parity.md#calibration)), so the 3 missing filters are ~2–4 h and the Effect
 Gallery dialog another 4–6 h. These parallelize well across agents.
@@ -67,7 +67,7 @@ quieter highlight grain. Grain strength stays even across shadows and midtones a
 mid-grey to a quarter-strength floor at full Intensity before highlight headroom; cream retains
 soft grain, black takes light speckles and white stays clean. The tonal curve and endpoint behaviour
 are interpretations, not verified proprietary behaviour. Saturated colour channels may clip. The parameter
-ranges and defaults are chosen for VectorCraft, not asserted as measured proprietary defaults.
+ranges and defaults are chosen for Oracle Vector, not asserted as measured proprietary defaults.
 
 Cutout, Neon Glow and Poster Edges (`artistic.cutout`, `artistic.neonGlow`, `artistic.posterEdges`)
 follow the same two public references, with original algorithms. Cutout softens the object's colours (Edge Simplicity, less with Edge
@@ -80,7 +80,7 @@ from its light areas (positive Glow Size) or its dark ones (negative), spread by
 strong as Glow Brightness; with no foreground and background colours in Illustrator's model, the
 glow colour is the effect's own parameter. All three keep coverage, work in document units at any
 Document Raster Effects resolution, and use the generic effect dialog with live preview. Ranges and
-defaults are chosen for VectorCraft. Evidence: `crates/effects/src/pixel/artistic.rs`, the
+defaults are chosen for Oracle Vector. Evidence: `crates/effects/src/pixel/artistic.rs`, the
 `artistic_*`, `cutout_*`, `poster_edges_*` and `neon_glow_*` tests in `crates/effects/src/pixel/tests.rs`,
 and `artistic_settings_survive_a_save_and_open` in `crates/engine/src/tests_rasterfilters.rs`.
 Smudge Stick (`artistic.smudgeStick`), Sponge (`artistic.sponge`) and Watercolor (`artistic.watercolor`),
@@ -89,7 +89,7 @@ Effect › Artistic, are original visual approximations from the public descript
 [public Artistic filters guide](https://helpx.adobe.com/photoshop-elements/using/artistic-filters.html), not
 pixel-identical copies. Each has live preview, appearance editing, document-unit patterns that follow the
 object, bounded work per pixel and kept coverage (they paint nothing outside the object), and bakes to an
-image in SVG and PDF. Ranges and defaults are chosen for VectorCraft, not asserted as measured.
+image in SVG and PDF. Ranges and defaults are chosen for Oracle Vector, not asserted as measured.
 - Smudge Stick (Stroke Length 0–10, Highlight Area 0–20, Intensity 0–10): dark areas smudged along short
   diagonal strokes; light areas smudged with strokes twice as long and lightened towards white.
 - Sponge (Brush Size 0–10, Definition 0–25, Smoothness 1–15): the object softened, then lighter and darker
@@ -120,7 +120,7 @@ Effect › Artistic, are original visual approximations from the public descript
 [public Artistic filters guide](https://helpx.adobe.com/photoshop-elements/using/artistic-filters.html), not
 pixel-identical copies. Each has live preview, appearance editing, document-unit patterns that follow the
 object, bounded work per pixel and kept coverage (they paint nothing outside the object), and bakes to an
-image in SVG and PDF. Ranges and defaults are chosen for VectorCraft, not asserted as measured.
+image in SVG and PDF. Ranges and defaults are chosen for Oracle Vector, not asserted as measured.
 - Smudge Stick (Stroke Length 0–10, Highlight Area 0–20, Intensity 0–10): dark areas smudged along short
   diagonal strokes; light areas smudged with strokes twice as long and lightened towards white.
 - Sponge (Brush Size 0–10, Definition 0–25, Smoothness 1–15): the object softened, then lighter and darker
@@ -145,16 +145,16 @@ live. Behaviour is an original visual approximation based on
 [Illustrator's public effects reference](https://helpx.adobe.com/illustrator/using/summary-effects.html)
 and the [public Sketch filters guide](https://helpx.adobe.com/photoshop-elements/using/sketch-filters.html),
 not a pixel-identical proprietary implementation; the parameter ranges and defaults are chosen for
-VectorCraft, not asserted as measured proprietary defaults. Tests: `pixel::tests_sketch::*`,
+Oracle Vector, not asserted as measured proprietary defaults. Tests: `pixel::tests_sketch::*`,
 `tests_rasterfilters`, `command_sweep`, `dialogs::tests::raster_filter_dialogs_preview_and_apply` and
 `tests_labels::effect_menu_lists_the_sketch_filters_*`.
 
 Effect › Sketch › Halftone Pattern and Note Paper (`sketch.halftonePattern`, `sketch.notePaper`) are
 original black-and-white filters guided by [Illustrator's public Sketch effects summary](https://helpx.adobe.com/illustrator/using/summary-effects.html)
 and [effects overview](https://helpx.adobe.com/illustrator/using/effects.html) (Halftone Size in points at any Document Raster Effects resolution).
-The public help pages name each control but publish no numeric defaults or slider limits; VectorCraft's ranges
+The public help pages name each control but publish no numeric defaults or slider limits; Oracle Vector's ranges
 follow those control names and the emboss/halftone behaviour described there, while dialog defaults are chosen
-for VectorCraft and are not verified against proprietary defaults. Evidence: `crates/effects/src/pixel/sketch.rs`,
+for Oracle Vector and are not verified against proprietary defaults. Evidence: `crates/effects/src/pixel/sketch.rs`,
 `halftone_*` and `note_paper_*` in `crates/effects/src/pixel/tests.rs`, `SKETCH` and
 `halftone_pattern_settings_survive_a_save_and_open` in `crates/engine/src/tests_rasterfilters.rs`, and
 `tests_labels::effect_menu_lists_the_sketch_filters_between_sharpen_and_stylize`.
@@ -180,7 +180,7 @@ angular cut caps, exact visibility, 3D Classic, Turntable, 3D export) is 25–45
 |---|---|---|
 | 2026-10-21 | minor | 3D: original Standard, Diffuse, Top Left and Right lighting presets; command access, effective-setting recognition and preview/history; scores and estimates unchanged |
 | 2026-10-20 | minor | G2: Effect › Sketch › Water Paper (Fiber Length, Brightness, Contrast; colours flow on damp fibrous paper, defaults unverified, #2955); measured Photoshop filters 47/57, Sketch 12/14. |
-| 2026-10-20 | minor | G2: Effect › Sketch › Note Paper (Image Balance, Graininess, Relief; embossed tones on fibrous paper); Halftone Pattern and Note Paper parameter ranges follow public control names, numeric defaults are unverified VectorCraft choices (public help gives no numbers); measured Photoshop filters 46/57, Sketch 11/14. |
+| 2026-10-20 | minor | G2: Effect › Sketch › Note Paper (Image Balance, Graininess, Relief; embossed tones on fibrous paper); Halftone Pattern and Note Paper parameter ranges follow public control names, numeric defaults are unverified Oracle Vector choices (public help gives no numbers); measured Photoshop filters 46/57, Sketch 11/14. |
 | 2026-10-19 | minor | Sketch › Chalk & Charcoal, Graphic Pen and Reticulation and Artistic › Plastic Wrap landed (#2972, #2967, #2976, #3034): 36/57 Photoshop effects (estimated; defaults unverified) |
 | 2026-10-16 | minor | Zig Zag with Smooth points draws a continuous wave: every peak and valley is a smooth point with handles along the path, a third of the way to the next ridge, so each span follows a half cosine through the path instead of a straight diagonal with rounded tips, also at the ends of open paths and for ridges much taller than they are apart (#2343); score unchanged (estimated) |
 | 2026-10-16 | minor | G2: Effect › Artistic › Smudge Stick, Sponge and Watercolor (live, with their documented options; original approximations); measured Photoshop filters 36/57 with Cutout, Neon Glow and Poster Edges, 21 remaining (19–31 h). |

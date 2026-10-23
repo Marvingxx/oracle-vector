@@ -8,8 +8,8 @@
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
-use vectorcraft_color::Paint;
-use vectorcraft_doc::{AppearanceItem, Document, Node, NodeKind};
+use oracle_vector_color::Paint;
+use oracle_vector_doc::{AppearanceItem, Document, Node, NodeKind};
 
 use super::unique_name;
 

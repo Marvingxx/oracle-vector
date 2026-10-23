@@ -1,14 +1,14 @@
 [workspace]
 resolver = "3"
 members = ["crates/*", "apps/*", "xtask"]
-default-members = ["crates/*", "apps/vectorcraft", "apps/vectorcraft-cli", "xtask"]
+default-members = ["crates/*", "apps/oracle-vector", "apps/oracle-vector-cli", "xtask"]
 
 [workspace.package]
 version = "0.14.0"
 edition = "2024"
 license = "MIT OR Apache-2.0"
 rust-version = "1.95"
-repository = "https://github.com/storytold/vectorcraft"
+repository = "https://github.com/Marvingxx/oracle-vector"
 
 [workspace.dependencies]
 craft-pdf = { git = "https://github.com/storytold/craft-libs", rev = "ca50d63b773c99f96e75c77ce5a1d21e7c9cda0d", default-features = false, features = ["interpret", "write"] }
@@ -19,35 +19,35 @@ craft-ui = { git = "https://github.com/storytold/craft-libs", rev = "5c874d51eeb
 # desktop. The `egui` feature adds `craft_window::decorate`. (craft-libs#217.)
 craft-window = { git = "https://github.com/storytold/craft-libs", rev = "1f805378d454dac48b5c214029d254055fdf961b", features = ["egui"] }
 # internal
-vectorcraft-geom = { path = "crates/geom" }
-vectorcraft-color = { path = "crates/color" }
-vectorcraft-doc = { path = "crates/doc" }
-vectorcraft-pathops = { path = "crates/pathops" }
-vectorcraft-brush = { path = "crates/brush" }
-vectorcraft-trace = { path = "crates/trace" }
+oracle-vector-geom = { path = "crates/geom" }
+oracle-vector-color = { path = "crates/color" }
+oracle-vector-doc = { path = "crates/doc" }
+oracle-vector-pathops = { path = "crates/pathops" }
+oracle-vector-brush = { path = "crates/brush" }
+oracle-vector-trace = { path = "crates/trace" }
 # Without its default `bundled-fonts`: a crate that wants the fonts asks for them (the apps and
-# vectorcraft-testkit through the engine's `bundled-fonts`), so a library crate never forces them on
+# oracle-vector-testkit through the engine's `bundled-fonts`), so a library crate never forces them on
 # an embedder that supplies its fonts at run time.
-vectorcraft-text = { path = "crates/text", default-features = false }
-vectorcraft-effects = { path = "crates/effects" }
-vectorcraft-three-d = { path = "crates/three-d" }
-vectorcraft-render = { path = "crates/render" }
-vectorcraft-svg = { path = "crates/svg" }
-vectorcraft-pdf = { path = "crates/pdf" }
-vectorcraft-format = { path = "crates/format" }
-vectorcraft-tools = { path = "crates/tools" }
-# Without its default `bundled-fonts`, as vectorcraft-text: each crate that wants the fonts asks for
+oracle-vector-text = { path = "crates/text", default-features = false }
+oracle-vector-effects = { path = "crates/effects" }
+oracle-vector-three-d = { path = "crates/three-d" }
+oracle-vector-render = { path = "crates/render" }
+oracle-vector-svg = { path = "crates/svg" }
+oracle-vector-pdf = { path = "crates/pdf" }
+oracle-vector-format = { path = "crates/format" }
+oracle-vector-tools = { path = "crates/tools" }
+# Without its default `bundled-fonts`, as oracle-vector-text: each crate that wants the fonts asks for
 # them, so an embedder can build without them (docs/development.md › Leaving out the bundled fonts).
-vectorcraft-engine = { path = "crates/engine", default-features = false }
-vectorcraft-ui-egui = { path = "crates/ui-egui" }
-vectorcraft-mcp = { path = "crates/mcp" }
-vectorcraft-testkit = { path = "crates/testkit" }
-vectorcraft-cad = { path = "crates/cad" }
-vectorcraft-eps = { path = "crates/eps" }
-vectorcraft-metafile = { path = "crates/metafile" }
-vectorcraft-plugins = { path = "crates/plugins" }
-vectorcraft-affinity = { path = "crates/affinity" }
-vectorcraft-scriptcheck = { path = "crates/scriptcheck" }
+oracle-vector-engine = { path = "crates/engine", default-features = false }
+oracle-vector-ui-egui = { path = "crates/ui-egui" }
+oracle-vector-mcp = { path = "crates/mcp" }
+oracle-vector-testkit = { path = "crates/testkit" }
+oracle-vector-cad = { path = "crates/cad" }
+oracle-vector-eps = { path = "crates/eps" }
+oracle-vector-metafile = { path = "crates/metafile" }
+oracle-vector-plugins = { path = "crates/plugins" }
+oracle-vector-affinity = { path = "crates/affinity" }
+oracle-vector-scriptcheck = { path = "crates/scriptcheck" }
 
 # foundation
 kurbo = { version = "0.13", features = ["serde"] }
@@ -71,7 +71,7 @@ wat = "1.228"
 
 # rendering / formats
 # Without `text` (glyph runs, through glifo and a second skrifa): the renderer draws the outlines
-# vectorcraft-text gives it. The other default features stay.
+# oracle-vector-text gives it. The other default features stay.
 vello_cpu = { version = "0.2", default-features = false, features = ["std", "png", "u8_pipeline", "f32_pipeline"] }
 image = { version = "0.25", default-features = false, features = ["png", "jpeg", "webp", "gif", "tiff", "bmp", "tga"] }
 # Without `text` and the system fonts (fontdb, harfrust and skrifa, at other versions than ours):
@@ -93,7 +93,7 @@ ruzstd = { version = "0.9.1", default-features = false, features = ["std"] }
 hayro-ccitt = "0.3"
 jpeg-encoder = { version = "0.6", default-features = false, features = ["std"] }
 gif = { version = "0.14", default-features = false, features = ["std", "raii_no_panic"] }
-# CMYK image samples (vectorcraft-doc's cmyk module): the image crate's own TIFF and JPEG
+# CMYK image samples (oracle-vector-doc's cmyk module): the image crate's own TIFF and JPEG
 # decoders, read directly (the image crate converts CMYK to RGB).
 tiff = "0.11"
 zune-jpeg = "0.5"
@@ -113,7 +113,7 @@ unsafe_code = "deny"
 
 [workspace.lints.clippy]
 dbg_macro = "warn"
-# VectorCraft never crashes: shipped code returns `Result`/`Option` instead of panicking (see
+# Oracle Vector never crashes: shipped code returns `Result`/`Option` instead of panicking (see
 # AGENTS.md › Robustness). Tests may unwrap (clippy.toml).
 unwrap_used = "deny"
 expect_used = "deny"

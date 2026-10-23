@@ -2,10 +2,10 @@
 
 use egui::{Context, Id, Response};
 use serde_json::json;
-use vectorcraft_doc::NodeId;
-use vectorcraft_geom::Point;
+use oracle_vector_doc::NodeId;
+use oracle_vector_geom::Point;
 
-use crate::{VectorcraftApp, canvas, widgets};
+use crate::{OracleVectorApp, canvas, widgets};
 
 const HOVER_SECONDS: f64 = 0.4;
 
@@ -43,7 +43,7 @@ fn activated_at_id() -> Id {
 }
 
 /// Record the Selection drag source and grab point, clearing any previous tab-hover timer.
-pub(crate) fn begin(app: &VectorcraftApp, ctx: &Context, grab: Point) {
+pub(crate) fn begin(app: &OracleVectorApp, ctx: &Context, grab: Point) {
     ctx.data_mut(|d| {
         d.remove::<Origin>(origin_id());
         d.remove::<Hover>(hover_id());
@@ -57,7 +57,7 @@ pub(crate) fn begin(app: &VectorcraftApp, ctx: &Context, grab: Point) {
 }
 
 /// Called before panels. Cancelled or abandoned transfers must never reach a later mouse-up.
-pub(crate) fn cleanup(app: &VectorcraftApp, ctx: &Context) {
+pub(crate) fn cleanup(app: &OracleVectorApp, ctx: &Context) {
     // Activating a tab can scroll the strip or change title widths. A tab moving under a
     // stationary pointer must not start another hover; actual pointer movement rearms it.
     let at = ctx.input(|i| i.pointer.interact_pos());
@@ -92,7 +92,7 @@ pub(crate) fn cleanup(app: &VectorcraftApp, ctx: &Context) {
 }
 
 /// Hover uses `contains_pointer`: the source canvas still owns egui's dragged widget.
-pub(crate) fn hover_tab(app: &mut VectorcraftApp, resp: &Response, index: usize, close: egui::Rect) -> bool {
+pub(crate) fn hover_tab(app: &mut OracleVectorApp, resp: &Response, index: usize, close: egui::Rect) -> bool {
     let ctx = &resp.ctx;
     let eligible = resp.contains_pointer()
         && ctx
@@ -167,7 +167,7 @@ pub(crate) fn finish_tabs(ctx: &Context, hovering: bool) {
 }
 
 /// Release artwork into the active canvas; returning to the source resumes Move or Alt-copy.
-pub(crate) fn drop_on_canvas(app: &mut VectorcraftApp, resp: &Response, xf: &canvas::Xf) {
+pub(crate) fn drop_on_canvas(app: &mut OracleVectorApp, resp: &Response, xf: &canvas::Xf) {
     let Some(payload) = egui::DragAndDrop::payload::<Artwork>(&resp.ctx) else {
         return;
     };

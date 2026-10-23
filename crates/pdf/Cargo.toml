@@ -1,20 +1,20 @@
 [package]
-name = "vectorcraft-pdf"
+name = "oracle-vector-pdf"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "VectorCraft PDF export and import"
+description = "Oracle Vector PDF export and import"
 
 [lints]
 workspace = true
 
 [dependencies]
-vectorcraft-geom = { workspace = true }
-vectorcraft-doc = { workspace = true }
-vectorcraft-effects = { workspace = true }
-vectorcraft-brush = { workspace = true }
-vectorcraft-color = { workspace = true }
-vectorcraft-text = { workspace = true }
+oracle-vector-geom = { workspace = true }
+oracle-vector-doc = { workspace = true }
+oracle-vector-effects = { workspace = true }
+oracle-vector-brush = { workspace = true }
+oracle-vector-color = { workspace = true }
+oracle-vector-text = { workspace = true }
 skrifa = { workspace = true }
 kurbo = { workspace = true }
 thiserror = { workspace = true }
@@ -36,9 +36,9 @@ md-5 = { version = "0.10", default-features = false }
 sha2 = { version = "0.10", default-features = false }
 
 [dev-dependencies]
-vectorcraft-testkit = { workspace = true }
+oracle-vector-testkit = { workspace = true }
 # A variable font built in code (no font file is committed).
-vectorcraft-text = { workspace = true, features = ["test-fonts"] }
+oracle-vector-text = { workspace = true, features = ["test-fonts"] }
 serde_json = { workspace = true }
 # `draw_text`, to write test files with live text as other writers do.
 krilla = { workspace = true, features = ["simple-text"] }

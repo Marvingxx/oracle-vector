@@ -1,6 +1,6 @@
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::{Appearance, Node};
-use vectorcraft_geom::shapes;
+use oracle_vector_color::{Color, Paint};
+use oracle_vector_doc::{Appearance, Node};
+use oracle_vector_geom::shapes;
 
 use super::png::{PngOptions, encode_indexed};
 use super::quantize::{Dither, Indexed, PaletteOptions, Reduction, quantize};

@@ -12,14 +12,14 @@
 //! Scissors: click a path to split it there.
 
 use serde_json::json;
-use vectorcraft_doc::NodeId;
-use vectorcraft_geom::Point;
+use oracle_vector_doc::NodeId;
+use oracle_vector_geom::Point;
 
 use super::{hit_anchor, hit_segment, insert_anchor, remove_anchor};
 use crate::direct::hit_handle;
 use crate::guides::HandleSnap;
 use crate::{Action, Cursor, Mods, Overlay, PointerEvent, PointerKind, Tool, ToolContext};
-use vectorcraft_geom::constrain_angle_from;
+use oracle_vector_geom::constrain_angle_from;
 
 #[derive(Clone, Copy, Debug)]
 enum State {
@@ -105,7 +105,7 @@ impl AnchorTool {
     }
 
     /// Nearest point of this eligible spine, in document coordinates.
-    fn spine_point(path: &vectorcraft_geom::PathData, p: Point, tol: f64) -> Option<usize> {
+    fn spine_point(path: &oracle_vector_geom::PathData, p: Point, tol: f64) -> Option<usize> {
         path.anchors()
             .filter(|(si, _, a)| *si == 0 && a.p.distance(p) <= tol)
             .min_by(|a, b| a.2.p.distance(p).total_cmp(&b.2.p.distance(p)))
@@ -113,7 +113,7 @@ impl AnchorTool {
     }
 
     /// Nearest shown handle, only when closer than its own anchor (short handles).
-    fn spine_handle(cx: &ToolContext, path: &vectorcraft_geom::PathData, p: Point, tol: f64) -> Option<(usize, bool)> {
+    fn spine_handle(cx: &ToolContext, path: &oracle_vector_geom::PathData, p: Point, tol: f64) -> Option<(usize, bool)> {
         let anchors: Vec<_> = path.anchors().filter(|(si, _, _)| *si == 0).collect();
         if !cx.handles_multiple && anchors.len() > 1 {
             return None;
@@ -217,7 +217,7 @@ impl AnchorTool {
     }
 
     /// How far a Shift-dragged anchor has gone: Shift still held keeps it at 45° steps.
-    fn move_delta(cx: &ToolContext, start: Point, p: Point, shift: bool) -> vectorcraft_geom::Vec2 {
+    fn move_delta(cx: &ToolContext, start: Point, p: Point, shift: bool) -> oracle_vector_geom::Vec2 {
         if shift { constrain_angle_from(p - start, 45.0, cx.constrain_angle) } else { p - start }
     }
 
@@ -502,8 +502,8 @@ pub(crate) fn press_cursor(cx: &ToolContext, p: Point) -> Cursor {
 mod tests {
     use super::*;
     use crate::testutil::*;
-    use vectorcraft_doc::Selection;
-    use vectorcraft_geom::{Anchor, ParamCurve};
+    use oracle_vector_doc::Selection;
+    use oracle_vector_geom::{Anchor, ParamCurve};
 
     /// The Anchor Point tool has its own caret cursor, not the Pen's start-a-path one, and over a
     /// segment the Reshape Segment cursor, kept while the segment is dragged.
@@ -526,23 +526,23 @@ mod tests {
 
     /// Selected three-anchor blend spine; the end anchors stay pinned to the
     /// centres of the two key objects.
-    fn blend_spine_doc(smooth: bool) -> (vectorcraft_doc::Document, NodeId, Selection) {
+    fn blend_spine_doc(smooth: bool) -> (oracle_vector_doc::Document, NodeId, Selection) {
         let (mut d, _) = doc_with_rect();
         let layer = d.layers[0].id;
         let (id, first, last) = (d.alloc_id(), d.alloc_id(), d.alloc_id());
         let key = |id, x| {
-            let path = vectorcraft_geom::shapes::rectangle(vectorcraft_geom::Rect::new(x, 300.0, x + 20.0, 320.0));
-            std::sync::Arc::new(vectorcraft_doc::Node::path(id, path, vectorcraft_doc::Appearance::default_art()))
+            let path = oracle_vector_geom::shapes::rectangle(oracle_vector_geom::Rect::new(x, 300.0, x + 20.0, 320.0));
+            std::sync::Arc::new(oracle_vector_doc::Node::path(id, path, oracle_vector_doc::Appearance::default_art()))
         };
-        let mut path = vectorcraft_geom::SubPath::polyline(&[Point::new(110.0, 310.0), Point::new(160.0, 310.0), Point::new(210.0, 310.0)], false);
+        let mut path = oracle_vector_geom::SubPath::polyline(&[Point::new(110.0, 310.0), Point::new(160.0, 310.0), Point::new(210.0, 310.0)], false);
         if smooth {
             path.anchors[1] = Anchor::smooth(Point::new(160.0, 310.0), Point::new(190.0, 330.0));
         }
         let spec =
-            vectorcraft_doc::live::BlendSpec { spine: Some(vectorcraft_geom::PathData::single(path)), key_anchors: vec![0, 2], ..Default::default() };
-        let blend = vectorcraft_doc::Node::new(
+            oracle_vector_doc::live::BlendSpec { spine: Some(oracle_vector_geom::PathData::single(path)), key_anchors: vec![0, 2], ..Default::default() };
+        let blend = oracle_vector_doc::Node::new(
             id,
-            vectorcraft_doc::NodeKind::Blend { children: vec![key(first, 100.0), key(last, 200.0)], spec: Box::new(spec) },
+            oracle_vector_doc::NodeKind::Blend { children: vec![key(first, 100.0), key(last, 200.0)], spec: Box::new(spec) },
         );
         d.insert(Some(layer), 1, blend).unwrap();
         let mut selected = Selection::default();
@@ -554,8 +554,8 @@ mod tests {
     /// of selection insertion order; cursor and emitted command must agree.
     #[test]
     fn overlapping_path_and_blend_follow_selection_then_stacking() {
-        use vectorcraft_doc::{Appearance, Node};
-        use vectorcraft_geom::{PathData, SubPath};
+        use oracle_vector_doc::{Appearance, Node};
+        use oracle_vector_geom::{PathData, SubPath};
         for path_on_top in [false, true] {
             for path_selected in [false, true] {
                 for blend_first in [false, true] {
@@ -575,9 +575,9 @@ mod tests {
                         let (mut d, mut sel) = (d.clone(), sel.clone());
                         let path = d.alloc_id();
                         let points = if path_is_segment {
-                            vec![at - vectorcraft_geom::Vec2::new(0.0, 30.0), at + vectorcraft_geom::Vec2::new(0.0, 30.0)]
+                            vec![at - oracle_vector_geom::Vec2::new(0.0, 30.0), at + oracle_vector_geom::Vec2::new(0.0, 30.0)]
                         } else {
-                            vec![at, at + vectorcraft_geom::Vec2::new(0.0, 60.0)]
+                            vec![at, at + oracle_vector_geom::Vec2::new(0.0, 60.0)]
                         };
                         let node = Node::path(path, PathData::single(SubPath::polyline(&points, false)), Appearance::default_art());
                         d.insert(Some(d.layers[0].id), if path_on_top { 2 } else { 1 }, node).unwrap();
@@ -677,16 +677,16 @@ mod tests {
         let layer = d.layers[0].id;
         let (id, first, last) = (d.alloc_id(), d.alloc_id(), d.alloc_id());
         let key = |id, x| {
-            let path = vectorcraft_geom::shapes::rectangle(vectorcraft_geom::Rect::new(x, 300.0, x + 20.0, 320.0));
-            std::sync::Arc::new(vectorcraft_doc::Node::path(id, path, vectorcraft_doc::Appearance::default_art()))
+            let path = oracle_vector_geom::shapes::rectangle(oracle_vector_geom::Rect::new(x, 300.0, x + 20.0, 320.0));
+            std::sync::Arc::new(oracle_vector_doc::Node::path(id, path, oracle_vector_doc::Appearance::default_art()))
         };
-        let mut path = vectorcraft_geom::SubPath::polyline(&[Point::new(110.0, 310.0), Point::new(160.0, 310.0), Point::new(210.0, 310.0)], false);
+        let mut path = oracle_vector_geom::SubPath::polyline(&[Point::new(110.0, 310.0), Point::new(160.0, 310.0), Point::new(210.0, 310.0)], false);
         path.anchors[1] = Anchor::smooth(Point::new(160.0, 310.0), Point::new(162.0, 310.0));
         let spec =
-            vectorcraft_doc::live::BlendSpec { spine: Some(vectorcraft_geom::PathData::single(path)), key_anchors: vec![0, 2], ..Default::default() };
-        let blend = vectorcraft_doc::Node::new(
+            oracle_vector_doc::live::BlendSpec { spine: Some(oracle_vector_geom::PathData::single(path)), key_anchors: vec![0, 2], ..Default::default() };
+        let blend = oracle_vector_doc::Node::new(
             id,
-            vectorcraft_doc::NodeKind::Blend { children: vec![key(first, 100.0), key(last, 200.0)], spec: Box::new(spec) },
+            oracle_vector_doc::NodeKind::Blend { children: vec![key(first, 100.0), key(last, 200.0)], spec: Box::new(spec) },
         );
         d.insert(Some(layer), 1, blend).unwrap();
         let mut selected = Selection::default();
@@ -883,10 +883,10 @@ mod tests {
         let (mut d, _) = doc_with_rect();
         let l = d.layers[0].id;
         let id = d.alloc_id();
-        let mut sp = vectorcraft_geom::SubPath::polyline(&[Point::new(100.0, 300.0), Point::new(200.0, 300.0), Point::new(300.0, 300.0)], false);
-        sp.anchors[1] = vectorcraft_geom::Anchor::smooth(Point::new(200.0, 300.0), Point::new(240.0, 300.0));
-        let path = vectorcraft_geom::PathData::single(sp);
-        d.insert(Some(l), 1, vectorcraft_doc::Node::path(id, path, vectorcraft_doc::Appearance::default_art())).unwrap();
+        let mut sp = oracle_vector_geom::SubPath::polyline(&[Point::new(100.0, 300.0), Point::new(200.0, 300.0), Point::new(300.0, 300.0)], false);
+        sp.anchors[1] = oracle_vector_geom::Anchor::smooth(Point::new(200.0, 300.0), Point::new(240.0, 300.0));
+        let path = oracle_vector_geom::PathData::single(sp);
+        d.insert(Some(l), 1, oracle_vector_doc::Node::path(id, path, oracle_vector_doc::Appearance::default_art())).unwrap();
         let mut s = Selection::default();
         s.set([id]);
         let p = paint();
@@ -917,10 +917,10 @@ mod tests {
         let (mut d, _) = doc_with_rect();
         let l = d.layers[0].id;
         let id = d.alloc_id();
-        let mut sp = vectorcraft_geom::SubPath::polyline(&[Point::new(100.0, 300.0), Point::new(200.0, 300.0), Point::new(300.0, 300.0)], false);
-        sp.anchors[1] = vectorcraft_geom::Anchor::smooth(Point::new(200.0, 300.0), Point::new(240.0, 320.0));
-        let path = vectorcraft_geom::PathData::single(sp);
-        d.insert(Some(l), 1, vectorcraft_doc::Node::path(id, path, vectorcraft_doc::Appearance::default_art())).unwrap();
+        let mut sp = oracle_vector_geom::SubPath::polyline(&[Point::new(100.0, 300.0), Point::new(200.0, 300.0), Point::new(300.0, 300.0)], false);
+        sp.anchors[1] = oracle_vector_geom::Anchor::smooth(Point::new(200.0, 300.0), Point::new(240.0, 320.0));
+        let path = oracle_vector_geom::PathData::single(sp);
+        d.insert(Some(l), 1, oracle_vector_doc::Node::path(id, path, oracle_vector_doc::Appearance::default_art())).unwrap();
         let mut s = Selection::default();
         s.set([id]);
         let p = paint();
@@ -939,7 +939,7 @@ mod tests {
         assert!(t.pointer(&cx, &PointerEvent::new(PointerKind::Drag, 160.5, 280.5)).is_empty());
         assert_eq!(t.pointer(&cx, &PointerEvent::new(PointerKind::Up, 160.5, 280.5)), retract("in"));
         // The command leaves the other handle where it was.
-        let mut a = vectorcraft_geom::Anchor::smooth(Point::new(200.0, 300.0), Point::new(240.0, 320.0));
+        let mut a = oracle_vector_geom::Anchor::smooth(Point::new(200.0, 300.0), Point::new(240.0, 320.0));
         a.set_handle(true, a.p, true);
         assert!(!a.has_out());
         assert_eq!(a.h_in, Point::new(160.0, 280.0));
@@ -953,10 +953,10 @@ mod tests {
         let (mut d, _) = doc_with_rect();
         let l = d.layers[0].id;
         let id = d.alloc_id();
-        let mut sp = vectorcraft_geom::SubPath::polyline(&[Point::new(100.0, 300.0), Point::new(200.0, 300.0), Point::new(300.0, 300.0)], false);
-        sp.anchors[1] = vectorcraft_geom::Anchor::smooth(Point::new(200.0, 300.0), Point::new(240.0, 320.0));
-        let path = vectorcraft_geom::PathData::single(sp);
-        d.insert(Some(l), 1, vectorcraft_doc::Node::path(id, path, vectorcraft_doc::Appearance::default_art())).unwrap();
+        let mut sp = oracle_vector_geom::SubPath::polyline(&[Point::new(100.0, 300.0), Point::new(200.0, 300.0), Point::new(300.0, 300.0)], false);
+        sp.anchors[1] = oracle_vector_geom::Anchor::smooth(Point::new(200.0, 300.0), Point::new(240.0, 320.0));
+        let path = oracle_vector_geom::PathData::single(sp);
+        d.insert(Some(l), 1, oracle_vector_doc::Node::path(id, path, oracle_vector_doc::Appearance::default_art())).unwrap();
         let s = Selection::default();
         let p = paint();
         let cx = cx(&d, &s, &p);
@@ -989,8 +989,8 @@ mod tests {
         let (mut d, _) = doc_with_rect();
         let l = d.layers[0].id;
         let id = d.alloc_id();
-        let sp = vectorcraft_geom::SubPath::polyline(&[Point::new(100.0, 300.0), Point::new(200.0, 300.0)], false);
-        d.insert(Some(l), 1, vectorcraft_doc::Node::path(id, vectorcraft_geom::PathData::single(sp), vectorcraft_doc::Appearance::default_art()))
+        let sp = oracle_vector_geom::SubPath::polyline(&[Point::new(100.0, 300.0), Point::new(200.0, 300.0)], false);
+        d.insert(Some(l), 1, oracle_vector_doc::Node::path(id, oracle_vector_geom::PathData::single(sp), oracle_vector_doc::Appearance::default_art()))
             .unwrap();
         let s = Selection::default();
         let p = paint();

@@ -19,8 +19,8 @@
 //! drag does: add a width point on a stroke, or move or widen the one under it.
 
 use serde_json::json;
-use vectorcraft_doc::{Document, NodeId, NodeKind, StrokeLayer};
-use vectorcraft_geom::{Point, Vec2};
+use oracle_vector_doc::{Document, NodeId, NodeKind, StrokeLayer};
+use oracle_vector_geom::{Point, Vec2};
 
 use super::pathutil::{eval_fraction, left_normal, nearest_fraction};
 use super::{BLUE, diamond};
@@ -360,7 +360,7 @@ impl Tool for WidthTool {
                     Mode::Move | Mode::Copy => {
                         let Some(NodeKind::Path { path, .. }) = cx.doc.node(d.spot.id).map(|n| &n.kind) else { return vec![] };
                         let Some(sp) = path.subpaths.get(d.spot.sub) else { return vec![] };
-                        let Some((_, t, q, tan, _)) = nearest_fraction(&vectorcraft_geom::PathData::single(sp.clone()), p) else { return vec![] };
+                        let Some((_, t, q, tan, _)) = nearest_fraction(&oracle_vector_geom::PathData::single(sp.clone()), p) else { return vec![] };
                         (d.t, d.spot.p, d.spot.n) = (t, q, left_normal(tan));
                         // Dropped onto another width point (a single point only): it lands exactly
                         // there, making a discontinuous point.
@@ -469,9 +469,9 @@ impl Tool for WidthTool {
 mod tests {
     use super::*;
     use crate::testutil::*;
-    use vectorcraft_doc::{Appearance, Node, Selection, WidthProfile};
-    use vectorcraft_geom::Point;
-    use vectorcraft_geom::{PathData, SubPath};
+    use oracle_vector_doc::{Appearance, Node, Selection, WidthProfile};
+    use oracle_vector_geom::Point;
+    use oracle_vector_geom::{PathData, SubPath};
 
     fn doc_line() -> (Document, NodeId) {
         let mut d = Document::new(500.0, 500.0);
@@ -616,7 +616,7 @@ mod tests {
         let (c, a, b) = (d.alloc_id(), d.alloc_id(), d.alloc_id());
         let line = |id, y| {
             let path = PathData::single(SubPath::polyline(&[Point::new(100.0, y), Point::new(300.0, y)], false));
-            std::sync::Arc::new(Node::path(id, path, Appearance::basic(vectorcraft_color::Paint::None, vectorcraft_color::Paint::None, 0.0)))
+            std::sync::Arc::new(Node::path(id, path, Appearance::basic(oracle_vector_color::Paint::None, oracle_vector_color::Paint::None, 0.0)))
         };
         let mut comp = Node::new(c, NodeKind::Compound { children: vec![line(a, 200.0), line(b, 300.0)], rule: Default::default() });
         comp.appearance = Appearance::default_art().into();

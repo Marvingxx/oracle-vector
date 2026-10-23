@@ -4,16 +4,16 @@ use std::sync::Arc;
 
 use egui::{Event, Key, Modifiers, PointerButton, Pos2, Rect, vec2};
 use serde_json::json;
-use vectorcraft_doc::{Document, Selection};
-use vectorcraft_engine::Session;
-use vectorcraft_geom::Point;
+use oracle_vector_doc::{Document, Selection};
+use oracle_vector_engine::Session;
+use oracle_vector_geom::Point;
 
-use crate::{VectorcraftApp, canvas::Xf};
+use crate::{OracleVectorApp, canvas::Xf};
 
 const SELECTION_TOOLS: [&str; 3] = ["selection", "directSelection", "groupSelection"];
 
 struct GuideDrag {
-    app: VectorcraftApp,
+    app: OracleVectorApp,
     ctx: egui::Context,
     time: f64,
     vertical: bool,
@@ -33,7 +33,7 @@ struct GuideDrag {
 
 impl GuideDrag {
     fn new(tool: &'static str, vertical: bool, copy: bool, borrowed: bool) -> Self {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width":400,"height":300})).unwrap();
         app.run("view.guides.lock", json!({"locked":false})).unwrap();
         app.run("shape.rectangle", json!({"x":20,"y":20,"width":20,"height":20})).unwrap();

@@ -1,7 +1,7 @@
 # Windows 7 x64 compatibility build (experimental, unsupported)
 
 Windows 7 is not a supported platform. This build is experimental and community-maintained,
-and the VectorCraft maintainers have not verified it on Windows 7.
+and the Oracle Vector maintainers have not verified it on Windows 7.
 
 This separate build targets **64-bit Windows 7 SP1**. It uses OpenGL instead of wgpu,
 and omits the native AccessKit accessibility adapter. Printer discovery supports the
@@ -18,8 +18,8 @@ in Preferences and `WGPU_POWER_PREF` do not control this OpenGL build.
 
 In your GitHub fork, open **Actions → Windows 7 x64 compatibility → Run workflow** (it
 also runs weekly and on pull requests changing the compatibility path).
-When it succeeds, download the `vectorcraft-windows7-x64-portable` artifact, extract the
-contained portable ZIP, then run `vectorcraft.exe` on Windows 7. The CLI is included.
+When it succeeds, download the `oracle-vector-windows7-x64-portable` artifact, extract the
+contained portable ZIP, then run `oracle-vector.exe` on Windows 7. The CLI is included.
 No MSI is provided: the existing installer remains for modern Windows.
 
 To build locally, use a **Windows 10/11 build computer**, with Rust/rustup and Visual Studio
@@ -33,7 +33,7 @@ powershell -ExecutionPolicy Bypass -File packaging/windows/windows7.ps1
 
 Add `-Test` to also run the app and CLI tests on the build computer.
 
-Output: `dist/release/vectorcraft-windows7-x64-portable.zip`. The script installs the pinned
+Output: `dist/release/oracle-vector-windows7-x64-portable.zip`. The script installs the pinned
 nightly compiler and `rust-src`, rebuilds the standard library for
 `x86_64-win7-windows-msvc`, and links the C runtime statically. It never installs Rust on
 the Windows 7 machine. The optional `CRAFT_FONTS_DIR` setting works as in the normal build.
@@ -74,12 +74,12 @@ A successful build on the Windows 2022 CI runner does **not** prove Windows 7 ru
 compatibility. Before declaring support, test on a Windows 7 SP1 x64 machine and record
 its GPU, driver version, Windows updates and any missing-DLL/entry-point error:
 
-- Start `vectorcraft.exe`; verify a visible canvas, resizing, minimize/restore and exit.
-- Draw a shape, save a `.vectorcraft` document, close and reopen it.
-- Open `examples/dusk-poster.vectorcraft`; export PNG and PDF and inspect both.
+- Start `oracle-vector.exe`; verify a visible canvas, resizing, minimize/restore and exit.
+- Draw a shape, save a `.oracle-vector` document, close and reopen it.
+- Open `examples/dusk-poster.oracle-vector`; export PNG and PDF and inspect both.
 - Exercise native Open/Save dialogs, clipboard text/images and drag-and-drop.
 - Change a preference, exit and verify it survives restarting.
-- Run `vectorcraft-cli.exe --version` and a headless export from a Command Prompt in the
+- Run `oracle-vector-cli.exe --version` and a headless export from a Command Prompt in the
   extracted application folder.
 
 This build is experimental until that checklist passes. New dependency versions can add

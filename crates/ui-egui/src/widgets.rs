@@ -1,8 +1,8 @@
 //! Shared widgets. Colours come from theme tokens.
 
 use egui::{Color32, CornerRadius, Pos2, Rect, Response, Sense, Stroke, StrokeKind, Ui, Vec2, pos2, vec2};
-use vectorcraft_color::{BlendMode, Color, Paint};
-use vectorcraft_doc::Unit;
+use oracle_vector_color::{BlendMode, Color, Paint};
+use oracle_vector_doc::Unit;
 
 use crate::theme::{self, Tokens};
 use crate::{icons, scrub};
@@ -276,7 +276,7 @@ fn unit_field(
 /// A percentage typed alone (`50%`, `150 %`, `100/3%`) as that share of `value`; `None` for any
 /// other text. `Unit::parse` reads a bare percentage as nothing, having no value to take it of.
 fn share_of(text: &str, value: f64) -> Option<f64> {
-    let percent = vectorcraft_doc::parse_number(text.trim().strip_suffix('%')?)?;
+    let percent = oracle_vector_doc::parse_number(text.trim().strip_suffix('%')?)?;
     Some(value * percent / 100.0)
 }
 
@@ -681,7 +681,7 @@ pub fn mixed_field(
     let read = |buf: &str| {
         let suffix = suffix.trim();
         let bare = if suffix.is_empty() { buf.to_string() } else { buf.replace(suffix, "") };
-        vectorcraft_doc::parse_number(&bare.replace(['%', '°'], ""))
+        oracle_vector_doc::parse_number(&bare.replace(['%', '°'], ""))
     };
     let shown = value.map(show).unwrap_or_default();
     take_dialog_focus(ui, id, &shown);
@@ -728,12 +728,12 @@ pub fn paint_chip(ui: &Ui, rect: Rect, paint: &Paint) {
 
 /// Draw a gradient preview into `rect`, laid out as the gradient would be on an object of that
 /// shape: linear along its angle, radial from the centre, freeform from its colour points.
-pub fn gradient_chip(ui: &Ui, rect: Rect, gradient: &vectorcraft_color::GradientPaint) {
+pub fn gradient_chip(ui: &Ui, rect: Rect, gradient: &oracle_vector_color::GradientPaint) {
     if !(rect.width() > 0.0 && rect.height() > 0.0) {
         return;
     }
     // Freeform sampling is costly per spot, so it gets a coarse grid (the mesh interpolates).
-    let freeform = gradient.gradient.kind == vectorcraft_color::GradientKind::Freeform;
+    let freeform = gradient.gradient.kind == oracle_vector_color::GradientKind::Freeform;
     let max = if freeform { 16 } else { 64 };
     let cols = ((rect.width() / 3.0).ceil() as usize).clamp(1, max);
     let rows = ((rect.height() / 3.0).ceil() as usize).clamp(1, max);
@@ -756,21 +756,21 @@ pub fn gradient_chip(ui: &Ui, rect: Rect, gradient: &vectorcraft_color::Gradient
 
 /// The colours at the `(cols + 1) x (rows + 1)` grid points (row by row) of a `width` x `height`
 /// chip showing `gp` as it would look on an object of that size.
-fn gradient_chip_colors(gp: &vectorcraft_color::GradientPaint, width: f32, height: f32, cols: usize, rows: usize) -> Vec<Color32> {
-    use vectorcraft_color::{GradientGeom, GradientKind};
-    let b = vectorcraft_geom::kurbo::Rect::new(0.0, 0.0, width as f64, height as f64);
-    let rgb = |c: vectorcraft_color::Color| {
+fn gradient_chip_colors(gp: &oracle_vector_color::GradientPaint, width: f32, height: f32, cols: usize, rows: usize) -> Vec<Color32> {
+    use oracle_vector_color::{GradientGeom, GradientKind};
+    let b = oracle_vector_geom::kurbo::Rect::new(0.0, 0.0, width as f64, height as f64);
+    let rgb = |c: oracle_vector_color::Color| {
         let [r, g, b, _] = c.to_rgba8(1.0);
         Color32::from_rgb(r, g, b)
     };
     let at = |k: usize| {
         let (i, j) = (k % (cols + 1), k / (cols + 1));
-        vectorcraft_geom::kurbo::Point::new(b.width() * i as f64 / cols as f64, b.height() * j as f64 / rows as f64)
+        oracle_vector_geom::kurbo::Point::new(b.width() * i as f64 / cols as f64, b.height() * j as f64 / rows as f64)
     };
     let n = (cols + 1) * (rows + 1);
     if gp.gradient.kind == GradientKind::Freeform {
-        let Some(painted) = vectorcraft_color::freeform::painted_box(b) else { return vec![Color32::TRANSPARENT; n] };
-        let field = gp.freeform_on(painted).field(vectorcraft_color::freeform::spread_scale(painted));
+        let Some(painted) = oracle_vector_color::freeform::painted_box(b) else { return vec![Color32::TRANSPARENT; n] };
+        let field = gp.freeform_on(painted).field(oracle_vector_color::freeform::spread_scale(painted));
         return (0..n)
             .map(|k| {
                 let ([r, g, b], _) = field.sample(at(k));
@@ -2193,7 +2193,7 @@ pub enum PanelDrag {
     Paint { paint: Paint, params: serde_json::Value, rows: Option<SwatchRows>, library: Option<(String, String)> },
     /// The Appearance panel's thumbnail: art it is dropped on takes object `0`'s appearance
     /// (`appearance.copyFrom`); the Graphic Styles panel makes a style of it.
-    Appearance(vectorcraft_doc::NodeId),
+    Appearance(oracle_vector_doc::NodeId),
     /// A Graphic Styles panel style: art it is dropped on takes it (`graphicStyle.apply` with its
     /// `ids`); the panel moves it to where it is dropped.
     GraphicStyle(String),
@@ -2201,7 +2201,7 @@ pub enum PanelDrag {
     /// makes a style of the first object (`graphicStyle.new`), the Symbols panel a symbol of it all
     /// (`symbol.new`), the Swatches panel a pattern swatch of a copy (`object.pattern.make`) and the
     /// Brushes panel an Art brush (`brush.new`).
-    Art(Vec<vectorcraft_doc::NodeId>),
+    Art(Vec<oracle_vector_doc::NodeId>),
     /// A Symbols panel symbol: the canvas places an instance of it centred where it is dropped
     /// (`symbol.place`).
     Symbol(String),
@@ -2213,7 +2213,7 @@ pub enum PanelDrag {
     LibraryGraphic { library: String, item: String },
     /// A Libraries panel text style (`item`: its name in `library`), which the panel moves to where
     /// it is dropped.
-    LibraryItem { library: String, kind: vectorcraft_engine::cmd::library::ItemKind, item: String },
+    LibraryItem { library: String, kind: oracle_vector_engine::cmd::library::ItemKind, item: String },
     /// A Libraries panel group, by its header, which the panel moves to where it is dropped.
     LibraryGroup { library: String, group: String },
 }
@@ -2251,7 +2251,7 @@ impl PanelDrag {
         Self::Paint { params: crate::panels::paint_params(&paint), paint, rows: None, library: None }
     }
     /// The dragged colour (a solid paint's), which the Gradient panel's ramp takes.
-    pub fn color(&self) -> Option<vectorcraft_color::Color> {
+    pub fn color(&self) -> Option<oracle_vector_color::Color> {
         match self {
             Self::Paint { paint, .. } => paint.color(),
             _ => None,
@@ -2270,11 +2270,11 @@ pub fn drag_source(ui: &Ui, resp: &Response, drag: impl FnOnce() -> PanelDrag) {
 /// A small document rendered to a texture at the screen's pixel density (stroke previews: brushes,
 /// arrowheads), transparent where nothing paints. `build` makes the `w`×`h` pt document only when
 /// the texture for `key` at this size isn't cached yet.
-pub fn doc_preview(ui: &Ui, key: &str, size: Vec2, build: impl FnOnce(f64, f64) -> Option<vectorcraft_doc::Document>) -> Option<egui::TextureHandle> {
+pub fn doc_preview(ui: &Ui, key: &str, size: Vec2, build: impl FnOnce(f64, f64) -> Option<oracle_vector_doc::Document>) -> Option<egui::TextureHandle> {
     use std::cell::RefCell;
     use std::collections::HashMap;
     thread_local! {
-        static RENDERER: RefCell<vectorcraft_render::Renderer> = RefCell::new(vectorcraft_render::Renderer::new());
+        static RENDERER: RefCell<oracle_vector_render::Renderer> = RefCell::new(oracle_vector_render::Renderer::new());
         static CACHE: crate::graphics::TexCache<HashMap<String, egui::TextureHandle>> = crate::graphics::TexCache::default();
     }
     let ppp = ui.ctx().pixels_per_point() as f64;
@@ -2284,7 +2284,7 @@ pub fn doc_preview(ui: &Ui, key: &str, size: Vec2, build: impl FnOnce(f64, f64) 
         return Some(t);
     }
     let doc = build(w, h)?;
-    let img = RENDERER.with(|r| r.borrow_mut().render_region(&doc, vectorcraft_geom::Rect::new(0.0, 0.0, w, h), ppp, false));
+    let img = RENDERER.with(|r| r.borrow_mut().render_region(&doc, oracle_vector_geom::Rect::new(0.0, 0.0, w, h), ppp, false));
     let color = crate::canvas::color_image(&img);
     let tex = ui.ctx().load_texture(format!("preview-{key}"), color, egui::TextureOptions::LINEAR);
     CACHE.with(|c| {
@@ -2504,10 +2504,10 @@ pub fn layout_button(ui: &mut Ui, tiles: &[(u8, u8)], selected: bool, tip: &str)
 /// (artboard and page thumbnails).
 pub fn region_texture(
     ctx: &egui::Context,
-    renderer: &mut vectorcraft_render::Renderer,
+    renderer: &mut oracle_vector_render::Renderer,
     name: &str,
-    doc: &vectorcraft_doc::Document,
-    region: vectorcraft_geom::Rect,
+    doc: &oracle_vector_doc::Document,
+    region: oracle_vector_geom::Rect,
     px: f64,
 ) -> egui::TextureHandle {
     let scale = px / region.width().max(region.height()).max(1.0);
@@ -2810,7 +2810,7 @@ mod menu_room_tests {
 #[cfg(test)]
 mod gradient_chip_tests {
     use super::*;
-    use vectorcraft_color::{Gradient, GradientKind, GradientPaint};
+    use oracle_vector_color::{Gradient, GradientKind, GradientPaint};
 
     fn paint(kind: GradientKind, angle: f64) -> GradientPaint {
         let mut gp = GradientPaint::new(Gradient { kind, ..Gradient::default() });

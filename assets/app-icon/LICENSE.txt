@@ -1,8 +1,8 @@
-VectorCraft app icon (vectorcraft.svg, vectorcraft-small.svg and every file derived from them in this
-directory: vectorcraft-1024.png, vectorcraft-macos-512.png, vectorcraft.icns, vectorcraft.ico, hicolor/).
+Oracle Vector app icon (oracle-vector.svg, oracle-vector-small.svg and every file derived from them in this
+directory: oracle-vector-1024.png, oracle-vector-macos-512.png, oracle-vector.icns, oracle-vector.ico, hicolor/).
 
 Original artwork made for this project by the project owner, drawn in ArtCraft and vectorised for
-VectorCraft (no third-party material). Licensed like the rest of VectorCraft, under either of
+Oracle Vector (no third-party material). Licensed like the rest of Oracle Vector, under either of
 
   * Apache License, Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0)
   * MIT license (https://opensource.org/licenses/MIT)

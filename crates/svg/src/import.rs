@@ -6,12 +6,12 @@ use std::str::FromStr;
 use std::sync::Arc;
 
 use usvg::roxmltree;
-use vectorcraft_color::{BlendMode, Color, Gradient, GradientGeom, GradientKind, GradientPaint, GradientStop, Paint};
-use vectorcraft_doc::{
+use oracle_vector_color::{BlendMode, Color, Gradient, GradientGeom, GradientKind, GradientPaint, GradientStop, Paint};
+use oracle_vector_doc::{
     Appearance, AppearanceItem, Dash, Document, FillLayer, ImageBlob, ImageObject, LayerColor, LineCap, LineJoin, MAX_SVG_SCRIPTS, Node, NodeId,
     NodeKind, PatternDef, SVG_EVENTS, StrokeLayer, Unit,
 };
-use vectorcraft_geom::{Affine, BezPath, FillRule, PathData, Point, Rect, Vec2, shapes};
+use oracle_vector_geom::{Affine, BezPath, FillRule, PathData, Point, Rect, Vec2, shapes};
 
 use crate::export::Reuse;
 use crate::{ImportOptions, SvgError, fnv1a};
@@ -159,7 +159,7 @@ pub(crate) fn import(svg: &str, opts: &ImportOptions) -> Result<(Document, Vec<S
                 None => false,
             };
             let id = im.doc.alloc_id();
-            let preset = (im.doc.layers.len() % vectorcraft_doc::LAYER_COLORS.len()) as u8;
+            let preset = (im.doc.layers.len() % oracle_vector_doc::LAYER_COLORS.len()) as u8;
             let mut l = Node::layer(id, &name, LayerColor::Preset(preset));
             l.set_clips(clip);
             if let Some(ch) = l.children_mut() {
@@ -314,9 +314,9 @@ fn filter_names(filters: &[Arc<usvg::filter::Filter>]) -> String {
 
 /// Inkscape's pages (`<inkscape:page>` in its `<sodipodi:namedview>`, in user units) as artboards
 /// through `user` (user units → document points), named by their labels; `None` without any.
-fn inkscape_pages(xml: &roxmltree::Document, user: Affine) -> Option<Vec<vectorcraft_doc::Artboard>> {
+fn inkscape_pages(xml: &roxmltree::Document, user: Affine) -> Option<Vec<oracle_vector_doc::Artboard>> {
     let num = |n: roxmltree::Node, a: &str| n.attribute(a).and_then(|v| v.trim().parse::<f64>().ok()).filter(|v| v.is_finite());
-    let pages: Vec<vectorcraft_doc::Artboard> = xml
+    let pages: Vec<oracle_vector_doc::Artboard> = xml
         .descendants()
         .filter(|n| n.is_element() && n.tag_name().name() == "page" && n.tag_name().namespace() == Some(INKSCAPE))
         .filter_map(|p| {
@@ -328,7 +328,7 @@ fn inkscape_pages(xml: &roxmltree::Document, user: Affine) -> Option<Vec<vectorc
         })
         .take(1000)
         .enumerate()
-        .map(|(i, (p, r))| vectorcraft_doc::Artboard {
+        .map(|(i, (p, r))| oracle_vector_doc::Artboard {
             id: i as u32 + 1,
             name: p.attribute((INKSCAPE, "label")).filter(|l| !l.trim().is_empty()).map_or_else(|| format!("Artboard {}", i + 1), str::to_string),
             rect: r,
@@ -399,7 +399,7 @@ struct SymbolMade {
 /// `n` with every object id (its descendants' and its mask art's too) zeroed, to compare art.
 fn without_ids(n: &Node) -> Node {
     let mut n = n.clone();
-    n.id = vectorcraft_doc::NodeId(0);
+    n.id = oracle_vector_doc::NodeId(0);
     if let Some(m) = n.extras_if_any().and_then(|e| e.mask.as_deref_mut()) {
         m.art = Arc::new(without_ids(&m.art));
     }
@@ -468,7 +468,7 @@ fn mask_flags(xml: &roxmltree::Document) -> HashMap<String, (bool, bool)> {
 }
 
 /// Prefix of the ids [`prepass`] gives the elements it has to find again that have none.
-const MADE_UP_ID: &str = "vectorcraft-id-";
+const MADE_UP_ID: &str = "oracle-vector-id-";
 
 /// Is `id` one [`prepass`] made up (not a name)?
 fn made_up(id: &str) -> bool {
@@ -998,7 +998,7 @@ impl Importer {
                 let name = unique_name(self.name_of(&sym), |n| self.doc.symbols.iter().any(|s| s.name == n));
                 let reuse = Reuse::of(&self.doc, &art);
                 let made = SymbolMade { name: name.clone(), art: without_ids(&art), reuse };
-                self.doc.symbols.push(vectorcraft_doc::Symbol { name: name.clone(), art: Arc::new(art) });
+                self.doc.symbols.push(oracle_vector_doc::Symbol { name: name.clone(), art: Arc::new(art) });
                 self.symbols.insert(sym, made);
                 if !whole || !reuse.allows(xf) {
                     return None;
@@ -1172,7 +1172,7 @@ impl Importer {
     /// luminance is its alpha (images in it keep their colours, with a warning). A mask our export wrote gets its
     /// options back ([`mask_flags`]) and its art without what stands for them: the inverting
     /// filter group and the backdrop rectangle.
-    fn opacity_mask(&mut self, m: &usvg::Mask, ts: Affine, label: &str) -> Option<Box<vectorcraft_doc::OpacityMask>> {
+    fn opacity_mask(&mut self, m: &usvg::Mask, ts: Affine, label: &str) -> Option<Box<oracle_vector_doc::OpacityMask>> {
         if m.mask().is_some() {
             self.warn(format!("nested mask on {label} ignored"));
         }
@@ -1191,7 +1191,7 @@ impl Importer {
         }
         let mut children: Vec<Arc<Node>> = nodes.iter().filter_map(|c| self.node(c, ts)).map(Arc::new).collect();
         if m.kind() == usvg::MaskType::Alpha {
-            children.iter_mut().for_each(|c| vectorcraft_doc::node::whiten(Arc::make_mut(c)));
+            children.iter_mut().for_each(|c| oracle_vector_doc::node::whiten(Arc::make_mut(c)));
             let mut image = false;
             children.iter().for_each(|c| c.walk(&mut |n| image |= matches!(n.kind, NodeKind::Image(_))));
             if image {
@@ -1204,7 +1204,7 @@ impl Importer {
             1 => Arc::unwrap_or_clone(children.pop()?),
             _ => self.named("", NodeKind::Group { children, clip: false }),
         };
-        let mut mask = vectorcraft_doc::OpacityMask::new(art, clip);
+        let mut mask = oracle_vector_doc::OpacityMask::new(art, clip);
         mask.invert = invert;
         Some(Box::new(mask))
     }

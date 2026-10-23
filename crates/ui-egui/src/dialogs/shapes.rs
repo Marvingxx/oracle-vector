@@ -2,11 +2,11 @@
 //! Star, Line Segment and Arc tool options, and the two grids (size, divider counts and skews, switches).
 
 use serde_json::{Value, json};
-use vectorcraft_doc::Unit;
-use vectorcraft_geom::{Point, Rect};
+use oracle_vector_doc::Unit;
+use oracle_vector_geom::{Point, Rect};
 
 use super::{DialogSpec, form, run_and_close};
-use crate::VectorcraftApp;
+use crate::OracleVectorApp;
 use crate::panels::transform::artboard_rect;
 use crate::state::Dialog;
 use crate::widgets;
@@ -56,7 +56,7 @@ pub(crate) fn arc_pin_to_anchor(d: &mut Dialog) {
     let refi = d.fields.get("reference").and_then(|v| v.as_u64()).map(|n| (n as usize).min(8)).unwrap_or(0);
     let w = d.f64("lengthX", 100.0).abs().max(1e-9);
     let h = d.f64("lengthY", 100.0).abs().max(1e-9);
-    let rp = vectorcraft_geom::reference_point(Rect::new(0.0, 0.0, w, h), refi);
+    let rp = oracle_vector_geom::reference_point(Rect::new(0.0, 0.0, w, h), refi);
     d.fields.insert("x".into(), json!(anchor.x - rp.x));
     d.fields.insert("y".into(), json!(anchor.y - rp.y));
 }
@@ -70,13 +70,13 @@ pub(crate) fn grid_pin_to_anchor(d: &mut Dialog) {
     let anchor = Point::new(d.f64("__anchorX", d.f64("x", 0.0)), d.f64("__anchorY", d.f64("y", 0.0)));
     let refi = grid_reference(d);
     let (w, h) = (d.f64("width", 100.0), d.f64("height", 100.0));
-    let rp = vectorcraft_geom::reference_point(Rect::new(0.0, 0.0, w, h), refi);
+    let rp = oracle_vector_geom::reference_point(Rect::new(0.0, 0.0, w, h), refi);
     d.fields.insert("x".into(), json!(anchor.x - rp.x));
     d.fields.insert("y".into(), json!(anchor.y - rp.y));
 }
 
 /// The form's fields, then a grid's switches.
-fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
+fn body(app: &mut OracleVectorApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     let unit = app.session.general_unit();
     if matches!(d.kind.as_str(), "rectangularGrid" | "polarGrid") {
         ui.horizontal(|ui| {
@@ -166,7 +166,7 @@ fn box_origin(d: &Dialog) -> (f64, f64) {
     }
 }
 
-fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn confirm(app: &mut OracleVectorApp, d: &Dialog) -> Result<Value, String> {
     let count = match d.kind.as_str() {
         "polygon" => Some(("sides", 6.0, 3.0)),
         "star" => Some(("points", 5.0, 2.0)),
@@ -241,7 +241,7 @@ fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
     };
     // On the active plane while the perspective grid shows, sized in plane units from the click.
     let options = options.or_else(|| matches!(d.kind.as_str(), "rectangularGrid" | "polarGrid").then(|| params.clone()));
-    let result = match vectorcraft_engine::perspective_click(&app.session, id, &params, vectorcraft_geom::Point::new(x, y)) {
+    let result = match oracle_vector_engine::perspective_click(&app.session, id, &params, oracle_vector_geom::Point::new(x, y)) {
         Some((id, params)) => run_and_close(app, &id, params),
         None => run_and_close(app, id, params),
     }?;

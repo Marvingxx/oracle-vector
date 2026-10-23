@@ -13,7 +13,7 @@ use super::document_setup::check;
 use super::{DialogSpec, form, run_and_close};
 use crate::state::Dialog;
 use crate::theme::Tokens;
-use crate::{VectorcraftApp, widgets};
+use crate::{OracleVectorApp, widgets};
 
 /// The dialog kind of the freehand tools' Tool Options.
 pub const KIND: &str = "freehandOptions";
@@ -35,12 +35,12 @@ fn label_w(d: &Dialog) -> f32 {
 const FIDELITY: (f64, f64) = (0.5, 20.0);
 
 fn heading(d: &Dialog) -> String {
-    let label = vectorcraft_tools::tool_info(&d.str("tool")).map_or("", |t| t.label);
+    let label = oracle_vector_tools::tool_info(&d.str("tool")).map_or("", |t| t.label);
     crate::i18n::fmt(tl!("{tool} Options"), &[("tool", tl!(label))])
 }
 
 /// Open the options of freehand tool `tool` with their current values.
-pub fn open(app: &mut VectorcraftApp, tool: &str) -> Result<Value, String> {
+pub fn open(app: &mut OracleVectorApp, tool: &str) -> Result<Value, String> {
     if !TOOLS.contains(&tool) {
         return Err(format!("`{tool}` isn't a freehand tool"));
     }
@@ -90,7 +90,7 @@ fn fidelity(ui: &mut egui::Ui, d: &mut Dialog) {
     );
 }
 
-fn body(_app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
+fn body(_app: &mut OracleVectorApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     if d.fields.contains_key("fidelity") {
         fidelity(ui, d);
         ui.add_space(10.0);
@@ -121,7 +121,7 @@ fn body(_app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
 }
 
 /// OK: set the tool's options.
-fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn confirm(app: &mut OracleVectorApp, d: &Dialog) -> Result<Value, String> {
     let values: Map<String, Value> = KEYS.iter().filter_map(|k| Some((k.to_string(), d.fields.get(*k)?.clone()))).collect();
     run_and_close(app, "tool.setOption", json!({ "tool": d.str("tool"), "values": values }))
 }
@@ -129,16 +129,16 @@ fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vectorcraft_engine::Session;
+    use oracle_vector_engine::Session;
 
-    fn app() -> VectorcraftApp {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    fn app() -> OracleVectorApp {
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 400, "height": 300})).unwrap();
         app
     }
 
     /// The labels the open dialog paints.
-    fn painted(app: &mut VectorcraftApp) -> String {
+    fn painted(app: &mut OracleVectorApp) -> String {
         crate::tests_labels::painted_text(app, |app, ui| super::super::show(app, ui.ctx()))
     }
 
@@ -214,17 +214,17 @@ mod tests {
         let mut app = app();
         // The anchors of a wave drawn around height `y0`, with nothing selected (a stroke starting
         // at the end of a selected path would continue it).
-        let anchors = |app: &mut VectorcraftApp, y0: f64| {
+        let anchors = |app: &mut OracleVectorApp, y0: f64| {
             app.run("select.set", json!({"ids": []})).unwrap();
             app.select_tool("pencil");
             let view = app.view_info();
             let pts: Vec<_> = (0..=40).map(|i| (20.0 + i as f64 * 8.0, y0 + 30.0 * (i as f64 * 0.25).sin())).collect();
-            let pointer = |kind, (x, y)| vectorcraft_tools::PointerEvent::new(kind, x, y);
-            crate::canvas::dispatch(app, &pointer(vectorcraft_tools::PointerKind::Down, pts[0]), view);
+            let pointer = |kind, (x, y)| oracle_vector_tools::PointerEvent::new(kind, x, y);
+            crate::canvas::dispatch(app, &pointer(oracle_vector_tools::PointerKind::Down, pts[0]), view);
             for p in &pts[1..] {
-                crate::canvas::dispatch(app, &pointer(vectorcraft_tools::PointerKind::Drag, *p), view);
+                crate::canvas::dispatch(app, &pointer(oracle_vector_tools::PointerKind::Drag, *p), view);
             }
-            crate::canvas::dispatch(app, &pointer(vectorcraft_tools::PointerKind::Up, pts[40]), view);
+            crate::canvas::dispatch(app, &pointer(oracle_vector_tools::PointerKind::Up, pts[40]), view);
             let doc = &app.session.doc().unwrap().doc;
             doc.layers[0].children().unwrap().last().unwrap().path_data().map_or(0, |p| p.subpaths.iter().map(|s| s.anchors.len()).sum::<usize>())
         };
@@ -240,15 +240,15 @@ mod tests {
     fn the_new_path_is_selected_only_with_keep_selected_on() {
         let mut app = app();
         // A stroke of `tool` along height `y0`; the ids selected afterwards and the new path's id.
-        let stroke = |app: &mut VectorcraftApp, tool: &str, y0: f64| {
+        let stroke = |app: &mut OracleVectorApp, tool: &str, y0: f64| {
             app.select_tool(tool);
             let view = app.view_info();
-            let pointer = |kind, x| vectorcraft_tools::PointerEvent::new(kind, x, y0);
-            crate::canvas::dispatch(app, &pointer(vectorcraft_tools::PointerKind::Down, 20.0), view);
+            let pointer = |kind, x| oracle_vector_tools::PointerEvent::new(kind, x, y0);
+            crate::canvas::dispatch(app, &pointer(oracle_vector_tools::PointerKind::Down, 20.0), view);
             for x in [60.0, 100.0, 140.0] {
-                crate::canvas::dispatch(app, &pointer(vectorcraft_tools::PointerKind::Drag, x), view);
+                crate::canvas::dispatch(app, &pointer(oracle_vector_tools::PointerKind::Drag, x), view);
             }
-            crate::canvas::dispatch(app, &pointer(vectorcraft_tools::PointerKind::Up, 180.0), view);
+            crate::canvas::dispatch(app, &pointer(oracle_vector_tools::PointerKind::Up, 180.0), view);
             let st = app.session.doc().unwrap();
             (st.selection.objects.clone(), st.doc.layers[0].children().unwrap().last().unwrap().id)
         };
@@ -279,22 +279,22 @@ mod tests {
     fn the_blob_brush_options_set_what_a_stroke_merges_with_and_selects() {
         let mut app = app();
         // A Blob Brush stroke across the canvas at height 100; the ids selected afterwards.
-        let stroke = |app: &mut VectorcraftApp| {
+        let stroke = |app: &mut OracleVectorApp| {
             app.select_tool("blobBrush");
             let view = app.view_info();
-            let pointer = |kind, x| vectorcraft_tools::PointerEvent::new(kind, x, 100.0);
-            crate::canvas::dispatch(app, &pointer(vectorcraft_tools::PointerKind::Down, 20.0), view);
+            let pointer = |kind, x| oracle_vector_tools::PointerEvent::new(kind, x, 100.0);
+            crate::canvas::dispatch(app, &pointer(oracle_vector_tools::PointerKind::Down, 20.0), view);
             for x in [80.0, 140.0, 200.0, 260.0] {
-                crate::canvas::dispatch(app, &pointer(vectorcraft_tools::PointerKind::Drag, x), view);
+                crate::canvas::dispatch(app, &pointer(oracle_vector_tools::PointerKind::Drag, x), view);
             }
-            crate::canvas::dispatch(app, &pointer(vectorcraft_tools::PointerKind::Up, 300.0), view);
+            crate::canvas::dispatch(app, &pointer(oracle_vector_tools::PointerKind::Up, 300.0), view);
             app.session.doc().unwrap().selection.objects.clone()
         };
-        let ids = |app: &VectorcraftApp| app.session.doc().unwrap().doc.layers[0].children().unwrap().iter().map(|n| n.id).collect::<Vec<_>>();
+        let ids = |app: &OracleVectorApp| app.session.doc().unwrap().doc.layers[0].children().unwrap().iter().map(|n| n.id).collect::<Vec<_>>();
         // Two blobs the stroke crosses, drawn with the same color.
-        let blob = |app: &mut VectorcraftApp, x: f64| {
+        let blob = |app: &mut OracleVectorApp, x: f64| {
             let r = app.run("path.blob", json!({"points": [[x, 60], [x, 140]], "size": 20})).unwrap();
-            vectorcraft_doc::NodeId(r["id"].as_u64().unwrap())
+            oracle_vector_doc::NodeId(r["id"].as_u64().unwrap())
         };
         let (a, b) = (blob(&mut app, 100.0), blob(&mut app, 240.0));
         app.run("tool.options", json!({"tool": "blobBrush"})).unwrap();

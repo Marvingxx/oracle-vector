@@ -8,7 +8,7 @@ use craft_pdf::syntax::page::Page;
 use craft_pdf::syntax::xref::XRef;
 use craft_pdf::syntax::{DecryptionError, LoadPdfError, Pdf};
 use kurbo::{Affine, Rect};
-use vectorcraft_doc::setup::MAX_BLEED;
+use oracle_vector_doc::setup::MAX_BLEED;
 
 use crate::import_color::{direct, items, readable, values};
 use crate::{Choice, CropTo, ImportOptions, PdfError};
@@ -299,7 +299,7 @@ const MAX_PRIVATE: usize = 256 << 20;
 /// streams in order, joined. A PDF saved with the editing data has its streams under
 /// `AIPDFPrivateData1`, `AIPDFPrivateData2`, … instead: those are read when there is no
 /// `AIPrivateData1`. `None` for a PDF without either (or with a stream that can't be read).
-/// What it holds is the editor's own copy of the art (see `vectorcraft_eps::layered_ai`).
+/// What it holds is the editor's own copy of the art (see `oracle_vector_eps::layered_ai`).
 pub fn illustrator_data(bytes: &[u8], password: Option<&str>) -> Option<Vec<u8>> {
     let pdf = open(bytes, password).ok()?;
     let page = pdf.pages().first()?;

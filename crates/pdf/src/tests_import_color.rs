@@ -1,11 +1,11 @@
 //! Imported colours keep their model: CMYK, Gray, spot inks (Separation, DeviceN) at a tint, in
 //! solid paints and shading stops; a CMYK file opens as a CMYK document.
 
-use vectorcraft_color::swatch::REGISTRATION;
-use vectorcraft_color::{Color, Gradient, GradientKind, GradientPaint, GradientStop, Paint, Swatch};
-use vectorcraft_doc::{Appearance, AppearanceItem, ColorMode, Document, Node, NodeId, NodeKind};
-use vectorcraft_geom::{Rect, shapes};
-use vectorcraft_testkit::pdf::{PdfPage, first_extra, pdf, pdf_with};
+use oracle_vector_color::swatch::REGISTRATION;
+use oracle_vector_color::{Color, Gradient, GradientKind, GradientPaint, GradientStop, Paint, Swatch};
+use oracle_vector_doc::{Appearance, AppearanceItem, ColorMode, Document, Node, NodeId, NodeKind};
+use oracle_vector_geom::{Rect, shapes};
+use oracle_vector_testkit::pdf::{PdfPage, first_extra, pdf, pdf_with};
 
 use crate::import_color::{Colors, Space};
 use crate::*;
@@ -453,7 +453,7 @@ fn spot_colours_with_an_icc_lab_alternate_keep_their_lab_values() {
 fn rgb_numbers_stand_in_editor_documents_only() {
     // GUARDS: an editor's document keeps its `ICCBased` RGB numbers; a PDF's profile stands.
     let f = first_extra(1);
-    let icc = vectorcraft_color::cms::icc_bytes(vectorcraft_color::cms::PROPHOTO_RGB).unwrap();
+    let icc = oracle_vector_color::cms::icc_bytes(oracle_vector_color::cms::PROPHOTO_RGB).unwrap();
     let hex: String = icc.iter().map(|b| format!("{b:02x}")).collect();
     let profile = format!("<< /N 3 /Filter /ASCIIHexDecode /Length {} >>\nstream\n{hex}>\nendstream", hex.len() + 1);
     let mut page = page_with(&format!("/CS0 [/ICCBased {f} 0 R]"), &[("CS0", "0.2 0.6 0.4")]);

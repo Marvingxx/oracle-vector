@@ -37,11 +37,12 @@ impl Brightness {
     }
 }
 
-/// User Interface › Accent Color: the one colour for what is on, chosen or focused. Coral, the
-/// default, is the app icon's.
+/// User Interface › Accent Color: the one colour for what is on, chosen or focused. Oracle red,
+/// the default, is the suite's brand colour (#d31c3b).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum Accent {
     #[default]
+    Oracle,
     Coral,
     Blue,
     Violet,
@@ -51,9 +52,10 @@ pub enum Accent {
 }
 
 impl Accent {
-    pub const ALL: [Accent; 6] = [Accent::Coral, Accent::Blue, Accent::Violet, Accent::Green, Accent::Amber, Accent::Pink];
+    pub const ALL: [Accent; 7] = [Accent::Oracle, Accent::Coral, Accent::Blue, Accent::Violet, Accent::Green, Accent::Amber, Accent::Pink];
     pub fn id(self) -> &'static str {
         match self {
+            Accent::Oracle => "oracle",
             Accent::Coral => "coral",
             Accent::Blue => "blue",
             Accent::Violet => "violet",
@@ -69,6 +71,8 @@ impl Accent {
     /// with white lettering.
     fn colors(self, dark: bool) -> (u32, u32) {
         match (self, dark) {
+            (Accent::Oracle, true) => (0xf0566f, 0xd31c3b),
+            (Accent::Oracle, false) => (0xb8152f, 0xd31c3b),
             (Accent::Coral, true) => (0xf06a52, 0xe8573f),
             (Accent::Coral, false) => (0xd9472f, 0xd14a33),
             (Accent::Blue, true) => (0x5b96ff, 0x2f74f0),
@@ -187,8 +191,8 @@ impl Tokens {
             icon: hex(0xc9d0dc),
             hover: hex(0x262b35),
             tool_active: hex(0x2f3541),
-            accent: hex(0xf06a52),
-            accent_strong: hex(0xe8573f),
+            accent: hex(0xf0566f),
+            accent_strong: hex(0xd31c3b),
             row_selected: hex(0x3a2a2c),
             pasteboard: hex(0x101217),
             ruler: hex(0x13161c),
@@ -497,15 +501,39 @@ pub fn mono(size: f32) -> FontId {
 
 /// Installs the interface's fonts and binds the families the panels and dialogs draw in
 /// ([`FONT_UI`], [`FONT_UI_SEMIBOLD`], [`FONT_MONO`]). egui panics drawing text in a family no font
-/// is bound to, so every context that shows them needs this once: [`crate::VectorcraftApp::logic`]
+/// is bound to, so every context that shows them needs this once: [`crate::OracleVectorApp::logic`]
 /// calls it on its first frame, and an embedder that draws the panels or dialogs without it calls
 /// it when it makes the context. It replaces the context's font definitions: add other fonts after
 /// it, or keep these families in definitions of one's own. Without the `interface-fonts` feature
 /// the families are egui's built-in fonts (and craft-fonts' faces in a build with them), which lack
 /// some symbols the panels show (→ ▾ ● ✓).
 pub fn install_fonts(ctx: &egui::Context) {
+    install_fonts_with(ctx, UiFont::Inter);
+}
+
+/// User Interface › Interface Font: the face the panels and dialogs are set in.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum UiFont {
+    /// Oracle's typeface, the app's default.
+    #[default]
+    Lexend,
+    Inter,
+}
+
+impl UiFont {
+    pub fn parse(s: &str) -> UiFont {
+        if s == "inter" { UiFont::Inter } else { UiFont::Lexend }
+    }
+}
+
+/// [`install_fonts`] with the interface set in `face`.
+pub fn install_fonts_with(ctx: &egui::Context, face: UiFont) {
     let mut fonts = FontDefinitions::default();
-    let (ui, semi, mono) = interface_faces(&mut fonts);
+    let (mut ui, mut semi, mono) = interface_faces(&mut fonts);
+    if face == UiFont::Lexend && lexend_faces(&mut fonts) {
+        ui.insert(0, "Lexend");
+        semi.insert(0, "Lexend-SemiBold");
+    }
     let stack = |fonts: &FontDefinitions, family: FontFamily| fonts.families.get(&family).cloned().unwrap_or_default();
     let (fallback, monospace) = (stack(&fonts, FontFamily::Proportional), stack(&fonts, FontFamily::Monospace));
     // Without its own monospace face, `mono` is egui's; with it, the face falls back to the text's.
@@ -539,6 +567,27 @@ fn interface_faces(fonts: &mut FontDefinitions) -> (Vec<&'static str>, Vec<&'sta
     (vec!["Inter", "SourceSans3"], vec!["Inter-SemiBold", "SourceSans3-Semibold"], vec!["JetBrainsMono"])
 }
 
+/// Lexend (OFL-1.1, a variable font) at the interface's two weights, drawn a little smaller than its
+/// size: its letters are wider than Inter's, and the panels are laid out for those.
+#[cfg(feature = "interface-fonts")]
+fn lexend_faces(fonts: &mut FontDefinitions) -> bool {
+    const LEXEND: &[u8] = include_bytes!("../../../assets/fonts/Lexend-Variable.ttf");
+    for (name, weight) in [("Lexend", 400.0), ("Lexend-SemiBold", 600.0)] {
+        let tweak = egui::epaint::text::FontTweak {
+            scale: 0.88,
+            coords: egui::epaint::text::VariationCoords::new([(*b"wght", weight)]),
+            ..Default::default()
+        };
+        fonts.font_data.insert(name.to_owned(), Arc::new(FontData::from_static(LEXEND).tweak(tweak)));
+    }
+    true
+}
+
+#[cfg(not(feature = "interface-fonts"))]
+fn lexend_faces(_fonts: &mut FontDefinitions) -> bool {
+    false
+}
+
 /// Without the `interface-fonts` feature the interface has no faces of its own: every family is egui's.
 #[cfg(not(feature = "interface-fonts"))]
 fn interface_faces(_fonts: &mut FontDefinitions) -> (Vec<&'static str>, Vec<&'static str>, Vec<&'static str>) {
@@ -546,7 +595,7 @@ fn interface_faces(_fonts: &mut FontDefinitions) -> (Vec<&'static str>, Vec<&'st
 }
 
 /// The egui name of a craft-fonts face.
-pub(crate) fn craft_font_name(f: &vectorcraft_text::CraftFont) -> String {
+pub(crate) fn craft_font_name(f: &oracle_vector_text::CraftFont) -> String {
     format!("craft-fonts {} {}", f.family, f.style)
 }
 
@@ -555,13 +604,13 @@ pub(crate) fn craft_font_name(f: &vectorcraft_text::CraftFont) -> String {
 /// adds: BIZ UDPGothic first (bold first in the semibold family), then the Mincho faces, then Noto
 /// Sans Georgian.
 fn add_craft_fonts(fonts: &mut FontDefinitions) {
-    for f in vectorcraft_text::CRAFT_FONTS.iter().filter(|f| f.is_japanese() || f.is_georgian()) {
+    for f in oracle_vector_text::CRAFT_FONTS.iter().filter(|f| f.is_japanese() || f.is_georgian()) {
         fonts.font_data.insert(craft_font_name(f), Arc::new(FontData::from_static(f.bytes)));
     }
     for (family, stack) in fonts.families.iter_mut() {
         let bold = *family == FontFamily::Name(FONT_UI_SEMIBOLD.into());
-        stack.extend(vectorcraft_text::craft_fonts::japanese_ui_fonts(bold).into_iter().map(craft_font_name));
-        stack.extend(vectorcraft_text::craft_fonts::georgian_ui_fonts().into_iter().map(craft_font_name));
+        stack.extend(oracle_vector_text::craft_fonts::japanese_ui_fonts(bold).into_iter().map(craft_font_name));
+        stack.extend(oracle_vector_text::craft_fonts::georgian_ui_fonts().into_iter().map(craft_font_name));
     }
 }
 

@@ -15,8 +15,8 @@ use std::hash::{Hash, Hasher};
 use std::sync::Mutex;
 
 use serde_json::{Value, json};
-use vectorcraft_doc::{Appearance, AppearanceItem};
-use vectorcraft_geom::{FillRule, PathData, Rect};
+use oracle_vector_doc::{Appearance, AppearanceItem};
+use oracle_vector_geom::{FillRule, PathData, Rect};
 
 use crate::objects::{decode, output_geometry, paint_lists};
 use crate::{Error, Kind, Limits, Result, registry};
@@ -181,8 +181,8 @@ fn run(plugin: &crate::Plugin, mut params: Value, path: &PathData, bounds: Rect,
 
 #[cfg(test)]
 mod tests {
-    use vectorcraft_color::{Color, Paint};
-    use vectorcraft_doc::{FillLayer, StrokeLayer};
+    use oracle_vector_color::{Color, Paint};
+    use oracle_vector_doc::{FillLayer, StrokeLayer};
 
     use super::*;
 

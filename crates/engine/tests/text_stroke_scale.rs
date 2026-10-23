@@ -3,8 +3,8 @@
 #![allow(clippy::unwrap_used, clippy::panic)]
 
 use serde_json::json;
-use vectorcraft_doc::{NodeId, NodeKind};
-use vectorcraft_engine::Session;
+use oracle_vector_doc::{NodeId, NodeKind};
+use oracle_vector_engine::Session;
 
 const MM: f64 = 72.0 / 25.4;
 

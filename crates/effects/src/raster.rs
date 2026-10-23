@@ -1,11 +1,11 @@
 //! Raster (painted) effects: descriptions for the renderer.
 
 use serde_json::Value;
-use vectorcraft_doc::color::{BlendMode, Color};
-use vectorcraft_doc::rastersettings::MAX_ADD_AROUND;
-use vectorcraft_doc::{Effect, RasterColorModel, RasterEffectsSettings};
+use oracle_vector_doc::color::{BlendMode, Color};
+use oracle_vector_doc::rastersettings::MAX_ADD_AROUND;
+use oracle_vector_doc::{Effect, RasterColorModel, RasterEffectsSettings};
 
-use vectorcraft_geom::{Point, Rect};
+use oracle_vector_geom::{Point, Rect};
 
 use crate::merged_params;
 use crate::pixel::{self, PixelFx, PixelSpace};

@@ -6,10 +6,10 @@
 use std::sync::Arc;
 
 use serde_json::{Value, json};
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::text::{CharStyle, TextObject};
-use vectorcraft_doc::{Appearance, AppearanceItem, Document, Effect, FillLayer, ImageBlob, ImageObject, Knockout, Node, NodeKind, StrokeLayer};
-use vectorcraft_geom::{Point, shapes};
+use oracle_vector_color::{Color, Paint};
+use oracle_vector_doc::text::{CharStyle, TextObject};
+use oracle_vector_doc::{Appearance, AppearanceItem, Document, Effect, FillLayer, ImageBlob, ImageObject, Knockout, Node, NodeKind, StrokeLayer};
+use oracle_vector_geom::{Point, shapes};
 
 use super::*;
 

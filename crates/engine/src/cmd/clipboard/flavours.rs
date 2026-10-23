@@ -7,8 +7,8 @@
 //! commands only convert, so agents can drive them headless.
 
 use serde_json::{Value, json};
-use vectorcraft_doc::{Document, ImageObject, Node, NodeId, NodeKind, TextObject};
-use vectorcraft_geom::{Affine, Point};
+use oracle_vector_doc::{Document, ImageObject, Node, NodeId, NodeKind, TextObject};
+use oracle_vector_geom::{Affine, Point};
 
 use super::super::fileio;
 use super::super::place::pt_per_px;
@@ -31,7 +31,7 @@ pub const EMF: &str = "image/emf";
 /// beside, or instead of, a PDF (#1499).
 pub const EPS: &str = "application/postscript";
 /// A `.ai` or `.ait` file whose bytes are a PDF, copied in a file manager ([`file_flavour`]): Paste
-/// reads it as `document.open` does, from its editing data. The type is VectorCraft's own: no
+/// reads it as `document.open` does, from its editing data. The type is Oracle Vector's own: no
 /// system clipboard carries it, and Paste asks for [`PDF`] to get it.
 pub const AI: &str = "application/x-ai";
 /// What Paste reads from other apps, best first: vector art before text, text before bitmaps
@@ -89,7 +89,7 @@ pub fn file_flavour(name: &str, head: &[u8], mimes: &[&str]) -> Option<&'static 
         "ps" => (EPS, EPS),
         "eps" => (EPS, EPS),
         "ai" | "ait" if head.starts_with(b"%PDF") => (PDF, AI),
-        "ai" | "ait" if vectorcraft_pdf::is_postscript(head) => (EPS, EPS),
+        "ai" | "ait" if oracle_vector_pdf::is_postscript(head) => (EPS, EPS),
         "emf" | "wmf" => (EMF, EMF),
         _ if f.raster => (BITMAP, f.mime),
         _ => return None,
@@ -205,7 +205,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Load Metafile into Clipboard",
             [],
             None,
-            "{dataBase64 (EMF or WMF bytes), center?: [x, y]} replace the clipboard with the picture's objects (paths, clipping groups, images, point type; the images they use), centred on `center` (default: the first artboard) → {count, warnings}; records VectorCraft doesn't read are skipped with one warning; then run edit.paste",
+            "{dataBase64 (EMF or WMF bytes), center?: [x, y]} replace the clipboard with the picture's objects (paths, clipping groups, images, point type; the images they use), centred on `center` (default: the first artboard) → {count, warnings}; records Oracle Vector doesn't read are skipped with one warning; then run edit.paste",
             has_doc,
             import_emf
         ),
@@ -253,7 +253,7 @@ impl Clipboard {
 
     /// The objects as a document whose one artboard is their visual bounds (`None` when there are
     /// none or they have no extent).
-    fn cropped(&self) -> Option<(Document, vectorcraft_geom::Rect)> {
+    fn cropped(&self) -> Option<(Document, oracle_vector_geom::Rect)> {
         let b = self.bounds().filter(|b| b.width() > 0.0 && b.height() > 0.0)?;
         Some((fileio::with_single_artboard(self.to_document(), b, "Clipboard"), b))
     }
@@ -263,7 +263,7 @@ impl Clipboard {
     pub fn png(&self, scale: f64) -> Result<Option<Png>> {
         const C: &str = "clipboard.exportPng";
         let Some((doc, b)) = self.cropped() else { return Ok(None) };
-        let (w, h) = vectorcraft_render::raster_size(b, scale).map_err(|e| bad(C, e))?;
+        let (w, h) = oracle_vector_render::raster_size(b, scale).map_err(|e| bad(C, e))?;
         let (png, warnings) = fileio::encode_with_warnings(&doc, "png", &json!({ "scale": scale, "background": "transparent" }))?;
         Ok(Some((png, w, h, warnings)))
     }
@@ -382,7 +382,7 @@ impl Session {
 /// The bytes of `p`'s `dataBase64`.
 fn data_param(p: &Value, cmd: &str) -> Result<Vec<u8>> {
     let b64 = str_param(p, "dataBase64").ok_or_else(|| bad(cmd, "give dataBase64"))?;
-    vectorcraft_format::base64_decode(b64).ok_or_else(|| bad(cmd, "bad base64"))
+    oracle_vector_format::base64_decode(b64).ok_or_else(|| bad(cmd, "bad base64"))
 }
 
 fn export_png(s: &mut Session, p: &Value) -> Result<Value> {
@@ -392,7 +392,7 @@ fn export_png(s: &mut Session, p: &Value) -> Result<Value> {
     }
     Ok(match s.clipboard_png(scale)? {
         Some((png, w, h, warnings)) => {
-            json!({ "dataBase64": vectorcraft_format::base64_encode(&png), "width": w, "height": h, "warnings": warnings })
+            json!({ "dataBase64": oracle_vector_format::base64_encode(&png), "width": w, "height": h, "warnings": warnings })
         }
         None => json!({ "dataBase64": null }),
     })
@@ -400,7 +400,7 @@ fn export_png(s: &mut Session, p: &Value) -> Result<Value> {
 
 fn export_pdf(s: &mut Session, _: &Value) -> Result<Value> {
     Ok(match s.clipboard_pdf()? {
-        Some((pdf, warnings)) => json!({ "dataBase64": vectorcraft_format::base64_encode(&pdf), "warnings": warnings }),
+        Some((pdf, warnings)) => json!({ "dataBase64": oracle_vector_format::base64_encode(&pdf), "warnings": warnings }),
         None => json!({ "dataBase64": null }),
     })
 }
@@ -451,7 +451,7 @@ fn import_text(s: &mut Session, p: &Value) -> Result<Value> {
 fn import_emf(s: &mut Session, p: &Value) -> Result<Value> {
     const C: &str = "clipboard.importEmf";
     let bytes = data_param(p, C)?;
-    if vectorcraft_metafile::sniff(&bytes).is_none() {
+    if oracle_vector_metafile::sniff(&bytes).is_none() {
         return Err(bad(C, "the data isn't an EMF or WMF picture"));
     }
     import_picture(s, p, C, "Clipboard.emf", &bytes)
@@ -461,7 +461,7 @@ fn import_eps(s: &mut Session, p: &Value) -> Result<Value> {
     const C: &str = "clipboard.importEps";
     let bytes = data_param(p, C)?;
     // Programs whose header is only `%!` are read too, as they are when a `.ps` or `.eps` file opens.
-    if !bytes.starts_with(b"%!") && !vectorcraft_pdf::is_postscript(&bytes) {
+    if !bytes.starts_with(b"%!") && !oracle_vector_pdf::is_postscript(&bytes) {
         return Err(bad(C, "the data isn't an EPS or PostScript picture"));
     }
     import_picture(s, p, C, "Clipboard.eps", &bytes)

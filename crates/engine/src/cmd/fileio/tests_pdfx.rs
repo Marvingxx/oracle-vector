@@ -20,7 +20,7 @@ fn session() -> Session {
     image::RgbaImage::from_fn(8, 8, |x, _| image::Rgba([0, 120, 255, if x < 4 { 0 } else { 255 }]))
         .write_to(&mut std::io::Cursor::new(&mut png), image::ImageFormat::Png)
         .unwrap();
-    s.execute("file.place", &json!({"name": "dots.png", "dataBase64": vectorcraft_format::base64_encode(&png), "at": [150, 50]})).unwrap();
+    s.execute("file.place", &json!({"name": "dots.png", "dataBase64": oracle_vector_format::base64_encode(&png), "at": [150, 50]})).unwrap();
     s
 }
 
@@ -28,7 +28,7 @@ fn session() -> Session {
 fn pdf(s: &mut Session, mut p: Value) -> (String, Vec<String>) {
     p["compression"] = json!({"compressText": false});
     let v = s.execute("document.exportPdf", &p).unwrap();
-    let bytes = vectorcraft_format::base64_decode(v["dataBase64"].as_str().unwrap()).unwrap();
+    let bytes = oracle_vector_format::base64_decode(v["dataBase64"].as_str().unwrap()).unwrap();
     let warnings = v["warnings"].as_array().unwrap().iter().map(|w| w.as_str().unwrap().to_string()).collect();
     (String::from_utf8_lossy(&bytes).into_owned(), warnings)
 }
@@ -78,7 +78,7 @@ fn choosing_a_pdfx_standard_sets_its_version_and_turns_off_what_it_forbids() {
         json!({"standard": "pdfX3", "preserveEditing": true}),
         json!({"standard": "pdfX4", "security": {"openPassword": "x"}}),
         json!({"standard": "pdfX1a", "security": {"permissionsPassword": "x"}}),
-        json!({"standard": "pdfX1a", "output": {"outputIntent": vectorcraft_color::cms::SRGB}}),
+        json!({"standard": "pdfX1a", "output": {"outputIntent": oracle_vector_color::cms::SRGB}}),
         json!({"standard": "pdfX4", "output": {"outputIntent": "No Such Press"}}),
     ] {
         let e = s.execute("document.exportPdf", &p).unwrap_err();
@@ -91,9 +91,9 @@ fn choosing_a_pdfx_standard_sets_its_version_and_turns_off_what_it_forbids() {
 }
 
 /// The ink amounts (0..1) `doc` shows at `p` in its images (the topmost image there).
-fn image_inks_at(doc: &vectorcraft_doc::Document, p: vectorcraft_geom::Point) -> Option<[f32; 4]> {
-    fn visit(n: &vectorcraft_doc::Node, out: &mut Vec<vectorcraft_doc::ImageObject>) {
-        if let vectorcraft_doc::NodeKind::Image(im) = &n.kind {
+fn image_inks_at(doc: &oracle_vector_doc::Document, p: oracle_vector_geom::Point) -> Option<[f32; 4]> {
+    fn visit(n: &oracle_vector_doc::Node, out: &mut Vec<oracle_vector_doc::ImageObject>) {
+        if let oracle_vector_doc::NodeKind::Image(im) = &n.kind {
             out.push((**im).clone());
         }
         for c in n.children().into_iter().flatten() {
@@ -129,11 +129,11 @@ fn pdfx_1a_flattening_keeps_the_inks_behind_an_image_in_a_cmyk_document() {
     image::RgbaImage::from_fn(40, 40, |x, _| image::Rgba([0, 120, 255, if x < 20 { 0 } else { 255 }]))
         .write_to(&mut std::io::Cursor::new(&mut png), image::ImageFormat::Png)
         .unwrap();
-    s.execute("file.place", &json!({"name": "logos.png", "dataBase64": vectorcraft_format::base64_encode(&png), "at": [100, 50]})).unwrap();
+    s.execute("file.place", &json!({"name": "logos.png", "dataBase64": oracle_vector_format::base64_encode(&png), "at": [100, 50]})).unwrap();
     let v = s.execute("document.exportPdf", &json!({"standard": "pdfX1a"})).unwrap();
-    let bytes = vectorcraft_format::base64_decode(v["dataBase64"].as_str().unwrap()).unwrap();
-    let back = vectorcraft_pdf::import(&bytes).unwrap();
+    let bytes = oracle_vector_format::base64_decode(v["dataBase64"].as_str().unwrap()).unwrap();
+    let back = oracle_vector_pdf::import(&bytes).unwrap();
     // Behind the image's see-through half: the panel's own inks, K included.
-    let ink = image_inks_at(&back, vectorcraft_geom::Point::new(88.0, 50.0)).expect("a CMYK image behind the see-through pixels");
+    let ink = image_inks_at(&back, oracle_vector_geom::Point::new(88.0, 50.0)).expect("a CMYK image behind the see-through pixels");
     assert!(ink.iter().zip(teal).all(|(a, b)| (a - b).abs() <= 1.5 / 255.0), "{ink:?} is not {teal:?}");
 }

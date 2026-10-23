@@ -8,7 +8,7 @@
 //! the dragged corner snap to Smart Guides ([`DrawSnap`]), hovering before the press too.
 
 use serde_json::{Value, json};
-use vectorcraft_geom::{Point, Rect, Vec2};
+use oracle_vector_geom::{Point, Rect, Vec2};
 
 use crate::guides::{DrawSnap, Leave, square};
 use crate::{Action, Cursor, Mods, Overlay, PointerEvent, PointerKind, Tool, ToolContext, ToolKey};
@@ -292,7 +292,7 @@ impl Tool for ShapeTool {
 mod tests {
     use super::*;
     use crate::testutil::*;
-    use vectorcraft_doc::Selection;
+    use oracle_vector_doc::Selection;
 
     #[test]
     fn rect_drag() {

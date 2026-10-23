@@ -2,8 +2,8 @@
 //! With type selected it edits the characters' stroke (weight, cap, join, miter limit, dashes).
 
 use serde_json::{Value, json};
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::{
+use oracle_vector_color::{Color, Paint};
+use oracle_vector_doc::{
     ArrowAlign, Arrowhead, CharStyle, Dash, LineCap, LineJoin, Node, NodeKind, SavedProfile, Scaling, StrokeAlign, StrokeLayer, Unit, WidthProfile,
 };
 
@@ -184,7 +184,7 @@ impl StrokeChange {
 }
 
 /// Does a Stroke panel edit find nothing selected (and no `ids`)? It then sets up new art.
-fn no_targets(ids: &[vectorcraft_doc::NodeId], p: &Value) -> bool {
+fn no_targets(ids: &[oracle_vector_doc::NodeId], p: &Value) -> bool {
     ids.is_empty() && p.get("ids").is_none() && p.get("id").is_none()
 }
 

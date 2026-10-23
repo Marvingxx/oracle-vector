@@ -12,7 +12,7 @@ fn session(width: f64, height: f64, artboards: usize) -> Session {
 }
 
 fn b64(v: &Value) -> Vec<u8> {
-    vectorcraft_format::base64_decode(v["dataBase64"].as_str().expect("dataBase64")).unwrap()
+    oracle_vector_format::base64_decode(v["dataBase64"].as_str().expect("dataBase64")).unwrap()
 }
 
 fn text(v: &Value) -> String {
@@ -200,17 +200,17 @@ fn dwg_and_pict_say_what_to_use_instead() {
     let e = s.execute("document.export", &json!({"format": "pict"})).unwrap_err().to_string();
     assert!(e.contains("PICT is a retired format"), "{e}");
     let e = s
-        .execute("document.open", &json!({"name": "old.pct", "dataBase64": vectorcraft_format::base64_encode(&[0u8; 600])}))
+        .execute("document.open", &json!({"name": "old.pct", "dataBase64": oracle_vector_format::base64_encode(&[0u8; 600])}))
         .unwrap_err()
         .to_string();
     assert!(e.contains("old.pct") && e.contains("PICT"), "{e}");
     let e = s
-        .execute("document.open", &json!({"name": "site.dwg", "dataBase64": vectorcraft_format::base64_encode(b"AC1032\0\0")}))
+        .execute("document.open", &json!({"name": "site.dwg", "dataBase64": oracle_vector_format::base64_encode(b"AC1032\0\0")}))
         .unwrap_err()
         .to_string();
     assert!(e.contains("DWG is not available"), "{e}");
     let e = s
-        .execute("document.open", &json!({"name": "brochure.PMD", "dataBase64": vectorcraft_format::base64_encode(b"PageMaker")}))
+        .execute("document.open", &json!({"name": "brochure.PMD", "dataBase64": oracle_vector_format::base64_encode(b"PageMaker")}))
         .unwrap_err()
         .to_string();
     assert!(e.contains("brochure.PMD") && e.contains("PageMaker"), "{e}");

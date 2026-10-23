@@ -15,6 +15,7 @@ list (author, source, license) is in ASSETS.md.
 - Lucide icons (assets/icons/*.svg except dc-*.svg) — ISC License; the icons Lucide derived from Feather are also under the MIT License (Cole Bemis). See assets/icons/LICENSE-lucide.txt.
 - Source Sans 3 and Source Serif 4 (assets/fonts/Source*) — SIL Open Font License 1.1. See assets/fonts/OFL-SourceSans3.txt, OFL-SourceSerif4.txt.
 - Inter (assets/fonts/Inter-*.ttf) — SIL Open Font License 1.1. See assets/fonts/OFL-Inter.txt.
+- Lexend (assets/fonts/Lexend-Variable.ttf, the interface font) — SIL Open Font License 1.1. See assets/fonts/OFL-Lexend.txt.
 - JetBrains Mono (assets/fonts/JetBrainsMono-*.ttf) — SIL Open Font License 1.1. See assets/fonts/OFL-JetBrainsMono.txt.
 - egui's default fonts, compiled into the app through the epaint_default_fonts crate — Ubuntu Light
   (Ubuntu Font Licence 1.0), Hack (MIT), Noto Emoji (SIL Open Font License 1.1) and emoji-icon-font
@@ -123,3 +124,8 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+---
+
+Oracle Vector is a modified version of VectorCraft, renamed and rebranded for the Oracle Suite.
+The original notices above are kept as required by the Apache License 2.0.

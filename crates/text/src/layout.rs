@@ -4,12 +4,12 @@ use std::ops::Range;
 
 use kurbo::{Affine, BezPath, PathEl, Point, Rect, Shape, Vec2};
 use unicode_bidi::{BidiInfo, Level};
-use vectorcraft_doc::text::Kashida;
-use vectorcraft_doc::{
+use oracle_vector_doc::text::Kashida;
+use oracle_vector_doc::{
     Burasagari, CharStyle, HyphenationOptions, InlineArt, Justify, Kinsoku, LeadingModel, Mojikumi, ParaDirection, ParaStyle, PathAlign, PathEffect,
     RubyAlign, RubyPosition, SingleWordJustify, TextKind, TextObject,
 };
-use vectorcraft_geom::{ArcPath, PathData};
+use oracle_vector_geom::{ArcPath, PathData};
 
 use crate::composer::{Breakpoint, Params, compose};
 use crate::fontdb::FontDb;
@@ -430,8 +430,8 @@ fn layout_once(db: &FontDb, t: &TextObject, opts: &LayoutOptions) -> TextLayout 
         TextKind::Point => flow(&mut cx, &paras, t, None),
         TextKind::Area { frame } => {
             let to_lines = line_xf.inverse();
-            let wrap: Vec<vectorcraft_doc::WrapShape> = if vertical {
-                t.wrap.iter().map(|w| vectorcraft_doc::WrapShape { path: w.path.transformed(to_lines), ..w.clone() }).collect()
+            let wrap: Vec<oracle_vector_doc::WrapShape> = if vertical {
+                t.wrap.iter().map(|w| oracle_vector_doc::WrapShape { path: w.path.transformed(to_lines), ..w.clone() }).collect()
             } else {
                 t.wrap.clone()
             };
@@ -647,8 +647,8 @@ fn glyph_em(g: &SGlyph) -> f64 {
 /// An inline graphic has its run's em (whatever its scale): it counts as one of the line's
 /// largest characters only when its run's size is, and moves with the text of its run (its art
 /// stays centred on that text's cap height).
-fn align_shift(g: &SGlyph, a: vectorcraft_doc::CharAlign, line_em: f64, vertical: bool) -> f64 {
-    use vectorcraft_doc::CharAlign;
+fn align_shift(g: &SGlyph, a: oracle_vector_doc::CharAlign, line_em: f64, vertical: bool) -> f64 {
+    use oracle_vector_doc::CharAlign;
     let icf = || g.face.icf_margins();
     let k = match a {
         CharAlign::RomanBaseline => return 0.0,
@@ -993,7 +993,7 @@ fn intersect_intervals(a: &[(f64, f64)], b: &[(f64, f64)]) -> Vec<(f64, f64)> {
 }
 
 impl Region {
-    fn cells(path: &BezPath, opts: &LayoutOptions, wrap: &[vectorcraft_doc::WrapShape]) -> Vec<Region> {
+    fn cells(path: &BezPath, opts: &LayoutOptions, wrap: &[oracle_vector_doc::WrapShape]) -> Vec<Region> {
         // A frame out of range has no cells, and a wrap shape out of range is left out.
         let Some(polys) = polygons(path) else { return vec![] };
         // Every cell shares one copy of the frame's polygons and one copy of the text wrap shapes.
@@ -1008,7 +1008,7 @@ impl Region {
             let area: f64 = polys[0].iter().zip(polys[0].iter().cycle().skip(1)).map(|(a, b)| a.x * b.y - b.x * a.y).sum::<f64>().abs() * 0.5;
             (area - bbox.area()).abs() <= bbox.area() * 1e-6 + 1e-9
         };
-        let max = vectorcraft_doc::AreaOptions::MAX_ROWS_COLUMNS;
+        let max = oracle_vector_doc::AreaOptions::MAX_ROWS_COLUMNS;
         let (rows, cols) = (opts.rows.clamp(1, max), opts.columns.clamp(1, max));
         let gutter = opts.gutter.max(0.0);
         let cw = ((bbox.width() - gutter * (cols - 1) as f64) / cols as f64).max(0.0);
@@ -1098,7 +1098,7 @@ impl Region {
 fn the_cells_of_a_frame_share_its_polygons_and_the_wrap_shapes() {
     let frame = kurbo::Circle::new((0.0, 0.0), 1000.0).to_path(0.1);
     let square = PathData::from_bezpath(&Rect::new(-10.0, -10.0, 10.0, 10.0).to_path(0.1));
-    let wrap = vectorcraft_doc::WrapShape { path: square, wrap: Default::default() };
+    let wrap = oracle_vector_doc::WrapShape { path: square, wrap: Default::default() };
     let cells = Region::cells(&frame, &LayoutOptions { rows: 100, columns: 100, ..LayoutOptions::default() }, &[wrap]);
     assert_eq!(cells.len(), 10_000);
     let first = &cells[0];
@@ -1264,8 +1264,8 @@ impl Pen<'_> {
 /// Advance of a tab at pen position `x`: up to the next stop after it (explicit stops first, then
 /// every ½ inch), and the leader of that stop (default stops have none). Right, centre and decimal
 /// stops align the text that follows (`rest`, up to the next tab) on the stop.
-fn tab_advance<'t>(tabs: &'t [vectorcraft_doc::TabStop], origin: f64, x: f64, rest: &[SGlyph]) -> (f64, &'t str) {
-    use vectorcraft_doc::TabAlign;
+fn tab_advance<'t>(tabs: &'t [oracle_vector_doc::TabStop], origin: f64, x: f64, rest: &[SGlyph]) -> (f64, &'t str) {
+    use oracle_vector_doc::TabAlign;
     let rel = x - origin;
     let seg: Vec<&SGlyph> = rest.iter().take_while(|g| g.ch != '\t').collect();
     let width: f64 = seg.iter().map(|g| g.adv).sum();
@@ -1282,14 +1282,14 @@ fn tab_advance<'t>(tabs: &'t [vectorcraft_doc::TabStop], origin: f64, x: f64, re
     let (at, leader) = explicit.unwrap_or_else(|| {
         let last = tabs.iter().map(|t| t.position).fold(0.0, f64::max).max(0.0);
         let base = rel.max(last);
-        (((base / vectorcraft_doc::text::DEFAULT_TAB_INTERVAL).floor() + 1.0) * vectorcraft_doc::text::DEFAULT_TAB_INTERVAL, "")
+        (((base / oracle_vector_doc::text::DEFAULT_TAB_INTERVAL).floor() + 1.0) * oracle_vector_doc::text::DEFAULT_TAB_INTERVAL, "")
     });
     ((at - rel).max(0.0), leader)
 }
 
 /// The width of glyphs `from..to` of `sg` set on a line whose content starts `x_start` from the
 /// tab origin: tabs take what [`tab_advance`] gives them, not the width of their glyph.
-fn set_width(sg: &[SGlyph], from: usize, to: usize, tabs: &[vectorcraft_doc::TabStop], x_start: f64) -> f64 {
+fn set_width(sg: &[SGlyph], from: usize, to: usize, tabs: &[oracle_vector_doc::TabStop], x_start: f64) -> f64 {
     let mut x = x_start;
     for (j, g) in sg.iter().enumerate().take(to).skip(from) {
         x += if g.ch == '\t' { tab_advance(tabs, 0.0, x, sg.get(j + 1..to).unwrap_or_default()).0 } else { g.adv };
@@ -1366,7 +1366,7 @@ fn break_line(
     g: &[SGlyph],
     i: usize,
     width: f64,
-    tabs: &[vectorcraft_doc::TabStop],
+    tabs: &[oracle_vector_doc::TabStop],
     x_start: f64,
     hyphenate: Option<(&HyphenationOptions, f64)>,
     burasagari: Burasagari,
@@ -1480,7 +1480,7 @@ fn hangs(g: &SGlyph) -> bool {
 /// `g` starts or ends a line. Quotation marks, hyphens, full stops and commas hang whole, and
 /// asterisks, tildes, ellipses, en and em dashes, colons and semicolons hang by half (the amounts
 /// published for Roman Hanging Punctuation). A, V, W, Y, v, w and y hang by a tenth of their
-/// advance, VectorCraft's own amount for their slanted sides. Other characters, East Asian
+/// advance, Oracle Vector's own amount for their slanted sides. Other characters, East Asian
 /// punctuation (which burasagari hangs) and inline graphics don't hang.
 fn optical_share(g: &SGlyph) -> f64 {
     if g.inline.is_some() || g.tcy.is_some() {
@@ -1939,7 +1939,7 @@ fn flow(cx: &mut Ctx<'_>, paras: &[Range<usize>], t: &TextObject, regions: Optio
         let flex = apply_desired(&mut sg, &para.justification, !cx.vertical);
         // …and Auto Leading: characters whose leading is Auto take this paragraph's share of their size.
         let auto_leading = |st: &CharStyle| st.leading.unwrap_or_else(|| para.justification.auto_leading_for(st.size));
-        if para.justification.auto_leading != vectorcraft_doc::JustificationOptions::default().auto_leading {
+        if para.justification.auto_leading != oracle_vector_doc::JustificationOptions::default().auto_leading {
             for g in sg.iter_mut().filter(|g| g.inline.is_none()) {
                 g.leading = auto_leading(cx.style_at(g.byte));
             }

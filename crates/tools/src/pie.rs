@@ -7,8 +7,8 @@
 //! draws them from the same geometry.
 
 use serde_json::json;
-use vectorcraft_doc::{Document, LiveShape, NodeId, NodeKind, Selection};
-use vectorcraft_geom::{Affine, Point};
+use oracle_vector_doc::{Document, LiveShape, NodeId, NodeKind, Selection};
+use oracle_vector_geom::{Affine, Point};
 
 use crate::{Action, Overlay, PointerEvent, ToolContext};
 
@@ -202,7 +202,7 @@ mod tests {
     use crate::select::SelectionTool;
     use crate::testutil::*;
     use crate::{Cursor, Mods, PointerKind, Tool};
-    use vectorcraft_doc::{Appearance, Node};
+    use oracle_vector_doc::{Appearance, Node};
 
     /// A document holding a live 200 × 100 ellipse at (100, 100) with pie angles `pie`, and a
     /// selection of it.

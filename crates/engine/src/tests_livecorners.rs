@@ -5,9 +5,9 @@
 use std::collections::BTreeSet;
 
 use serde_json::{Value, json};
-use vectorcraft_doc::{AnchorRef, LiveCorners, LiveShape, NodeKind};
-use vectorcraft_geom::Affine;
-use vectorcraft_geom::shapes::CornerKind;
+use oracle_vector_doc::{AnchorRef, LiveCorners, LiveShape, NodeKind};
+use oracle_vector_geom::Affine;
+use oracle_vector_geom::shapes::CornerKind;
 
 use super::*;
 
@@ -177,7 +177,7 @@ fn star(s: &mut Session) -> NodeId {
     NodeId(s.execute("shape.star", &json!({"cx": 200, "cy": 200, "radius1": 60, "radius2": 30})).unwrap()["id"].as_u64().unwrap())
 }
 
-fn node_path(s: &Session, id: NodeId) -> (vectorcraft_geom::PathData, Option<LiveShape>) {
+fn node_path(s: &Session, id: NodeId) -> (oracle_vector_geom::PathData, Option<LiveShape>) {
     let NodeKind::Path { path, live, .. } = &s.doc().unwrap().doc.node(id).unwrap().kind else { panic!("not a path") };
     (path.clone(), live.as_deref().cloned())
 }
@@ -379,7 +379,7 @@ fn invert_pie_and_make_sides_equal_refuse_a_boolean_given_as_text() {
 /// double-click on a widget makes the ellipse whole again in one step.
 #[test]
 fn dragging_and_double_clicking_the_pie_widgets() {
-    use vectorcraft_tools::{Mods, PointerEvent, PointerKind};
+    use oracle_vector_tools::{Mods, PointerEvent, PointerKind};
     let mut s = Session::new();
     s.execute("file.new", &json!({"width": 300, "height": 300})).unwrap();
     let id = NodeId(s.execute("shape.ellipse", &json!({"x": 50, "y": 100, "width": 200, "height": 100})).unwrap()["id"].as_u64().unwrap());

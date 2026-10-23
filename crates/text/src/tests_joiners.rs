@@ -10,7 +10,7 @@
 use super::*;
 use kurbo::Point;
 use std::sync::Arc;
-use vectorcraft_doc::CharStyle;
+use oracle_vector_doc::CharStyle;
 
 const ZWNJ: char = '\u{200C}';
 const ZWJ: char = '\u{200D}';

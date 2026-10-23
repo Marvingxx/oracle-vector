@@ -3,22 +3,22 @@
 //! commands.
 
 use serde_json::{Value, json};
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_geom::{PathData, Point, SubPath};
-use vectorcraft_plugins::wat as tpl;
+use oracle_vector_color::{Color, Paint};
+use oracle_vector_geom::{PathData, Point, SubPath};
+use oracle_vector_plugins::wat as tpl;
 
 use super::*;
 
 /// The example Desaturate plug-in (built from `crates/plugins/example`).
 const DESATURATE: &[u8] = include_bytes!("../../plugins/tests/fixtures/desaturate.wasm");
-const DESATURATE_ID: &str = "org.vectorcraft.example.desaturate";
+const DESATURATE_ID: &str = "org.oracle-vector.example.desaturate";
 
 fn run(s: &mut Session, cmd: &str, p: Value) -> Value {
     s.execute(cmd, &p).unwrap_or_else(|e| panic!("{cmd}: {e}"))
 }
 
 fn install(s: &mut Session, wasm: &[u8]) -> Value {
-    run(s, "plugin.install", json!({"dataBase64": vectorcraft_format::base64_encode(wasm)}))
+    run(s, "plugin.install", json!({"dataBase64": oracle_vector_format::base64_encode(wasm)}))
 }
 
 fn install_wat(s: &mut Session, src: &str) -> Value {
@@ -39,7 +39,7 @@ fn rect(s: &mut Session, x: f64, fill: &str) -> NodeId {
     id
 }
 
-fn node(s: &Session, id: NodeId) -> vectorcraft_doc::Node {
+fn node(s: &Session, id: NodeId) -> oracle_vector_doc::Node {
     s.doc().unwrap().doc.node(id).unwrap().clone()
 }
 
@@ -147,7 +147,7 @@ fn live_effect_plugins_reshape_editable_art_and_expand() {
         let n = node(s, a);
         let path = n.path_data().unwrap().clone();
         let b = path.bounds().unwrap();
-        vectorcraft_render::effects::apply_geometry(&n.appearance.effects, &path, b)
+        oracle_vector_render::effects::apply_geometry(&n.appearance.effects, &path, b)
     };
     run(&mut s, "effect.apply", json!({"ids": [a.0], "effect": "plugin.test.engine.echo"}));
     assert_eq!(effected(&s), *node(&s, a).path_data().unwrap(), "identity");
@@ -193,15 +193,15 @@ fn live_effects_are_given_their_object_s_paints() {
     let effected = |s: &Session, item: Option<usize>| {
         let n = node(s, id);
         let path = n.path_data().unwrap().clone();
-        let ctx = vectorcraft_render::effects::GeomContext::of(&n);
+        let ctx = oracle_vector_render::effects::GeomContext::of(&n);
         let (effects, ctx) = match item {
             Some(i) => match &n.appearance.items[i] {
-                vectorcraft_doc::AppearanceItem::Stroke(st) => (st.effects.clone(), ctx.item(&n.appearance.items[i])),
+                oracle_vector_doc::AppearanceItem::Stroke(st) => (st.effects.clone(), ctx.item(&n.appearance.items[i])),
                 other => panic!("not a stroke: {other:?}"),
             },
             None => (n.appearance.effects.clone(), ctx),
         };
-        vectorcraft_render::effects::apply_geometry_with(&effects, &path, path.bounds().unwrap(), &ctx)
+        oracle_vector_render::effects::apply_geometry_with(&effects, &path, path.bounds().unwrap(), &ctx)
     };
     let own = node(&s, id).path_data().unwrap().clone();
     let remove = |s: &mut Session| run(s, "effect.remove", json!({"ids": [id.0], "index": 0, "item": null}));
@@ -238,8 +238,8 @@ fn expanding_a_fill_gives_its_plug_in_effect_the_fill_it_sits_on() {
     let fill = node(&s, id).appearance.items.iter().position(|i| i.is_fill()).unwrap();
     run(&mut s, "effect.apply", json!({"ids": [id.0], "effect": "plugin.test.engine.onfill", "item": fill}));
     // Drawn, the gradient fills the triangle: a point of it outside the rectangle is painted.
-    let opts = vectorcraft_render::RenderOptions { background: Some([255, 255, 255, 255]), ..Default::default() };
-    let drawn = vectorcraft_render::Renderer::new().render(&s.doc().unwrap().doc, 40, 40, vectorcraft_geom::Affine::IDENTITY, &opts);
+    let opts = oracle_vector_render::RenderOptions { background: Some([255, 255, 255, 255]), ..Default::default() };
+    let drawn = oracle_vector_render::Renderer::new().render(&s.doc().unwrap().doc, 40, 40, oracle_vector_geom::Affine::IDENTITY, &opts);
     assert_ne!(drawn.pixel(15, 1), [255, 255, 255, 255], "drawn as a triangle");
     run(&mut s, "select.set", json!({"ids": [id.0]}));
     run(&mut s, "object.expand", json!({"steps": 2}));
@@ -283,10 +283,10 @@ fn filters_set_effects_and_stroke_styles() {
     filter(&mut s, "test.engine.setfx", fx).unwrap();
     let n = node(&s, id);
     let st = n.appearance.stroke().unwrap();
-    assert_eq!((st.width, st.join, st.cap, st.miter_limit), (4.0, vectorcraft_doc::LineJoin::Round, vectorcraft_doc::LineCap::Square, 4.0));
+    assert_eq!((st.width, st.join, st.cap, st.miter_limit), (4.0, oracle_vector_doc::LineJoin::Round, oracle_vector_doc::LineCap::Square, 4.0));
     let effects = &n.appearance.effects;
     assert_eq!(effects.iter().map(|e| (e.id.as_str(), e.visible)).collect::<Vec<_>>(), [("distort.roughen", true), ("plugin.test.engine.fx", false)]);
-    assert_eq!(effects[0].params, vectorcraft_render::effects::merged_params("distort.roughen", &json!({"size": 3})), "filled in");
+    assert_eq!(effects[0].params, oracle_vector_render::effects::merged_params("distort.roughen", &json!({"size": 3})), "filled in");
     assert_eq!(effects[1].params, json!({"n": 2}));
     // Handed back unchanged (an echo), nothing changes, not even the records' parameters.
     install_wat(&mut s, &tpl::module(&tpl::manifest("test.engine.same", "filter", "{}"), tpl::ECHO, "", 1));
@@ -345,7 +345,7 @@ fn plugin_management_commands() {
         json!({}),
         json!({"dataBase64": "!!"}),
         json!({"dataBase64": "AGFzbQ=="}),
-        json!({"dataBase64": vectorcraft_format::base64_encode(DESATURATE), "replace": false}),
+        json!({"dataBase64": oracle_vector_format::base64_encode(DESATURATE), "replace": false}),
     ] {
         assert!(s.execute("plugin.install", &bad).is_err(), "{bad}");
     }
@@ -354,13 +354,13 @@ fn plugin_management_commands() {
     assert!(s.execute("plugin.reload", &json!({})).is_err(), "no folder set");
 
     // The Additional Plug-ins Folder preference installs what's in it.
-    let dir = std::env::temp_dir().join(format!("vectorcraft-engine-plugins-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("oracle-vector-engine-plugins-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let src = tpl::returning(&tpl::manifest("test.engine.folder", "filter", "{}"), r#"{"objects":[]}"#);
     std::fs::write(dir.join("folder.wasm"), wat::parse_str(src).unwrap()).unwrap();
     std::fs::write(dir.join("broken.wasm"), b"\0asm?").unwrap();
     run(&mut s, "prefs.set", json!({"key": "pluginsFolder", "value": dir.display().to_string()}));
-    assert!(vectorcraft_plugins::registry::get("test.engine.folder").is_some());
+    assert!(oracle_vector_plugins::registry::get("test.engine.folder").is_some());
     run(&mut s, "plugin.remove", json!({"id": "test.engine.folder"}));
     let r = run(&mut s, "plugin.reload", json!({}));
     assert_eq!(r["loaded"], json!(["test.engine.folder"]));
@@ -380,11 +380,11 @@ fn installed_plugins_are_kept_in_the_store() {
     s.attach_plugin_store(folder.0.clone());
     install_wat(&mut s, &src);
     assert_eq!(std::fs::read_dir(&folder.0).unwrap().count(), 1, "one file in the store");
-    vectorcraft_plugins::registry::remove(id);
+    oracle_vector_plugins::registry::remove(id);
 
     let mut next = session();
     next.attach_plugin_store(folder.0.clone());
-    assert!(vectorcraft_plugins::registry::get(id).is_some(), "installed again from the store");
+    assert!(oracle_vector_plugins::registry::get(id).is_some(), "installed again from the store");
     run(&mut next, "plugin.remove", json!({"id": id}));
     assert_eq!(std::fs::read_dir(&folder.0).unwrap().count(), 0, "removed from the store");
 
@@ -392,5 +392,5 @@ fn installed_plugins_are_kept_in_the_store() {
     std::fs::write(folder.0.join("broken.wasm"), b"\0asm?").unwrap();
     let mut third = session();
     third.attach_plugin_store(folder.0.clone());
-    assert!(vectorcraft_plugins::registry::get(id).is_none());
+    assert!(oracle_vector_plugins::registry::get(id).is_none());
 }

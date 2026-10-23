@@ -1,11 +1,11 @@
 //! Off-centre (focal) radial gradients: the pixels follow the model's gradient parameter, with
 //! and without an aspect ratio, and differ from the centred gradient.
 
-use vectorcraft_color::{Gradient, GradientGeom, GradientKind, GradientPaint, Paint};
-use vectorcraft_doc::{Appearance, Document};
-use vectorcraft_geom::{Point, Rect, shapes};
-use vectorcraft_testkit::fixtures::DocBuilder;
-use vectorcraft_testkit::raster::{Image, render_view};
+use oracle_vector_color::{Gradient, GradientGeom, GradientKind, GradientPaint, Paint};
+use oracle_vector_doc::{Appearance, Document};
+use oracle_vector_geom::{Point, Rect, shapes};
+use oracle_vector_testkit::fixtures::DocBuilder;
+use oracle_vector_testkit::raster::{Image, render_view};
 
 /// A 100 pt square filled with a white-to-black radial on `geom`.
 fn radial(geom: GradientGeom) -> Document {

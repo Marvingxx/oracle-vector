@@ -2,7 +2,7 @@
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use vectorcraft_geom::Point;
+use oracle_vector_geom::Point;
 
 use crate::theme::Brightness;
 
@@ -31,7 +31,7 @@ impl Default for View {
 
 impl View {
     /// The view a document opens at: the one it was saved with, else fitted on first display.
-    pub fn of(st: &vectorcraft_engine::DocState) -> Self {
+    pub fn of(st: &oracle_vector_engine::DocState) -> Self {
         match &st.view {
             Some(v) if v.zoom.is_finite() && v.zoom > 0.0 && v.center.x.is_finite() && v.center.y.is_finite() => Self {
                 zoom: v.zoom.clamp(0.0313, 640.0),
@@ -289,7 +289,7 @@ impl Dialog {
     pub fn f64(&self, k: &str, d: f64) -> f64 {
         match self.fields.get(k) {
             Some(Value::Number(n)) => n.as_f64().unwrap_or(d),
-            Some(Value::String(s)) => vectorcraft_doc::Unit::Points.parse(s).unwrap_or(d),
+            Some(Value::String(s)) => oracle_vector_doc::Unit::Points.parse(s).unwrap_or(d),
             _ => d,
         }
     }
@@ -341,7 +341,7 @@ pub struct UiState {
     /// document's `uid`: the context menu's Unlock submenu lists them while the menu is open. Not
     /// saved.
     #[serde(skip)]
-    pub context_locked: Option<(u64, Vec<vectorcraft_doc::NodeId>)>,
+    pub context_locked: Option<(u64, Vec<oracle_vector_doc::NodeId>)>,
     /// Last tool shown in each toolbar slot (keyed by the slot's first tool id).
     #[serde(default)]
     pub slot_tool: std::collections::BTreeMap<String, String>,
@@ -456,7 +456,7 @@ pub struct UiState {
     pub engine_prefs: Value,
     /// Color Guide panel: variation kind, steps and amount (Color Guide Options).
     #[serde(default)]
-    pub color_guide: vectorcraft_color::harmony::GuideOptions,
+    pub color_guide: oracle_vector_color::harmony::GuideOptions,
     /// The library panels' settings (Window → Swatch Libraries, Graphic Style Libraries): of each
     /// library opened, and of the persistent ones, which reopen at startup, also once closed
     /// ([`crate::panels::library_panel`], `ui.libraryPanel`).
@@ -772,13 +772,13 @@ impl UiState {
         self.status.clear();
         self.about = false;
         self.open_panel = None;
-        if self.group_tool.len() != vectorcraft_tools::TOOL_GROUPS.len() {
+        if self.group_tool.len() != oracle_vector_tools::TOOL_GROUPS.len() {
             self.group_tool = UiState::default().group_tool;
         }
         // One strip per group, of known tools (a hand-edited preferences file).
         let mut seen = std::collections::BTreeSet::new();
         self.floating_flyouts.retain_mut(|f| {
-            f.tools.retain(|id| vectorcraft_tools::tool_info(id).is_some());
+            f.tools.retain(|id| oracle_vector_tools::tool_info(id).is_some());
             f.tools.first().is_some_and(|k| seen.insert(k.clone()))
         });
         FloatingPanels::sanitize(&mut self.floating_panels, &mut self.toolbar_pos);
@@ -847,7 +847,7 @@ impl Default for UiState {
             told: vec![],
             answering_control: false,
             flyout: None,
-            group_tool: vectorcraft_tools::TOOL_GROUPS.iter().map(|g| g[0].id.to_string()).collect(),
+            group_tool: oracle_vector_tools::TOOL_GROUPS.iter().map(|g| g[0].id.to_string()).collect(),
             status: String::new(),
             palette_open: false,
             palette_query: String::new(),
@@ -927,7 +927,7 @@ mod tests {
         assert_eq!(zoom_label(0.125, false), "12.5%");
     }
 
-    /// storytold/vectorcraft#2719: 100% in the zoom field matches Actual Size when Display Print Size is on.
+    /// Marvingxx/oracle-vector#2719: 100% in the zoom field matches Actual Size when Display Print Size is on.
     #[test]
     fn zoom_percent_honors_display_print_size_baseline() {
         let b = zoom_baseline(true);

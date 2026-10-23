@@ -14,7 +14,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use serde_json::{Value, json};
-use vectorcraft_doc::{DataSet, DataValue, NodeId, NodeKind, Variable, VariableKind, Variables};
+use oracle_vector_doc::{DataSet, DataValue, NodeId, NodeKind, Variable, VariableKind, Variables};
 
 use super::edit::selected_roots;
 use super::fileio::{absolute_path, read_file_head, write_file};
@@ -88,7 +88,7 @@ fn names_param(p: &Value, cmd: &str, fallback: Option<String>, nothing: &str) ->
 
 /// Refuse what a variable of `kind` can't be bound to: art that is locked or on a hidden or locked
 /// layer; a text variable only drives type; an image variable only drives an image object.
-fn check_bindable(doc: &vectorcraft_doc::Document, ids: &[NodeId], kind: VariableKind, cmd: &str) -> Result<()> {
+fn check_bindable(doc: &oracle_vector_doc::Document, ids: &[NodeId], kind: VariableKind, cmd: &str) -> Result<()> {
     for id in ids {
         match doc.node(*id) {
             None => return Err(EngineError::NoNode(*id)),
@@ -110,8 +110,8 @@ fn check_bindable(doc: &vectorcraft_doc::Document, ids: &[NodeId], kind: Variabl
 
 /// Why `variable_target` refuses `id`: the object is locked, a group or layer that holds it is
 /// locked, or one that holds it is hidden, checked in that order.
-fn not_a_target(doc: &vectorcraft_doc::Document, id: NodeId) -> String {
-    let holders: Vec<&vectorcraft_doc::Node> =
+fn not_a_target(doc: &oracle_vector_doc::Document, id: NodeId) -> String {
+    let holders: Vec<&oracle_vector_doc::Node> =
         doc.ancestry(id).unwrap_or_default().into_iter().filter(|i| *i != id).filter_map(|i| doc.node(i)).collect();
     if doc.node(id).is_some_and(|n| n.locked) {
         format!("node {} is locked", id.0)
@@ -550,7 +550,7 @@ fn datasets_csv_bytes(p: &Value, cmd: &str) -> Result<Vec<u8>> {
         // One byte past the cap is enough to refuse the file below.
         (Some(path), ..) => read_file_head(&absolute_path(path), MAX_CSV_BYTES + 1)?,
         (None, Some(text), ..) => text.as_bytes().to_vec(),
-        (None, None, Some(b64), _) => vectorcraft_format::base64_decode(b64).ok_or_else(|| bad(cmd, "bad dataBase64"))?,
+        (None, None, Some(b64), _) => oracle_vector_format::base64_decode(b64).ok_or_else(|| bad(cmd, "bad dataBase64"))?,
         (None, None, None, Some(csv)) => csv.as_bytes().to_vec(),
         _ => return Err(bad(cmd, "give `path`, `data`, `dataBase64` or `csv`")),
     };
@@ -907,7 +907,7 @@ fn library_bytes(p: &Value, cmd: &str) -> Result<Vec<u8>> {
         // One byte past the cap is enough to refuse the file below.
         (Some(path), ..) => read_file_head(&absolute_path(path), MAX_LIBRARY_BYTES + 1)?,
         (None, Some(xml), _) => xml.as_bytes().to_vec(),
-        (None, None, Some(b64)) => vectorcraft_format::base64_decode(b64).ok_or_else(|| bad(cmd, "bad dataBase64"))?,
+        (None, None, Some(b64)) => oracle_vector_format::base64_decode(b64).ok_or_else(|| bad(cmd, "bad dataBase64"))?,
         _ => return Err(bad(cmd, "give `path`, `xml` or `dataBase64`")),
     };
     if bytes.len() > MAX_LIBRARY_BYTES {

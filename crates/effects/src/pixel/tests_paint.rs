@@ -1,8 +1,8 @@
 //! Artistic › Smudge Stick, Sponge and Watercolor.
 
 use serde_json::json;
-use vectorcraft_doc::Effect;
-use vectorcraft_geom::{Affine, Point};
+use oracle_vector_doc::Effect;
+use oracle_vector_geom::{Affine, Point};
 
 use super::*;
 use crate::{RasterFx, raster_effects};

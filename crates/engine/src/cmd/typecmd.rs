@@ -4,8 +4,8 @@
 use std::sync::Arc;
 
 use serde_json::{Value, json};
-use vectorcraft_doc::{AreaFit, Document, Justify, Node, NodeId, NodeKind, RubyAlign, RubyPosition, RubySpan, TextObject};
-use vectorcraft_geom::{Affine, PathData, Vec2};
+use oracle_vector_doc::{AreaFit, Document, Justify, Node, NodeId, NodeKind, RubyAlign, RubyPosition, RubySpan, TextObject};
+use oracle_vector_geom::{Affine, PathData, Vec2};
 
 use super::edit::selected_roots;
 use super::pathops::{len_param, num_param, shape_node};
@@ -248,7 +248,7 @@ fn ruby(s: &mut Session, p: &Value) -> Result<Value> {
             };
             let (a, b) = match range {
                 Some(r) => r.bytes(t),
-                None => (0, vectorcraft_text::edit::runs_len(&t.runs)),
+                None => (0, oracle_vector_text::edit::runs_len(&t.runs)),
             };
             // The ruby over the range goes; a new reading takes its place.
             t.ruby.retain(|r| r.end <= a || r.start >= b);
@@ -275,23 +275,23 @@ fn ruby(s: &mut Session, p: &Value) -> Result<Value> {
 
 /// Recompute the layout caches (bounds and baselines) after a text edit. Every engine text edit ends here (typing
 /// through `text.editRange` too), inside its `Session::edit`, so this is where Auto Size area type
-/// ([`vectorcraft_doc::AreaFit::AutoHeight`]) fits its frame to the text: part of the same undo
+/// ([`oracle_vector_doc::AreaFit::AutoHeight`]) fits its frame to the text: part of the same undo
 /// step as the edit.
 pub(crate) fn refresh_bounds(t: &mut TextObject) {
     // Edits that changed the paragraph count keep one paragraph style per paragraph.
     t.normalize_paras();
     auto_height(t);
-    let lay = vectorcraft_text::layout(vectorcraft_text::FontDb::global(), t);
+    let lay = oracle_vector_text::layout(oracle_vector_text::FontDb::global(), t);
     t.cached_bounds = Some(lay.bounds);
     t.cached_baselines = lay.baselines();
 }
 
 /// The text-space bounds of area type's frame, when Auto Size can fit it: a rectangle (one
 /// subpath, as large as its bounds) of horizontal type in one row, with some height.
-fn auto_height_frame(t: &TextObject) -> Option<vectorcraft_geom::Rect> {
-    use vectorcraft_geom::Shape;
-    let vectorcraft_doc::TextKind::Area { frame } = &t.kind else { return None };
-    if t.area.fit != vectorcraft_doc::AreaFit::AutoHeight || t.vertical || t.area.rows > 1 || frame.subpaths.len() != 1 {
+fn auto_height_frame(t: &TextObject) -> Option<oracle_vector_geom::Rect> {
+    use oracle_vector_geom::Shape;
+    let oracle_vector_doc::TextKind::Area { frame } = &t.kind else { return None };
+    if t.area.fit != oracle_vector_doc::AreaFit::AutoHeight || t.vertical || t.area.rows > 1 || frame.subpaths.len() != 1 {
         return None;
     }
     let b = frame.bounds()?;
@@ -313,9 +313,9 @@ thread_local! {
 /// the inset), so the frame's height follows the text. Text in several columns gets the least
 /// height (to 0.01 pt) at which it fits. True when the frame changed.
 fn auto_height(t: &mut TextObject) -> bool {
-    use vectorcraft_geom::Shape;
+    use oracle_vector_geom::Shape;
     let Some(b) = auto_height_frame(t) else { return false };
-    let db = vectorcraft_text::FontDb::global();
+    let db = oracle_vector_text::FontDb::global();
     // Lay out in a frame as tall as the canvas allows: everything the width lets through flows.
     let tall = (crate::MAX_COORD - b.y0).min(1.0e5);
     if tall <= 1.0 {
@@ -323,8 +323,8 @@ fn auto_height(t: &mut TextObject) -> bool {
     }
     let mut probe = t.clone();
     let with_size = |probe: &mut TextObject, w: f64, h: f64| {
-        if let vectorcraft_doc::TextKind::Area { frame } = &mut probe.kind {
-            *frame = PathData::from_bezpath(&vectorcraft_geom::Rect::new(b.x0, b.y0, b.x0 + w, b.y0 + h).to_path(0.1));
+        if let oracle_vector_doc::TextKind::Area { frame } = &mut probe.kind {
+            *frame = PathData::from_bezpath(&oracle_vector_geom::Rect::new(b.x0, b.y0, b.x0 + w, b.y0 + h).to_path(0.1));
         }
     };
     // Columns: all the text in one column as wide as each of them is surely tall enough.
@@ -333,8 +333,8 @@ fn auto_height(t: &mut TextObject) -> bool {
     with_size(&mut probe, col_w, tall);
     probe.area.columns = 1;
     // Measured from the top: aligned in the tall probe the lines would sit far below.
-    probe.area.vertical_align = vectorcraft_doc::VerticalAlign::Top;
-    let lay = vectorcraft_text::layout(db, &probe);
+    probe.area.vertical_align = oracle_vector_doc::VerticalAlign::Top;
+    let lay = oracle_vector_text::layout(db, &probe);
     let inset = t.area.inset.max(0.0);
     let Some(bottom) = lay.lines.iter().map(|l| l.baseline + l.descent).filter(|y| y.is_finite()).reduce(f64::max) else { return false };
     // The layout's fit test is `baseline + descent <= bottom + 0.01`: the last line fits exactly.
@@ -346,7 +346,7 @@ fn auto_height(t: &mut TextObject) -> bool {
             #[cfg(test)]
             COLUMN_LAYOUTS.with(|c| c.set(c.get() + 1));
             with_size(probe, b.width(), h);
-            !vectorcraft_text::layout(db, probe).overflow
+            !oracle_vector_text::layout(db, probe).overflow
         };
         // The bisection runs on the one column's lines as `columns_hold` places them in the columns.
         // The columns are then laid out at the upper height it ends on and, when they hold the text
@@ -373,7 +373,7 @@ fn auto_height(t: &mut TextObject) -> bool {
     }
     // Scale the frame about its top edge, keeping its anchors (and their order) as they are.
     let a = Affine::translate((0.0, b.y0)) * Affine::scale_non_uniform(1.0, h / b.height()) * Affine::translate((0.0, -b.y0));
-    let vectorcraft_doc::TextKind::Area { frame } = &mut t.kind else { return false };
+    let oracle_vector_doc::TextKind::Area { frame } = &mut t.kind else { return false };
     let mut next = frame.clone();
     next.transform(a);
     if next.bounds().is_none_or(|nb| ![nb.x0, nb.y0, nb.x1, nb.y1].iter().all(|v| v.is_finite() && v.abs() <= crate::MAX_COORD)) {
@@ -400,10 +400,10 @@ fn least_height(mut lo: f64, mut hi: f64, mut fits: impl FnMut(f64) -> bool) -> 
 /// `lines`, the text's lines laid out in one column as wide as each of them from the same top?
 /// Each column takes the next lines while they end within its bottom, as layout tests them
 /// (`baseline + descent <= bottom + 0.01`). A column's first line sits its
-/// [`first_baseline`](vectorcraft_text::LineInfo::first_baseline) below `y0 + inset`, and the
+/// [`first_baseline`](oracle_vector_text::LineInfo::first_baseline) below `y0 + inset`, and the
 /// lines after it keep their distances from it. A last line with no characters (after a return
 /// that ends the text) may be left out, as layout leaves it out without overflowing.
-fn columns_hold(lines: &[vectorcraft_text::LineInfo], cols: usize, y0: f64, inset: f64, h: f64) -> bool {
+fn columns_hold(lines: &[oracle_vector_text::LineInfo], cols: usize, y0: f64, inset: f64, h: f64) -> bool {
     let Some(first) = lines.first() else { return true };
     let bottom = y0 + h - inset + 0.01;
     let mut next = 0;
@@ -435,8 +435,8 @@ pub(crate) fn refresh_bounds_of(d: &mut Document, ids: &[NodeId]) {
 /// pushed text out of its frame says so itself.
 pub(crate) fn with_overflow(s: &Session, ids: &[NodeId], mut result: Value) -> Value {
     let Ok(st) = s.doc() else { return result };
-    let db = vectorcraft_text::FontDb::global();
-    let fits = |t: &TextObject| matches!(t.kind, vectorcraft_doc::TextKind::Point) || !vectorcraft_text::layout(db, t).overflow;
+    let db = oracle_vector_text::FontDb::global();
+    let fits = |t: &TextObject| matches!(t.kind, oracle_vector_doc::TextKind::Point) || !oracle_vector_text::layout(db, t).overflow;
     let over = |id: &&NodeId| matches!(st.doc.node(**id).map(|n| &n.kind), Some(NodeKind::Text(t)) if !fits(t));
     let over: Vec<u64> = ids.iter().filter(over).map(|i| i.0).collect();
     if !over.is_empty() {
@@ -547,7 +547,7 @@ fn create_outlines(s: &mut Session, _: &Value) -> Result<Value> {
         for tid in texts {
             let Some(n) = d.node(tid).cloned() else { continue };
             let NodeKind::Text(t) = &n.kind else { continue };
-            let lay = vectorcraft_text::layout(vectorcraft_text::FontDb::global(), t);
+            let lay = oracle_vector_text::layout(oracle_vector_text::FontDb::global(), t);
             let mut children = vec![];
             for (gi, g) in lay.glyphs.iter().enumerate() {
                 // Inline graphics become instances of their symbols, in place.
@@ -569,7 +569,7 @@ fn create_outlines(s: &mut Session, _: &Value) -> Result<Value> {
                 children.push(Arc::new(node));
             }
             // Underline and strikethrough bars become paths of their run's paint too (#847).
-            for (run, bar) in vectorcraft_text::decorations(&lay, vectorcraft_text::FontDb::global(), t) {
+            for (run, bar) in oracle_vector_text::decorations(&lay, oracle_vector_text::FontDb::global(), t) {
                 let st = t.runs.get(run).map(|r| r.style.clone()).unwrap_or_else(|| t.first_style());
                 let mut node = shape_node(d, PathData::from_bezpath(&bar).transformed(t.xf), None);
                 node.appearance = st.appearance().into();
@@ -644,7 +644,7 @@ impl TextRange {
     }
     /// The byte range in `t`, clamped and ordered.
     pub(crate) fn bytes(&self, t: &TextObject) -> (usize, usize) {
-        let len = vectorcraft_text::edit::runs_len(&t.runs);
+        let len = oracle_vector_text::edit::runs_len(&t.runs);
         let a = self.start.unwrap_or(0).min(len);
         let b = self.end.unwrap_or(len).min(len);
         (a.min(b), a.max(b))
@@ -662,13 +662,13 @@ pub(crate) fn para_span(range: Option<TextRange>, t: &TextObject) -> Option<std:
 }
 
 /// Apply `f` to the character styles of `range` of `t` (None: every run).
-pub(crate) fn style_chars(t: &mut TextObject, range: Option<TextRange>, mut f: impl FnMut(&mut vectorcraft_doc::CharStyle)) {
+pub(crate) fn style_chars(t: &mut TextObject, range: Option<TextRange>, mut f: impl FnMut(&mut oracle_vector_doc::CharStyle)) {
     match range {
         None => t.runs.iter_mut().for_each(|r| f(&mut r.style)),
         Some(r) => {
             let (a, b) = r.bytes(t);
             if a < b {
-                vectorcraft_text::edit::style_range(&mut t.runs, a, b, f);
+                oracle_vector_text::edit::style_range(&mut t.runs, a, b, f);
             }
         }
     }
@@ -682,8 +682,8 @@ fn set_text(s: &mut Session, p: &Value) -> Result<Value> {
             let Some(NodeKind::Text(t)) = d.node_mut(*id).map(|n| &mut n.kind) else { continue };
             let style = t.first_style();
             // Every paragraph of the new text takes the first paragraph's attributes.
-            t.splice_paras(0, vectorcraft_text::edit::runs_len(&t.runs), &text);
-            t.runs = vec![vectorcraft_doc::TextRun { text: text.clone(), style, inline: None }];
+            t.splice_paras(0, oracle_vector_text::edit::runs_len(&t.runs), &text);
+            t.runs = vec![oracle_vector_doc::TextRun { text: text.clone(), style, inline: None }];
             // The text is new: the ruby of the old one is gone.
             t.ruby.clear();
             refresh_bounds(t);
@@ -728,8 +728,8 @@ fn set_style(s: &mut Session, p: &Value) -> Result<Value> {
     super::paint::check_keep_model(p, C)?;
     let fill = match p.get("fill") {
         None | Some(Value::Null) => None,
-        Some(Value::String(n)) if n.eq_ignore_ascii_case("none") => Some(vectorcraft_color::Paint::None),
-        Some(v) => Some(vectorcraft_color::Paint::solid(super::paint::new_color(s, p, color_value(v).ok_or_else(|| bad(C, "bad fill colour"))?))),
+        Some(Value::String(n)) if n.eq_ignore_ascii_case("none") => Some(oracle_vector_color::Paint::None),
+        Some(v) => Some(oracle_vector_color::Paint::solid(super::paint::new_color(s, p, color_value(v).ok_or_else(|| bad(C, "bad fill colour"))?))),
     };
     let features = super::textedit::features_param(p, C)?;
     if font.is_none()
@@ -831,7 +831,7 @@ fn set_style(s: &mut Session, p: &Value) -> Result<Value> {
 pub(crate) fn reshape_area_with(t: &mut TextObject, f: impl FnOnce(&mut TextObject) -> bool) -> bool {
     let before = t.kind.clone();
     let within = |t: &TextObject| match &t.kind {
-        vectorcraft_doc::TextKind::Area { frame } => {
+        oracle_vector_doc::TextKind::Area { frame } => {
             frame.bounds().is_some_and(|b| [b.x0, b.y0, b.x1, b.y1].iter().all(|v| v.abs() <= crate::MAX_COORD))
         }
         _ => false,
@@ -846,7 +846,7 @@ pub(crate) fn reshape_area_with(t: &mut TextObject, f: impl FnOnce(&mut TextObje
     if let (Some(a), Some(b)) = (was, height(t))
         && (a - b).abs() > 1e-6
     {
-        t.area.fit = vectorcraft_doc::AreaFit::None;
+        t.area.fit = oracle_vector_doc::AreaFit::None;
     }
     refresh_bounds(t);
     true
@@ -855,15 +855,15 @@ pub(crate) fn reshape_area_with(t: &mut TextObject, f: impl FnOnce(&mut TextObje
 /// Area type's text, if `n` is area type.
 fn area_text(n: Option<&Node>) -> Option<&TextObject> {
     match n.map(|n| &n.kind) {
-        Some(NodeKind::Text(t)) if matches!(t.kind, vectorcraft_doc::TextKind::Area { .. }) => Some(t),
+        Some(NodeKind::Text(t)) if matches!(t.kind, oracle_vector_doc::TextKind::Area { .. }) => Some(t),
         _ => None,
     }
 }
 
 /// The width and height of area type's frame in points, along the type's own axes, and the frame's
 /// bounds in text space.
-fn area_size(t: &TextObject) -> Option<(f64, f64, vectorcraft_geom::Rect)> {
-    let vectorcraft_doc::TextKind::Area { frame } = &t.kind else { return None };
+fn area_size(t: &TextObject) -> Option<(f64, f64, oracle_vector_geom::Rect)> {
+    let oracle_vector_doc::TextKind::Area { frame } = &t.kind else { return None };
     let b = frame.bounds()?;
     let [a, bb, c, d, _, _] = t.xf.as_coeffs();
     Some((b.width() * a.hypot(bb), b.height() * c.hypot(d), b))
@@ -920,7 +920,7 @@ pub(crate) fn fit_param(p: &Value, cur: AreaFit, c: &str) -> Result<Option<AreaF
 /// `overflow`s its frame at `fitScale` (Shrink Text to Fit's factor; 1 unshrunk).
 pub(crate) fn area_options_json(t: &TextObject) -> Result<Value> {
     let mut v = serde_json::to_value(&t.area).map_err(|e| EngineError::Other(e.to_string()))?;
-    let lay = vectorcraft_text::layout(vectorcraft_text::FontDb::global(), t);
+    let lay = oracle_vector_text::layout(oracle_vector_text::FontDb::global(), t);
     if let Some(o) = v.as_object_mut() {
         o.insert("fit".into(), json!(t.area.fit.id()));
         let min = match t.area.fit {
@@ -938,7 +938,7 @@ pub(crate) fn area_options_json(t: &TextObject) -> Result<Value> {
     Ok(v)
 }
 
-/// The [`vectorcraft_doc::AreaOptions`] keys `text.areaOptions` merges as they are.
+/// The [`oracle_vector_doc::AreaOptions`] keys `text.areaOptions` merges as they are.
 const AREA_KEYS: [&str; 7] = ["rows", "columns", "gutter", "inset", "firstBaseline", "firstBaselineMin", "verticalAlign"];
 
 fn area_options(s: &mut Session, p: &Value) -> Result<Value> {
@@ -968,9 +968,9 @@ fn area_options(s: &mut Session, p: &Value) -> Result<Value> {
     if !changed {
         return options(s);
     }
-    let mut opts: vectorcraft_doc::AreaOptions = serde_json::from_value(v).map_err(|e| bad(C, e.to_string()))?;
-    opts.rows = opts.rows.clamp(1, vectorcraft_doc::AreaOptions::MAX_ROWS_COLUMNS);
-    opts.columns = opts.columns.clamp(1, vectorcraft_doc::AreaOptions::MAX_ROWS_COLUMNS);
+    let mut opts: oracle_vector_doc::AreaOptions = serde_json::from_value(v).map_err(|e| bad(C, e.to_string()))?;
+    opts.rows = opts.rows.clamp(1, oracle_vector_doc::AreaOptions::MAX_ROWS_COLUMNS);
+    opts.columns = opts.columns.clamp(1, oracle_vector_doc::AreaOptions::MAX_ROWS_COLUMNS);
     let finite = |x: f64| if x.is_finite() { x } else { 0.0 };
     opts.gutter = finite(opts.gutter).clamp(0.0, 10_000.0);
     opts.inset = finite(opts.inset).clamp(0.0, 10_000.0);
@@ -1094,7 +1094,7 @@ mod area_tests {
 
     #[test]
     fn kinsoku_set_is_set_per_paragraph_and_saved_only_when_not_hard() {
-        use vectorcraft_doc::Kinsoku;
+        use oracle_vector_doc::Kinsoku;
         let mut s = Session::new();
         s.execute("file.new", &json!({"width": 400, "height": 400})).unwrap();
         let id = s.execute("text.create", &json!({"x": 10, "y": 10, "text": "あカッ", "area": {"width": 40, "height": 100}})).unwrap()["id"]
@@ -1118,13 +1118,13 @@ mod area_tests {
         s.execute("edit.undo", &json!({})).unwrap();
         assert_eq!(para(&s).kinsoku, Kinsoku::Hard);
         // Documents from before it read as Hard.
-        let old: vectorcraft_doc::ParaStyle = serde_json::from_value(json!({"justify": "Left"})).unwrap();
+        let old: oracle_vector_doc::ParaStyle = serde_json::from_value(json!({"justify": "Left"})).unwrap();
         assert_eq!(old.kinsoku, Kinsoku::Hard);
     }
 
     #[test]
     fn burasagari_is_set_per_paragraph_and_saved_only_when_on() {
-        use vectorcraft_doc::Burasagari;
+        use oracle_vector_doc::Burasagari;
         let mut s = Session::new();
         s.execute("file.new", &json!({"width": 400, "height": 400})).unwrap();
         let id = s.execute("text.create", &json!({"x": 10, "y": 10, "text": "雅楽、笙。", "area": {"width": 200, "height": 100}})).unwrap()["id"]
@@ -1148,7 +1148,7 @@ mod area_tests {
         s.execute("edit.undo", &json!({})).unwrap();
         s.execute("edit.undo", &json!({})).unwrap();
         assert_eq!(para(&s).burasagari, Burasagari::Standard);
-        let old: vectorcraft_doc::ParaStyle = serde_json::from_value(json!({"justify": "Left"})).unwrap();
+        let old: oracle_vector_doc::ParaStyle = serde_json::from_value(json!({"justify": "Left"})).unwrap();
         assert_eq!(old.burasagari, Burasagari::None);
     }
 
@@ -1195,7 +1195,7 @@ mod area_tests {
         s.execute("edit.undo", &json!({})).unwrap();
         assert!(text(&s).optical_margin);
         // Saved and reopened as it was; a document from before it reads as off.
-        let back = vectorcraft_format::load(&vectorcraft_format::save(&s.doc().unwrap().doc, false)).unwrap();
+        let back = oracle_vector_format::load(&oracle_vector_format::save(&s.doc().unwrap().doc, false)).unwrap();
         let NodeKind::Text(t) = &back.node(NodeId(id)).unwrap().kind else { panic!("text") };
         assert!(t.optical_margin);
         let mut old = serde_json::to_value(text(&s)).unwrap();
@@ -1219,7 +1219,7 @@ mod area_tests {
         };
         let setup = |s: &Session| s.doc().unwrap().doc.setup.clone();
         let advances = |s: &Session| {
-            vectorcraft_text::layout(vectorcraft_text::FontDb::global(), &text(s, id)).glyphs.iter().map(|g| g.advance).collect::<Vec<_>>()
+            oracle_vector_text::layout(oracle_vector_text::FontDb::global(), &text(s, id)).glyphs.iter().map(|g| g.advance).collect::<Vec<_>>()
         };
         assert!(!setup(&s).system_layout);
         assert!(!text(&s, id).system_layout && !text(&s, other).system_layout);
@@ -1245,13 +1245,13 @@ mod area_tests {
         assert!(!setup(&s).system_layout && !text(&s, id).system_layout && !text(&s, made).system_layout);
         s.execute("edit.undo", &json!({})).unwrap();
         assert!(setup(&s).system_layout && text(&s, id).system_layout);
-        let back = vectorcraft_format::load(&vectorcraft_format::save(&s.doc().unwrap().doc, false)).unwrap();
+        let back = oracle_vector_format::load(&oracle_vector_format::save(&s.doc().unwrap().doc, false)).unwrap();
         assert!(back.setup.system_layout);
         let NodeKind::Text(t) = &back.node(NodeId(id)).unwrap().kind else { panic!("text") };
         assert!(t.system_layout);
         let mut old = serde_json::to_value(setup(&s)).unwrap();
         old.as_object_mut().unwrap().remove("systemLayout");
-        assert!(!serde_json::from_value::<vectorcraft_doc::DocSetup>(old).unwrap().system_layout);
+        assert!(!serde_json::from_value::<oracle_vector_doc::DocSetup>(old).unwrap().system_layout);
     }
 
     /// Character panel menu › Fractional Widths: `type.fractionalWidths` sets or toggles the flag
@@ -1268,7 +1268,7 @@ mod area_tests {
             _ => panic!("text"),
         };
         let advances =
-            |s: &Session| vectorcraft_text::layout(vectorcraft_text::FontDb::global(), &text(s)).glyphs.iter().map(|g| g.advance).collect::<Vec<_>>();
+            |s: &Session| oracle_vector_text::layout(oracle_vector_text::FontDb::global(), &text(s)).glyphs.iter().map(|g| g.advance).collect::<Vec<_>>();
         // New type: on, and not saved.
         assert!(text(&s).fractional_widths);
         assert!(serde_json::to_value(text(&s)).unwrap().get("fractionalWidths").is_none());
@@ -1298,7 +1298,7 @@ mod area_tests {
         assert!(text(&s).fractional_widths);
         // Saved and reopened as it was; a document from before it reads as on.
         s.execute("type.fractionalWidths", &json!({"on": false})).unwrap();
-        let back = vectorcraft_format::load(&vectorcraft_format::save(&s.doc().unwrap().doc, false)).unwrap();
+        let back = oracle_vector_format::load(&oracle_vector_format::save(&s.doc().unwrap().doc, false)).unwrap();
         let NodeKind::Text(t) = &back.node(NodeId(id)).unwrap().kind else { panic!("text") };
         assert!(!t.fractional_widths);
         let mut old = serde_json::to_value(text(&s)).unwrap();
@@ -1311,7 +1311,7 @@ mod area_tests {
     /// and paragraph styles carry them.
     #[test]
     fn hyphenation_options_are_set_per_paragraph_and_saved_only_when_not_default() {
-        use vectorcraft_doc::HyphenationOptions;
+        use oracle_vector_doc::HyphenationOptions;
         let mut s = Session::new();
         s.execute("file.new", &json!({"width": 400, "height": 400})).unwrap();
         let id = s.execute("text.create", &json!({"x": 10, "y": 10, "text": "One\nTwo", "area": {"width": 200, "height": 100}})).unwrap()["id"]
@@ -1333,7 +1333,7 @@ mod area_tests {
         let (first, second) = paras(&s);
         assert_eq!((first.hyphenation, &second.hyphenation), (HyphenationOptions::default(), &want), "only the paragraph the caret is in");
         assert_eq!(serde_json::to_value(&second).unwrap()["hyphenation"]["hyphen_limit"], 2);
-        let back: vectorcraft_doc::ParaStyle = serde_json::from_value(serde_json::to_value(&second).unwrap()).unwrap();
+        let back: oracle_vector_doc::ParaStyle = serde_json::from_value(serde_json::to_value(&second).unwrap()).unwrap();
         assert_eq!(back.hyphenation, want);
         s.execute("text.setFormat", &json!({"hyphenLimit": -3, "hyphenationZone": 5000})).unwrap();
         assert_eq!((paras(&s).0.hyphenation.hyphen_limit, paras(&s).1.hyphenation.zone), (0, 1296.0));
@@ -1344,7 +1344,7 @@ mod area_tests {
         s.execute("paraStyle.new", &json!({"name": "Loose", "attrs": {"hyphenation": {"words_longer_than": 9}}})).unwrap();
         s.execute("paraStyle.apply", &json!({"name": "Loose", "id": id})).unwrap();
         assert_eq!(paras(&s).0.hyphenation, HyphenationOptions { words_longer_than: 9, ..HyphenationOptions::default() });
-        let old: vectorcraft_doc::ParaStyle = serde_json::from_value(json!({"justify": "Left", "hyphenate": true})).unwrap();
+        let old: oracle_vector_doc::ParaStyle = serde_json::from_value(json!({"justify": "Left", "hyphenate": true})).unwrap();
         assert_eq!(old.hyphenation, HyphenationOptions::default());
     }
 
@@ -1374,7 +1374,7 @@ mod area_tests {
         assert!(text(&s).para_at(0).roman_hanging && !text(&s).para_at(1).roman_hanging);
         assert!(left(&s) < inside - 5.0, "{} {inside}", left(&s));
         assert_eq!(serde_json::to_value(text(&s).para_at(0)).unwrap()["roman_hanging"], true);
-        let back: vectorcraft_doc::ParaStyle = serde_json::from_value(serde_json::to_value(text(&s).para_at(0)).unwrap()).unwrap();
+        let back: oracle_vector_doc::ParaStyle = serde_json::from_value(serde_json::to_value(text(&s).para_at(0)).unwrap()).unwrap();
         assert!(back.roman_hanging);
         s.execute("edit.undo", &json!({})).unwrap();
         assert!(!text(&s).para_at(0).roman_hanging);
@@ -1390,7 +1390,7 @@ mod area_tests {
     /// unknown value changes nothing, and paragraph styles carry it.
     #[test]
     fn insert_kashidas_is_set_per_paragraph_and_saved_only_when_set() {
-        use vectorcraft_doc::text::Kashida;
+        use oracle_vector_doc::text::Kashida;
         let mut s = Session::new();
         s.execute("file.new", &json!({"width": 400, "height": 400})).unwrap();
         let id = s
@@ -1409,7 +1409,7 @@ mod area_tests {
         s.execute("text.setFormat", &json!({"kashida": "medium", "start": 0, "end": 0})).unwrap();
         assert_eq!((text(&s).para_at(0).kashida, text(&s).para_at(1).kashida), (Kashida::Medium, Kashida::None));
         assert_eq!(serde_json::to_value(text(&s).para_at(0)).unwrap()["kashida"], "medium");
-        let reopened = vectorcraft_format::load(&vectorcraft_format::save(&s.doc().unwrap().doc, false)).unwrap();
+        let reopened = oracle_vector_format::load(&oracle_vector_format::save(&s.doc().unwrap().doc, false)).unwrap();
         let Some(NodeKind::Text(back)) = reopened.node(NodeId(id)).map(|n| &n.kind) else { panic!("text") };
         assert_eq!((back.para_at(0).kashida, back.para_at(1).kashida), (Kashida::Medium, Kashida::None));
         assert!(s.execute("text.setFormat", &json!({"kashida": "wide"})).is_err());
@@ -1428,7 +1428,7 @@ mod area_tests {
     /// are saved only when not the defaults, and paragraph styles carry them.
     #[test]
     fn justification_options_are_set_per_paragraph_and_saved_only_when_not_default() {
-        use vectorcraft_doc::{JustificationOptions, SingleWordJustify};
+        use oracle_vector_doc::{JustificationOptions, SingleWordJustify};
         let mut s = Session::new();
         s.execute("file.new", &json!({"width": 400, "height": 400})).unwrap();
         let id = s.execute("text.create", &json!({"x": 10, "y": 10, "text": "One\nTwo", "area": {"width": 200, "height": 100}})).unwrap()["id"]
@@ -1459,7 +1459,7 @@ mod area_tests {
         let (first, second) = paras(&s);
         assert_eq!((first.justification, &second.justification), (JustificationOptions::default(), &want), "only the paragraph the caret is in");
         assert_eq!(serde_json::to_value(&second).unwrap()["justification"]["single_word"], "alignCenter");
-        let back: vectorcraft_doc::ParaStyle = serde_json::from_value(serde_json::to_value(&second).unwrap()).unwrap();
+        let back: oracle_vector_doc::ParaStyle = serde_json::from_value(serde_json::to_value(&second).unwrap()).unwrap();
         assert_eq!(back.justification, want);
         // Out of order: nothing changes, and the error names the setting.
         let e = s.execute("text.setFormat", &json!({"wordSpacing": {"desired": 85}, "letterSpacing": {"min": 5}})).unwrap_err().to_string();
@@ -1473,7 +1473,7 @@ mod area_tests {
         s.execute("paraStyle.new", &json!({"name": "Airy", "attrs": {"justification": {"auto_leading": 200.0}}})).unwrap();
         s.execute("paraStyle.apply", &json!({"name": "Airy", "id": id})).unwrap();
         assert_eq!(paras(&s).0.justification, JustificationOptions { auto_leading: 200.0, ..JustificationOptions::default() });
-        let old: vectorcraft_doc::ParaStyle = serde_json::from_value(json!({"justify": "Left", "hyphenate": true})).unwrap();
+        let old: oracle_vector_doc::ParaStyle = serde_json::from_value(json!({"justify": "Left", "hyphenate": true})).unwrap();
         assert_eq!(old.justification, JustificationOptions::default());
     }
 
@@ -1483,7 +1483,7 @@ mod area_tests {
     /// baseline.
     #[test]
     fn new_type_takes_the_japanese_defaults_while_the_interface_is_japanese() {
-        use vectorcraft_doc::{CharAlign, LeadingModel};
+        use oracle_vector_doc::{CharAlign, LeadingModel};
         let mut s = Session::new();
         s.execute("file.new", &json!({"width": 400, "height": 400})).unwrap();
         let made = |s: &mut Session, cmd: &str, p: Value| -> (LeadingModel, CharAlign) {
@@ -1534,7 +1534,7 @@ mod area_tests {
         // Imported text keeps the Roman baseline.
         s.ui_language = Some("ja".into());
         let svg = r#"<svg xmlns="http://www.w3.org/2000/svg" width="200" height="100"><text x="10" y="50">雅楽</text></svg>"#;
-        s.execute("document.open", &json!({"name": "t.svg", "dataBase64": vectorcraft_format::base64_encode(svg.as_bytes())})).unwrap();
+        s.execute("document.open", &json!({"name": "t.svg", "dataBase64": oracle_vector_format::base64_encode(svg.as_bytes())})).unwrap();
         let mut found = vec![];
         s.doc().unwrap().doc.walk(|n| {
             if let NodeKind::Text(t) = &n.kind {
@@ -1546,7 +1546,7 @@ mod area_tests {
 
     #[test]
     fn leading_model_is_set_per_paragraph_and_saved_only_when_top_to_top() {
-        use vectorcraft_doc::LeadingModel;
+        use oracle_vector_doc::LeadingModel;
         let mut s = Session::new();
         s.execute("file.new", &json!({"width": 400, "height": 400})).unwrap();
         // Exercise ink bounds with bundled glyphs; Japanese outlines require optional craft-fonts.
@@ -1565,7 +1565,7 @@ mod area_tests {
         let t = text(&s);
         assert_eq!(t.para.leading_model, LeadingModel::EmBoxTop);
         // The fallback used without craft-fonts has no glyph metrics to move the first line.
-        if !vectorcraft_text::CRAFT_FONTS.is_empty() {
+        if !oracle_vector_text::CRAFT_FONTS.is_empty() {
             assert_ne!(t.cached_bounds, before, "the first line moves up to the frame's top");
         }
         assert_eq!(serde_json::to_value(&t.para).unwrap()["leading_model"], "emBoxTop");
@@ -1575,7 +1575,7 @@ mod area_tests {
 
     #[test]
     fn character_alignment_is_a_character_attribute_saved_only_when_set() {
-        use vectorcraft_doc::CharAlign;
+        use oracle_vector_doc::CharAlign;
         let mut s = Session::new();
         s.execute("file.new", &json!({"width": 400, "height": 400})).unwrap();
         let id = s.execute("text.create", &json!({"x": 10, "y": 50, "text": "雅楽"})).unwrap()["id"].as_u64().unwrap();
@@ -1610,7 +1610,7 @@ mod area_tests {
     /// set and kept by a native save.
     #[test]
     fn character_direction_is_a_character_attribute_saved_only_when_set() {
-        use vectorcraft_doc::ParaDirection;
+        use oracle_vector_doc::ParaDirection;
         let mut s = Session::new();
         s.execute("file.new", &json!({"width": 400, "height": 400})).unwrap();
         let id = s.execute("text.create", &json!({"x": 10, "y": 50, "text": "שלום 21 10 2026"})).unwrap()["id"].as_u64().unwrap();
@@ -1637,7 +1637,7 @@ mod area_tests {
         assert!(runs(&s).iter().all(|r| r.style.char_direction.is_none()));
         s.execute("edit.redo", &json!({})).unwrap();
         // Saved and reopened as it was.
-        let back = vectorcraft_format::load(&vectorcraft_format::save(&s.doc().unwrap().doc, false)).unwrap();
+        let back = oracle_vector_format::load(&oracle_vector_format::save(&s.doc().unwrap().doc, false)).unwrap();
         let NodeKind::Text(t) = &back.node(NodeId(id)).unwrap().kind else { panic!("text") };
         let reopened: Vec<_> = t.runs.iter().map(|r| (r.text.clone(), r.style.char_direction)).collect();
         assert_eq!(reopened, set(&s));
@@ -1671,7 +1671,7 @@ mod area_tests {
         // Styles written without it (documents from before it) read as off.
         let old = serde_json::to_value(&runs(&s)[0].style).unwrap();
         assert!(old.get("proportionalMetrics").is_none());
-        assert!(!serde_json::from_value::<vectorcraft_doc::CharStyle>(old).unwrap().proportional_metrics);
+        assert!(!serde_json::from_value::<oracle_vector_doc::CharStyle>(old).unwrap().proportional_metrics);
     }
 
     /// Tate-chu-yoko (Character panel menu, East Asian options): a character attribute, saved only
@@ -1699,7 +1699,7 @@ mod area_tests {
         assert_eq!(on, [("2026".to_string(), true), ("年".to_string(), false)]);
         let old = serde_json::to_value(&runs(&s)[1].style).unwrap();
         assert!(old.get("tateChuYoko").is_none());
-        assert!(!serde_json::from_value::<vectorcraft_doc::CharStyle>(old).unwrap().tate_chu_yoko);
+        assert!(!serde_json::from_value::<oracle_vector_doc::CharStyle>(old).unwrap().tate_chu_yoko);
         s.execute("text.setFormat", &json!({"tateChuYoko": false})).unwrap();
         assert!(runs(&s).iter().all(|r| !r.style.tate_chu_yoko));
     }
@@ -1727,7 +1727,7 @@ mod area_tests {
         assert_eq!(on, [("A".to_string(), true), ("b".to_string(), false)]);
         let old = serde_json::to_value(&runs(&s)[1].style).unwrap();
         assert!(old.get("noBreak").is_none());
-        assert!(!serde_json::from_value::<vectorcraft_doc::CharStyle>(old).unwrap().no_break);
+        assert!(!serde_json::from_value::<oracle_vector_doc::CharStyle>(old).unwrap().no_break);
         s.execute("text.setFormat", &json!({"noBreak": false})).unwrap();
         assert!(runs(&s).iter().all(|r| !r.style.no_break));
     }
@@ -1736,7 +1736,7 @@ mod area_tests {
     /// when set; the text keeps the digits that were typed.
     #[test]
     fn digits_are_a_character_attribute_saved_only_when_set() {
-        use vectorcraft_doc::Digits;
+        use oracle_vector_doc::Digits;
         let mut s = Session::new();
         s.execute("file.new", &json!({"width": 400, "height": 400})).unwrap();
         let id = s.execute("text.create", &json!({"x": 10, "y": 50, "text": "صفحة 12"})).unwrap()["id"].as_u64().unwrap();
@@ -1770,8 +1770,8 @@ mod area_tests {
     /// when set, each value clamped to its axis's range, and cleared by another font or style.
     #[test]
     fn variable_font_settings_are_a_character_attribute_saved_only_when_set() {
-        use vectorcraft_text::test_fonts::{TWO_AXIS_FAMILY as FAMILY, two_axis_font};
-        vectorcraft_text::FontDb::global().add_font(two_axis_font().unwrap());
+        use oracle_vector_text::test_fonts::{TWO_AXIS_FAMILY as FAMILY, two_axis_font};
+        oracle_vector_text::FontDb::global().add_font(two_axis_font().unwrap());
         let mut s = Session::new();
         s.execute("file.new", &json!({"width": 400, "height": 400})).unwrap();
         let id = s.execute("text.create", &json!({"x": 10, "y": 50, "text": "lIn lIn", "font": FAMILY, "size": 40})).unwrap()["id"].as_u64().unwrap();
@@ -1804,7 +1804,7 @@ mod area_tests {
         let axes = |v: &[(&str, f64)]| v.iter().map(|(t, v)| (t.to_string(), *v)).collect::<std::collections::BTreeMap<_, _>>();
         assert_eq!(set, [("lIn ".to_string(), axes(&[("wdth", 80.0)])), ("lIn".to_string(), axes(&[("wdth", 80.0), ("wght", 550.0)]))]);
         // A saved file keeps them.
-        let back = vectorcraft_format::load(&vectorcraft_format::save(&s.doc().unwrap().doc, false)).unwrap();
+        let back = oracle_vector_format::load(&oracle_vector_format::save(&s.doc().unwrap().doc, false)).unwrap();
         let NodeKind::Text(t) = &back.node(NodeId(id)).unwrap().kind else { panic!("text") };
         assert_eq!(t.runs, runs(&s));
         // Another style or font clears them: their settings were the old face's.
@@ -1842,7 +1842,7 @@ mod area_tests {
 
     #[test]
     fn new_type_is_composed_with_line_end_half_width_punctuation() {
-        use vectorcraft_doc::Mojikumi;
+        use oracle_vector_doc::Mojikumi;
         let mut s = Session::new();
         s.execute("file.new", &json!({"width": 400, "height": 400})).unwrap();
         let id = s.execute("text.create", &json!({"x": 10, "y": 50, "text": "雅楽。"})).unwrap()["id"].as_u64().unwrap();
@@ -1860,7 +1860,7 @@ mod area_tests {
         // Saved only when set; documents from before it read as None.
         let json = serde_json::to_value(para(&s)).unwrap();
         assert_eq!(json["mojikumi"], "lineEndHalf");
-        let old: vectorcraft_doc::ParaStyle = serde_json::from_value(json!({"justify": "Left"})).unwrap();
+        let old: oracle_vector_doc::ParaStyle = serde_json::from_value(json!({"justify": "Left"})).unwrap();
         assert_eq!(old.mojikumi, Mojikumi::None);
         assert!(serde_json::to_value(&old).unwrap().get("mojikumi").is_none());
     }
@@ -1894,7 +1894,7 @@ mod area_tests {
         let q = s.execute("text.areaOptions", &json!({})).unwrap();
         assert_eq!((q["rows"].as_u64(), q["columns"].as_u64()), (Some(1), Some(1)));
         let lay = |s: &Session| match &s.doc().unwrap().doc.node(NodeId(id)).unwrap().kind {
-            NodeKind::Text(t) => vectorcraft_text::layout(vectorcraft_text::FontDb::global(), t),
+            NodeKind::Text(t) => oracle_vector_text::layout(oracle_vector_text::FontDb::global(), t),
             _ => panic!(),
         };
         assert_eq!(lay(&s).frames.len(), 1);
@@ -1916,8 +1916,8 @@ mod area_tests {
 fn headline_fit(t: &TextObject, tracking: f64) -> Option<(f64, f64, usize)> {
     let mut probe = t.clone();
     let para_end = probe.plain_text().find('\n').unwrap_or(usize::MAX);
-    vectorcraft_text::edit::style_range(&mut probe.runs, 0, para_end.min(vectorcraft_text::edit::runs_len(&t.runs)), |st| st.tracking = tracking);
-    let lay = vectorcraft_text::layout(vectorcraft_text::FontDb::global(), &probe);
+    oracle_vector_text::edit::style_range(&mut probe.runs, 0, para_end.min(oracle_vector_text::edit::runs_len(&t.runs)), |st| st.tracking = tracking);
+    let lay = oracle_vector_text::layout(oracle_vector_text::FontDb::global(), &probe);
     let cell = lay.frames.first()?;
     let line = lay.lines.first()?;
     let para = t.para_at(0);
@@ -1932,7 +1932,7 @@ fn fit_headline(s: &mut Session, p: &Value) -> Result<Value> {
     let mut plans = vec![];
     for id in &ids {
         let Some(NodeKind::Text(t)) = d.node(*id).map(|n| &n.kind) else { continue };
-        if !matches!(t.kind, vectorcraft_doc::TextKind::Area { .. }) {
+        if !matches!(t.kind, oracle_vector_doc::TextKind::Area { .. }) {
             continue;
         }
         // Largest tracking that keeps the first paragraph on one line (bisection). The layout
@@ -1954,8 +1954,8 @@ fn fit_headline(s: &mut Session, p: &Value) -> Result<Value> {
     s.edit("Fit Headline", |d, _| {
         for (id, tr) in &plans {
             if let Some(NodeKind::Text(t)) = d.node_mut(*id).map(|n| &mut n.kind) {
-                let end = t.plain_text().find('\n').unwrap_or(usize::MAX).min(vectorcraft_text::edit::runs_len(&t.runs));
-                vectorcraft_text::edit::style_range(&mut t.runs, 0, end, |st| st.tracking = *tr);
+                let end = t.plain_text().find('\n').unwrap_or(usize::MAX).min(oracle_vector_text::edit::runs_len(&t.runs));
+                oracle_vector_text::edit::style_range(&mut t.runs, 0, end, |st| st.tracking = *tr);
                 refresh_bounds(t);
             }
         }
@@ -2085,7 +2085,7 @@ mod ruby_tests {
         let (mut s, _) = session_with_text();
         let export = |s: &mut Session, format: &str| -> Vec<u8> {
             let r = s.execute("document.export", &json!({"format": format})).unwrap();
-            vectorcraft_format::base64_decode(r["dataBase64"].as_str().unwrap()).unwrap()
+            oracle_vector_format::base64_decode(r["dataBase64"].as_str().unwrap()).unwrap()
         };
         s.execute("type.ruby", &json!({"text": "かんじ", "start": 0, "end": 6})).unwrap();
         let svg_ruby = String::from_utf8(export(&mut s, "svg")).unwrap();
@@ -2105,8 +2105,8 @@ mod ruby_tests {
         let (mut s, id) = session_with_text();
         s.execute("type.ruby", &json!({"text": "かんじ", "start": 0, "end": 6, "position": "below", "size": 40})).unwrap();
         let doc = s.doc().unwrap().doc.clone();
-        let bytes = vectorcraft_format::save(&doc, false);
-        let back = vectorcraft_format::load(&bytes).unwrap();
+        let bytes = oracle_vector_format::save(&doc, false);
+        let back = oracle_vector_format::load(&bytes).unwrap();
         let NodeKind::Text(t) = &back.node(NodeId(id)).unwrap().kind else { panic!("text") };
         assert_eq!(t.ruby.len(), 1);
         assert_eq!((t.ruby[0].start, t.ruby[0].end), (0, 6));
@@ -2114,7 +2114,7 @@ mod ruby_tests {
         assert_eq!(t.ruby[0].position, RubyPosition::Below);
         assert!((t.ruby[0].size_percent - 40.0).abs() < 1e-9);
         // The loaded type lays the reading out too.
-        let lay = vectorcraft_text::layout(vectorcraft_text::FontDb::global(), t);
+        let lay = oracle_vector_text::layout(oracle_vector_text::FontDb::global(), t);
         assert!(!lay.ruby.is_empty());
     }
 }

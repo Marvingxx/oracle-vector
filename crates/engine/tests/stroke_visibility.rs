@@ -2,9 +2,9 @@
 #![allow(clippy::unwrap_used)]
 
 use serde_json::json;
-use vectorcraft_doc::NodeId;
-use vectorcraft_engine::{Session, ViewInfo};
-use vectorcraft_tools::{PointerEvent, PointerKind};
+use oracle_vector_doc::NodeId;
+use oracle_vector_engine::{Session, ViewInfo};
+use oracle_vector_tools::{PointerEvent, PointerKind};
 
 fn fixture() -> (Session, NodeId) {
     let mut s = Session::new();

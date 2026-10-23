@@ -2,8 +2,8 @@
 //! Character/Paragraph attributes.
 
 use serde_json::{Value, json};
-use vectorcraft_doc::{Composer, JustificationOptions, NodeKind, Scaling, SingleWordJustify};
-use vectorcraft_geom::{Rect, Vec2};
+use oracle_vector_doc::{Composer, JustificationOptions, NodeKind, Scaling, SingleWordJustify};
+use oracle_vector_geom::{Rect, Vec2};
 
 use super::*;
 use crate::{Clipboard, EngineError};
@@ -95,14 +95,14 @@ fn boards_and_art(s: &Session, p: &Value, cmd: &str) -> Result<(Vec<usize>, bool
 
 /// The one artboard `cmd` acts on: `index`, an artboard of `d`, with the errors of
 /// [`artboard_indices`] (`missing index`, `no such artboard`).
-pub(crate) fn artboard_index(d: &vectorcraft_doc::Document, p: &Value, cmd: &str) -> Result<usize> {
+pub(crate) fn artboard_index(d: &oracle_vector_doc::Document, p: &Value, cmd: &str) -> Result<usize> {
     let i = p.get("index").ok_or_else(|| bad(cmd, "missing index"))?;
     artboard_indices(d, &json!({ "index": i }), cmd)?.into_iter().next().ok_or_else(|| EngineError::Other("no such artboard".into()))
 }
 
 /// The artboards `cmd` acts on: `indices` (several), else `index` (one), each an artboard of `d`,
 /// in order and once each.
-pub(crate) fn artboard_indices(d: &vectorcraft_doc::Document, p: &Value, cmd: &str) -> Result<Vec<usize>> {
+pub(crate) fn artboard_indices(d: &oracle_vector_doc::Document, p: &Value, cmd: &str) -> Result<Vec<usize>> {
     let listed = match (p.get("indices"), p.get("index")) {
         (Some(v), _) => point_indices(v),
         (None, Some(i)) => point_indices(&json!([i])),
@@ -117,7 +117,7 @@ pub(crate) fn artboard_indices(d: &vectorcraft_doc::Document, p: &Value, cmd: &s
 
 /// An error when one of artboards `indices` of `d` is locked: a locked artboard isn't moved,
 /// resized or deleted.
-pub(crate) fn refuse_locked(d: &vectorcraft_doc::Document, indices: &[usize]) -> Result<()> {
+pub(crate) fn refuse_locked(d: &oracle_vector_doc::Document, indices: &[usize]) -> Result<()> {
     match indices.iter().any(|i| d.artboards.get(*i).is_some_and(|a| a.locked)) {
         true => Err(EngineError::Other("the artboard is locked".into())),
         false => Ok(()),
@@ -127,7 +127,7 @@ pub(crate) fn refuse_locked(d: &vectorcraft_doc::Document, indices: &[usize]) ->
 /// The art that goes with artboard `i` when `art`: the objects fully inside it (locked and hidden
 /// ones only with prefs moveLockedWithArtboard), in paint order. With `moving` (a move or a cut),
 /// the art also on another locked artboard stays unless prefs moveLockedWithArtboard
-/// ([`vectorcraft_doc::Document::art_moving_with`]); a copy takes it.
+/// ([`oracle_vector_doc::Document::art_moving_with`]); a copy takes it.
 pub(crate) fn artboard_art(s: &Session, i: usize, art: bool, moving: bool) -> Result<Vec<NodeId>> {
     let d = &s.doc()?.doc;
     let rect = d.artboards.get(i).map(|a| a.rect).ok_or_else(|| EngineError::Other("no such artboard".into()))?;
@@ -152,7 +152,7 @@ pub(crate) fn artboards_art(s: &Session, indices: &[usize], art: bool, moving: b
 }
 
 /// How far a copy of `rect` moves to sit right of the last artboard (Duplicate Artboards, Paste).
-pub(crate) fn beside_artboards(d: &vectorcraft_doc::Document, rect: Rect) -> Vec2 {
+pub(crate) fn beside_artboards(d: &oracle_vector_doc::Document, rect: Rect) -> Vec2 {
     let right = d.artboards.iter().map(|a| a.rect.x1).fold(f64::MIN, f64::max);
     Vec2::new(right + 20.0 - rect.x0, 0.0)
 }
@@ -225,7 +225,7 @@ pub(crate) fn artboard_copy(s: &mut Session, p: &Value, cut: bool) -> Result<Val
 /// Add a copy of artboard `i` moved by `dv`, with copies of its guides and of its `art` (each just
 /// above its original) moved along → (the copy's index, the art's copies). When `sc.patterns`, the
 /// pattern tiles of the art's copies move with them. Duplicate Artboards and Alt-drag.
-pub(crate) fn copy_artboard(d: &mut vectorcraft_doc::Document, i: usize, dv: Vec2, art: &[NodeId], sc: Scaling) -> Result<(usize, Vec<NodeId>)> {
+pub(crate) fn copy_artboard(d: &mut oracle_vector_doc::Document, i: usize, dv: Vec2, art: &[NodeId], sc: Scaling) -> Result<(usize, Vec<NodeId>)> {
     let src = d.artboards.get(i).cloned().ok_or_else(|| EngineError::Other("no such artboard".into()))?;
     let index = push_artboard_copy(d, &src, src.rect + dv);
     // Its guides come along.
@@ -238,7 +238,7 @@ pub(crate) fn copy_artboard(d: &mut vectorcraft_doc::Document, i: usize, dv: Vec
 
 /// Add a copy of artboard `src` at `rect`, unlocked, with an id of its own and its name, or
 /// `<name> copy` (`<name> copy 2`…) when that is taken → its index.
-pub(crate) fn push_artboard_copy(d: &mut vectorcraft_doc::Document, src: &vectorcraft_doc::Artboard, rect: Rect) -> usize {
+pub(crate) fn push_artboard_copy(d: &mut oracle_vector_doc::Document, src: &oracle_vector_doc::Artboard, rect: Rect) -> usize {
     let mut a = src.clone();
     a.id = d.next_artboard_id();
     a.locked = false;
@@ -359,17 +359,17 @@ fn set_format(s: &mut Session, p: &Value) -> Result<Value> {
     let mojikumi = match p.get("mojikumi") {
         None => None,
         Some(v) => Some(match v.as_str() {
-            Some("none") => vectorcraft_doc::Mojikumi::None,
-            Some("lineEndHalf") => vectorcraft_doc::Mojikumi::LineEndHalf,
+            Some("none") => oracle_vector_doc::Mojikumi::None,
+            Some("lineEndHalf") => oracle_vector_doc::Mojikumi::LineEndHalf,
             _ => return Err(bad(C, "`mojikumi` must be \"none\" or \"lineEndHalf\"")),
         }),
     };
     let kinsoku = match p.get("kinsoku") {
         None => None,
         Some(v) => Some(match v.as_str() {
-            Some("none") => vectorcraft_doc::Kinsoku::None,
-            Some("hard") => vectorcraft_doc::Kinsoku::Hard,
-            Some("soft") => vectorcraft_doc::Kinsoku::Soft,
+            Some("none") => oracle_vector_doc::Kinsoku::None,
+            Some("hard") => oracle_vector_doc::Kinsoku::Hard,
+            Some("soft") => oracle_vector_doc::Kinsoku::Soft,
             _ => return Err(bad(C, "`kinsoku` must be \"none\", \"hard\" or \"soft\"")),
         }),
     };
@@ -377,36 +377,36 @@ fn set_format(s: &mut Session, p: &Value) -> Result<Value> {
         None => None,
         Some(v) => Some(match v.as_str() {
             Some("auto") => None,
-            Some("leftToRight") => Some(vectorcraft_doc::ParaDirection::LeftToRight),
-            Some("rightToLeft") => Some(vectorcraft_doc::ParaDirection::RightToLeft),
+            Some("leftToRight") => Some(oracle_vector_doc::ParaDirection::LeftToRight),
+            Some("rightToLeft") => Some(oracle_vector_doc::ParaDirection::RightToLeft),
             _ => return Err(bad(C, "`direction` must be \"auto\", \"leftToRight\" or \"rightToLeft\"")),
         }),
     };
     let leading_model = match p.get("leadingModel") {
         None => None,
         Some(v) => Some(match v.as_str() {
-            Some("romanBaseline") => vectorcraft_doc::LeadingModel::RomanBaseline,
-            Some("emBoxTop") => vectorcraft_doc::LeadingModel::EmBoxTop,
+            Some("romanBaseline") => oracle_vector_doc::LeadingModel::RomanBaseline,
+            Some("emBoxTop") => oracle_vector_doc::LeadingModel::EmBoxTop,
             _ => return Err(bad(C, "`leadingModel` must be \"romanBaseline\" or \"emBoxTop\"")),
         }),
     };
     let burasagari = match p.get("burasagari") {
         None => None,
         Some(v) => Some(match v.as_str() {
-            Some("none") => vectorcraft_doc::Burasagari::None,
-            Some("standard") => vectorcraft_doc::Burasagari::Standard,
-            Some("forced") => vectorcraft_doc::Burasagari::Forced,
+            Some("none") => oracle_vector_doc::Burasagari::None,
+            Some("standard") => oracle_vector_doc::Burasagari::Standard,
+            Some("forced") => oracle_vector_doc::Burasagari::Forced,
             _ => return Err(bad(C, "`burasagari` must be \"none\", \"standard\" or \"forced\"")),
         }),
     };
     let kashida = match p.get("kashida") {
         None => None,
         Some(v) => Some(match v.as_str() {
-            Some("none") => vectorcraft_doc::text::Kashida::None,
-            Some("short") => vectorcraft_doc::text::Kashida::Short,
-            Some("medium") => vectorcraft_doc::text::Kashida::Medium,
-            Some("long") => vectorcraft_doc::text::Kashida::Long,
-            Some("stylistic") => vectorcraft_doc::text::Kashida::Stylistic,
+            Some("none") => oracle_vector_doc::text::Kashida::None,
+            Some("short") => oracle_vector_doc::text::Kashida::Short,
+            Some("medium") => oracle_vector_doc::text::Kashida::Medium,
+            Some("long") => oracle_vector_doc::text::Kashida::Long,
+            Some("stylistic") => oracle_vector_doc::text::Kashida::Stylistic,
             _ => return Err(bad(C, "`kashida` must be \"none\", \"short\", \"medium\", \"long\" or \"stylistic\"")),
         }),
     };
@@ -430,7 +430,7 @@ fn set_format(s: &mut Session, p: &Value) -> Result<Value> {
     let mut out_of_order: Option<&str> = None;
     let range = super::typecmd::TextRange::parse(p, C)?;
     // The character attributes, given the baseline shift and horizontal scale in the type's own units.
-    let chars = |st: &mut vectorcraft_doc::CharStyle, baseline_shift: Option<f64>, h_scale: Option<f64>| {
+    let chars = |st: &mut oracle_vector_doc::CharStyle, baseline_shift: Option<f64>, h_scale: Option<f64>| {
         if let Some(k) = kerning {
             st.kerning = k;
         }

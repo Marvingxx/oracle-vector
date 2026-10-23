@@ -20,9 +20,9 @@
 //! image as its Contents row says; new ones go right below that row.
 
 use serde_json::{Value, json};
-use vectorcraft_color::{BlendMode, Paint};
-use vectorcraft_doc::{Appearance, AppearanceItem, CharStyle, FillLayer, Node, NodeKind, ParaStyle, StrokeLayer};
-use vectorcraft_geom::Rect;
+use oracle_vector_color::{BlendMode, Paint};
+use oracle_vector_doc::{Appearance, AppearanceItem, CharStyle, FillLayer, Node, NodeKind, ParaStyle, StrokeLayer};
+use oracle_vector_geom::Rect;
 
 use super::edit::{outermost, selected_roots};
 use super::opacitymask::percent;
@@ -346,7 +346,7 @@ pub(crate) fn edit_items_then(
     label: &str,
     fill: bool,
     mut f: impl FnMut(&mut Node, Option<usize>) -> Result<()>,
-    mut after: impl FnMut(&mut vectorcraft_doc::Document, &[NodeId]) -> Result<bool>,
+    mut after: impl FnMut(&mut oracle_vector_doc::Document, &[NodeId]) -> Result<bool>,
 ) -> Result<()> {
     if ids.is_empty() {
         return Ok(());
@@ -367,7 +367,7 @@ pub(crate) fn edit_items_then(
 }
 
 /// How many of `ids` differ in `d` from `before`.
-pub(crate) fn count_changed(d: &vectorcraft_doc::Document, before: &vectorcraft_doc::Document, ids: &[NodeId]) -> usize {
+pub(crate) fn count_changed(d: &oracle_vector_doc::Document, before: &oracle_vector_doc::Document, ids: &[NodeId]) -> usize {
     ids.iter().filter(|id| d.node(**id) != before.node(**id)).count()
 }
 
@@ -805,7 +805,7 @@ fn copy_from(s: &mut Session, p: &Value) -> Result<Value> {
         super::overprint::edit_counted(s, "Eyedropper", |d| {
             let Some(NodeKind::Text(t)) = d.node_mut(id).map(|n| &mut n.kind) else { return Err(EngineError::NoNode(id)) };
             let placed = picked.placed(Some(t.local_bounds()));
-            vectorcraft_text::edit::style_range(&mut t.runs, start, end, |st| picked.run(st, &placed, &attrs));
+            oracle_vector_text::edit::style_range(&mut t.runs, start, end, |st| picked.run(st, &placed, &attrs));
             if let Some((_, para)) = picked.text.as_ref().filter(|_| attrs.paragraph) {
                 t.edit_paras(Some(t.paragraphs_in(start, end)), |p| *p = para.clone());
             }

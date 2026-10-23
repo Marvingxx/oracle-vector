@@ -18,7 +18,7 @@
 //! `%%Creator`) and these operators: Adobe Illustrator File Format Specification, version 7.0
 //! (1998), listed by PRONOM at https://www.nationalarchives.gov.uk/PRONOM/fmt/423. A file in that
 //! format whose program has its layers (`%AI5_BeginLayer`) comes in through them, as `native` reads
-//! an Illustrator EPS's editing copy (#1027). One VectorCraft wrote (its prolog the procedure set
+//! an Illustrator EPS's editing copy (#1027). One Oracle Vector wrote (its prolog the procedure set
 //! [`crate::legacy_ai::PROCSET`], which prints its gradients flat and leaves its type out) comes in
 //! from those layers alone, without its page.
 //!
@@ -60,10 +60,10 @@ mod tests_native;
 use std::collections::HashSet;
 use std::sync::Arc;
 
-use vectorcraft_color::Paint;
-use vectorcraft_color::swatch::{REGISTRATION, Swatch};
-use vectorcraft_doc::{ColorMode, Document, LayerColor, Node};
-use vectorcraft_geom::{Affine, Rect};
+use oracle_vector_color::Paint;
+use oracle_vector_color::swatch::{REGISTRATION, Swatch};
+use oracle_vector_doc::{ColorMode, Document, LayerColor, Node};
+use oracle_vector_geom::{Affine, Rect};
 
 use graphics::{GState, Out};
 use interp::{Fault, Interp};
@@ -95,7 +95,7 @@ struct Dsc {
     /// In the legacy Illustrator format: its header has `%AI…` comments or names the app as the
     /// creator (see the module docs for the specification).
     illustrator: bool,
-    /// Its prolog is the one VectorCraft's legacy `.ai` writer includes
+    /// Its prolog is the one Oracle Vector's legacy `.ai` writer includes
     /// ([`crate::legacy_ai::PROCSET`] in `%%DocumentSuppliedResources`).
     own_legacy: bool,
 }
@@ -181,7 +181,7 @@ pub const POSTSCRIPT_ERRORS: &[(&str, &str)] = &[
 /// (`fault`).
 fn reason(e: &PsError, fault: Option<&Fault>) -> String {
     let what = match e {
-        PsError::Ps("undefined", at) => format!("it uses `{at}`, which VectorCraft's PostScript reader doesn't know"),
+        PsError::Ps("undefined", at) => format!("it uses `{at}`, which Oracle Vector's PostScript reader doesn't know"),
         PsError::Ps(name, at) => {
             let detail = match fault.and_then(|f| f.op) {
                 Some(op) if at.is_empty() || at == op => format!("{name} in `{op}`"),
@@ -241,7 +241,7 @@ pub fn import_with(bytes: &[u8], editing_data: bool) -> Result<Imported, String>
 pub fn import_trusting(bytes: &[u8], editing_data: bool, trust: bool) -> Result<Imported, String> {
     let ps = program(bytes)?;
     let dsc = Dsc::read(ps);
-    // A legacy `.ai` VectorCraft wrote: its prolog prints the art plainly (gradients flat, no
+    // A legacy `.ai` Oracle Vector wrote: its prolog prints the art plainly (gradients flat, no
     // type), and its program has all of it, which is read as the format (as before the file
     // printed).
     if editing_data
@@ -268,7 +268,7 @@ pub fn import_trusting(bytes: &[u8], editing_data: bool, trust: bool) -> Result<
     let why = match (&result, drew) {
         (Ok(()), true) if editing_data => return Ok(native::layered(ps, finish(out), trust)),
         (Ok(()), true) => return Ok(finish(out)),
-        (Ok(()), false) => "it draws nothing VectorCraft's PostScript reader can show".to_string(),
+        (Ok(()), false) => "it draws nothing Oracle Vector's PostScript reader can show".to_string(),
         (Err(e), _) => reason(e, fault.as_ref()),
     };
     // A file in the legacy Illustrator format whose program can't be run (a `.ai` that names the
@@ -300,7 +300,7 @@ pub fn import_trusting(bytes: &[u8], editing_data: bool, trust: bool) -> Result<
 /// groups), the spot inks as spot swatches, in CMYK when most process colours were.
 fn finish(mut out: Out) -> Imported {
     let drawn = std::mem::take(&mut out.drawn);
-    let mut children = vectorcraft_doc::clipnest::nest(&mut out.doc, drawn);
+    let mut children = oracle_vector_doc::clipnest::nest(&mut out.doc, drawn);
     if !out.shadings.is_empty() {
         graphics::collapse(&mut children, &out.shadings);
     }
@@ -317,7 +317,7 @@ fn finish_with(out: Out, layers: Vec<Arc<Node>>) -> Imported {
     let mut doc = out.doc;
     if out.cmyk > out.rgb {
         doc.color_mode = ColorMode::Cmyk;
-        let (swatches, groups) = vectorcraft_color::default_swatches(ColorMode::Cmyk.model());
+        let (swatches, groups) = oracle_vector_color::default_swatches(ColorMode::Cmyk.model());
         (doc.swatches, doc.swatch_groups) = (swatches.into(), groups.into());
     }
     // `taken` holds the names `Document::swatch` finds: each swatch's name, and Registration.

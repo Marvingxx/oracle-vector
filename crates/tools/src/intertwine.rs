@@ -16,11 +16,11 @@ use std::sync::Arc;
 
 use kurbo::BezPath;
 use serde_json::{Value, json};
-use vectorcraft_doc::intertwine::over_area;
-use vectorcraft_doc::{AppearanceItem, Document, Node, NodeId, NodeKind};
-use vectorcraft_effects as effects;
-use vectorcraft_geom::{FillRule, PathData, Point, Rect, SubPath, shapes};
-use vectorcraft_pathops as po;
+use oracle_vector_doc::intertwine::over_area;
+use oracle_vector_doc::{AppearanceItem, Document, Node, NodeId, NodeKind};
+use oracle_vector_effects as effects;
+use oracle_vector_geom::{FillRule, PathData, Point, Rect, SubPath, shapes};
+use oracle_vector_pathops as po;
 
 use crate::{Action, Cursor, Mods, Overlay, PointerEvent, PointerKind, Tool, ToolContext, ToolKey};
 
@@ -87,7 +87,7 @@ pub fn nonempty(p: PathData) -> Option<PathData> {
 
 /// Does area `a` (filled non-zero) contain `p`?
 pub fn contains(a: &PathData, p: Point) -> bool {
-    vectorcraft_geom::hit::fill_contains(&a.to_bezpath(), FillRule::NonZero, p)
+    oracle_vector_geom::hit::fill_contains(&a.to_bezpath(), FillRule::NonZero, p)
 }
 
 /// One overlap area: its outline, a point inside it, and the members (child indices, bottom
@@ -303,7 +303,7 @@ pub fn create(id: &str) -> Option<Box<dyn Tool>> {
 
 #[cfg(test)]
 mod tests {
-    use vectorcraft_doc::{Appearance, NodeId};
+    use oracle_vector_doc::{Appearance, NodeId};
 
     use super::*;
 

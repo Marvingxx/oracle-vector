@@ -5,13 +5,13 @@ use std::sync::Arc;
 
 use egui::{CornerRadius, Sense, Stroke, Ui, vec2};
 use serde_json::json;
-use vectorcraft_doc::NodeKind;
+use oracle_vector_doc::NodeKind;
 
 use crate::panels::stroke as stroke_panel;
 use crate::state::{ROTATE_VIEW_ANGLES, ZOOM_STOPS, zoom_label};
 use crate::theme::{self, Tokens};
 use crate::widgets;
-use crate::{VectorcraftApp, icons, menus, titlebar};
+use crate::{OracleVectorApp, icons, menus, titlebar};
 
 /// The application bar's height, in points (compact, as in PhotoCraft).
 pub const APP_BAR_HEIGHT: f32 = 32.0;
@@ -21,12 +21,12 @@ const MARK: f32 = 18.0;
 const WIDGET_H: f32 = 22.0;
 
 /// The application bar: brand mark, Home, menus, then Discord, search and the workspace switcher
-/// at the right. With [`VectorcraftApp::custom_titlebar`] it is also the window's title bar
+/// at the right. With [`OracleVectorApp::custom_titlebar`] it is also the window's title bar
 /// ([`titlebar`]): the caption buttons take the right end and the rest of the bar drags the window.
 /// On macOS, under the system's transparent title bar, its empty space drags and zooms the window
 /// too ([`titlebar::drag_area`]). With the system title bar (Windows and Linux, `system_title_bar`) the OS draws its own icon and
 /// title, so the in-app bar shows Home, menus and workspace controls only: no brand mark.
-pub fn app_bar(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn app_bar(app: &mut OracleVectorApp, ui: &mut Ui) {
     let t = Tokens::get(ui.ctx());
     let custom = app.custom_titlebar;
     let system = system_title_bar(app);
@@ -69,7 +69,6 @@ pub fn app_bar(app: &mut VectorcraftApp, ui: &mut Ui) {
             let icon = 28.0;
             let search = room >= 64.0 + 8.0 + gap + icon;
             let ws_w = ws_w.min(room - 8.0 - gap - if search { icon } else { 0.0 }).max(64.0);
-            let discord = search && room >= ws_w + 8.0 + gap + icon + 10.0 + gap + crate::community::discord_width(ui, false);
             let mut rui = ui.new_child(egui::UiBuilder::new().max_rect(right).layout(egui::Layout::right_to_left(egui::Align::Center)));
             let ui = &mut rui;
             // Workspace switcher: shows the current workspace, opens Window → Workspace.
@@ -91,12 +90,8 @@ pub fn app_bar(app: &mut VectorcraftApp, ui: &mut Ui) {
                     app.ui.palette_query.clear();
                 }
             }
-            if discord {
-                ui.add_space(10.0);
-                crate::community::discord_button(app, ui, false);
-            }
             if app.services.native_menu.is_some() {
-                let title = ui.painter().layout_no_wrap("VectorCraft".into(), egui::FontId::proportional(13.5), t.text);
+                let title = ui.painter().layout_no_wrap("Oracle Vector".into(), egui::FontId::proportional(13.5), t.text);
                 let title_rect = egui::Rect::from_center_size(full.center(), title.size());
                 // Keep the title centered only while the interactive groups leave room for it.
                 if title_rect.left() >= menus_end + 8.0 && title_rect.right() <= ui.min_rect().left() - 8.0 {
@@ -115,23 +110,23 @@ pub fn app_bar(app: &mut VectorcraftApp, ui: &mut Ui) {
 /// decorations, but keeps the in-app brand mark, so it never counts as system mode here; nor
 /// does the web build (the browser tab has no document title), nor an embedder that never
 /// turned the preference on.
-pub fn system_title_bar(app: &VectorcraftApp) -> bool {
+pub fn system_title_bar(app: &OracleVectorApp) -> bool {
     !app.custom_titlebar && app.session.prefs.system_title_bar && !cfg!(any(target_os = "macos", target_arch = "wasm32"))
 }
 
 /// The OS window title: the active document's name suffixed with the app name (a `*` prefix
 /// marks unsaved changes, like the `*` in the document tabs), or just the app name with no
 /// document open.
-pub fn window_title(app: &VectorcraftApp) -> String {
+pub fn window_title(app: &OracleVectorApp) -> String {
     app.session
         .active()
-        .map(|d| format!("{}{} \u{2014} VectorCraft", if d.is_dirty() { "*" } else { "" }, d.title()))
-        .unwrap_or_else(|| "VectorCraft".into())
+        .map(|d| format!("{}{} \u{2014} Oracle Vector", if d.is_dirty() { "*" } else { "" }, d.title()))
+        .unwrap_or_else(|| "Oracle Vector".into())
 }
 
 /// Keep the OS window title (and the taskbar / Alt-Tab entry) on the active file. Sends
 /// `ViewportCommand::Title` only when the title changed since the last frame.
-pub fn sync_window_title(app: &mut VectorcraftApp, ctx: &egui::Context) {
+pub fn sync_window_title(app: &mut OracleVectorApp, ctx: &egui::Context) {
     let want = window_title(app);
     if app.last_window_title != want {
         app.last_window_title = want.clone();
@@ -158,7 +153,7 @@ pub enum AnchorControls {
 }
 
 /// Which anchor controls show for the selection and the active tool.
-pub fn anchor_controls(app: &VectorcraftApp) -> AnchorControls {
+pub fn anchor_controls(app: &OracleVectorApp) -> AnchorControls {
     let Some(st) = app.session.active() else {
         return AnchorControls::None;
     };
@@ -166,13 +161,13 @@ pub fn anchor_controls(app: &VectorcraftApp) -> AnchorControls {
         return AnchorControls::All;
     }
     let paths = st.selection.objects.iter().any(|id| st.doc.node(*id).is_some_and(|n| matches!(n.kind, NodeKind::Path { .. })));
-    if paths && vectorcraft_tools::catalog::edits_anchors(app.session.tool_id()) { AnchorControls::Convert } else { AnchorControls::None }
+    if paths && oracle_vector_tools::catalog::edits_anchors(app.session.tool_id()) { AnchorControls::Convert } else { AnchorControls::None }
 }
 
 /// What the Control bar and the Properties panel offer for selected anchors ([`anchor_controls`]):
 /// "Convert:" corner or smooth, then "Anchors:" remove, connect (Join) and cut. Each group is a
 /// row of its own: inline in the Control bar, one under the other in a panel.
-pub fn anchor_buttons(app: &mut VectorcraftApp, ui: &mut Ui, controls: AnchorControls) {
+pub fn anchor_buttons(app: &mut OracleVectorApp, ui: &mut Ui, controls: AnchorControls) {
     let t = Tokens::get(ui.ctx());
     let mut run = None;
     let groups: [(&str, &[AnchorButton]); 2] = [
@@ -217,10 +212,10 @@ const ISOLATION_BUTTON: &str = "cb-isolation";
 
 /// The Control bar's isolation button. In isolation mode it is Exit Isolation Mode, except while a
 /// pattern is edited (the isolation bar's Done and Cancel end that). Otherwise, with one object
-/// selected that [`vectorcraft_tools::select::isolates`], it is Isolate Selected Object, which
+/// selected that [`oracle_vector_tools::select::isolates`], it is Isolate Selected Object, which
 /// also isolates a path inside a group that Direct Selection selected. An envelope's contents
 /// get no button: the envelope's Edit Envelope and Edit Contents buttons show instead.
-fn isolation_button(app: &mut VectorcraftApp, ui: &mut Ui) {
+fn isolation_button(app: &mut OracleVectorApp, ui: &mut Ui) {
     let Some(st) = app.session.active() else { return };
     let (icon, tip, id) = if st.isolation.is_some() {
         if st.doc.pattern_edit.is_some() {
@@ -228,8 +223,8 @@ fn isolation_button(app: &mut VectorcraftApp, ui: &mut Ui) {
         }
         ("chevron-left", tl!("Exit Isolation Mode"), "object.exitIsolation")
     } else if let [one] = st.selection.objects[..]
-        && st.doc.node(one).is_some_and(|n| vectorcraft_tools::select::isolates(&n.kind))
-        && vectorcraft_doc::live::envelope_of(&st.doc, one).is_none()
+        && st.doc.node(one).is_some_and(|n| oracle_vector_tools::select::isolates(&n.kind))
+        && oracle_vector_doc::live::envelope_of(&st.doc, one).is_none()
     {
         ("square-dashed", tl!("Isolate Selected Object"), "object.isolate")
     } else {
@@ -246,7 +241,7 @@ fn isolation_button(app: &mut VectorcraftApp, ui: &mut Ui) {
 const INLINE_TRANSFORM_WIDTH: f32 = 440.0;
 
 /// The Control bar (Window → Control), context-sensitive like Illustrator's.
-pub fn control_bar(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn control_bar(app: &mut OracleVectorApp, ui: &mut Ui) {
     let t = Tokens::get(ui.ctx());
     egui::Panel::top("control_bar")
         .exact_size(34.0)
@@ -271,7 +266,7 @@ pub fn control_bar(app: &mut VectorcraftApp, ui: &mut Ui) {
                     Some(_) if sel.len() == 1 && anchors != AnchorControls::None => {
                         tl!("Anchor Point")
                     }
-                    Some(vectorcraft_doc::Node { kind: NodeKind::Image(im), .. }) if sel.len() == 1 => {
+                    Some(oracle_vector_doc::Node { kind: NodeKind::Image(im), .. }) if sel.len() == 1 => {
                         if im.link.is_some() {
                             tl!("Linked File")
                         } else {
@@ -391,11 +386,11 @@ pub fn control_bar(app: &mut VectorcraftApp, ui: &mut Ui) {
 
 /// A document tab's title: "Name* @ 66.67 % (RGB/Preview)", or while an opacity mask is edited
 /// "Name* @ 66.67 % (<Opacity Mask>/Opacity Mask)".
-fn tab_title(d: &vectorcraft_engine::DocState, zoom: f64, outline: bool, display_print_size: bool) -> String {
+fn tab_title(d: &oracle_vector_engine::DocState, zoom: f64, outline: bool, display_print_size: bool) -> String {
     let mode = if d.doc.mask_edit.is_some() {
         format!("<{0}>/{0}", tl!("Opacity Mask"))
     } else {
-        let color = if d.doc.color_mode == vectorcraft_doc::ColorMode::Cmyk { "CMYK" } else { "RGB" };
+        let color = if d.doc.color_mode == oracle_vector_doc::ColorMode::Cmyk { "CMYK" } else { "RGB" };
         format!("{color}/{}", if outline { tl!("Outline") } else { tl!("Preview") })
     };
     format!("{}{} @ {} ({mode})", d.title(), if d.is_dirty() { "*" } else { "" }, zoom_label(zoom, display_print_size).replace('%', " %"))
@@ -419,7 +414,7 @@ fn first_tab_shown(widths: &[f32], active: Option<usize>, room: f32) -> usize {
 /// Document tab strip: "Name* @ 66.67% (RGB/Preview)". User Interface › Large Tabs makes the tabs
 /// taller, with larger titles. Tabs that don't fit are reached from a » button at the strip's
 /// right end, which lists every open document, and the active tab is always in view (#746).
-pub fn doc_tabs(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn doc_tabs(app: &mut OracleVectorApp, ui: &mut Ui) {
     /// The width of the » button.
     const MORE: f32 = 30.0;
     let t = Tokens::get(ui.ctx());
@@ -516,7 +511,7 @@ pub fn doc_tabs(app: &mut VectorcraftApp, ui: &mut Ui) {
 
 /// The isolation mode breadcrumb bar. It is drawn over the top of `area` (the canvas), after the
 /// canvas, so entering isolation mode does not change the canvas's size (#3126).
-pub fn isolation_bar(app: &mut VectorcraftApp, ui: &mut Ui, area: egui::Rect) {
+pub fn isolation_bar(app: &mut OracleVectorApp, ui: &mut Ui, area: egui::Rect) {
     let t = Tokens::get(ui.ctx());
     if let Some(st) = app.session.active()
         && let Some(iso) = st.isolation
@@ -574,7 +569,7 @@ pub fn isolation_bar(app: &mut VectorcraftApp, ui: &mut Ui, area: egui::Rect) {
 /// name. The field's list shows every artboard by number and name, as the Artboards panel lists
 /// them, and opens with the active artboard's row in view. The list lays out only the rows in view
 /// and at most one more. Returns the artboard chosen in the list.
-fn artboard_list(app: &VectorcraftApp, ui: &mut Ui, cur: usize) -> Option<usize> {
+fn artboard_list(app: &OracleVectorApp, ui: &mut Ui, cur: usize) -> Option<usize> {
     /// The width of the field.
     const FIELD_W: f32 = 140.0;
     /// The least width of the list.
@@ -656,7 +651,7 @@ fn artboard_list(app: &VectorcraftApp, ui: &mut Ui, cur: usize) -> Option<usize>
 }
 
 /// Draw the status message, bounded readouts and artboard navigation controls.
-pub fn status_bar(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn status_bar(app: &mut OracleVectorApp, ui: &mut Ui) {
     let t = Tokens::get(ui.ctx());
     egui::Panel::bottom("status_bar")
         .exact_size(24.0)
@@ -723,7 +718,7 @@ pub fn status_bar(app: &mut VectorcraftApp, ui: &mut Ui) {
                     app.status(e);
                 }
                 ui.separator();
-                let tool = vectorcraft_tools::tool_info(app.session.tool_id())
+                let tool = oracle_vector_tools::tool_info(app.session.tool_id())
                     .map(|t| {
                         // The catalog keys carry the full label ("Selection Tool"); only English drops the suffix.
                         let shown = tl!(t.label);
@@ -738,13 +733,13 @@ pub fn status_bar(app: &mut VectorcraftApp, ui: &mut Ui) {
 
 /// The most recently measured status widths, scoped to this UI and display settings.
 struct StatusReadoutWidths {
-    key: (crate::i18n::Lang, vectorcraft_doc::Unit, f32),
+    key: (crate::i18n::Lang, oracle_vector_doc::Unit, f32),
     values: [f32; 4],
 }
 
 /// Reuse sample-string measurements until language, document units or display scale changes.
 /// Keep a single entry per UI so repeated DPI/zoom changes cannot grow the cache indefinitely.
-fn status_readout_widths(ui: &Ui, lang: crate::i18n::Lang, unit: vectorcraft_doc::Unit, t: &Tokens) -> Arc<StatusReadoutWidths> {
+fn status_readout_widths(ui: &Ui, lang: crate::i18n::Lang, unit: oracle_vector_doc::Unit, t: &Tokens) -> Arc<StatusReadoutWidths> {
     let id = ui.id().with("status-readout-widths");
     let key = (lang, unit, ui.ctx().pixels_per_point());
     if let Some(cached) = ui.data(|data| data.get_temp::<Arc<StatusReadoutWidths>>(id))
@@ -773,7 +768,7 @@ fn status_readout_widths(ui: &Ui, lang: crate::i18n::Lang, unit: vectorcraft_doc
 
 /// Allocate the remaining row once, then paint each field inside its own bounded rectangle.
 /// Child UIs requested with a desired width can shrink to their contents; these rectangles cannot.
-fn status_readouts(app: &VectorcraftApp, ui: &mut Ui, t: &Tokens) {
+fn status_readouts(app: &OracleVectorApp, ui: &mut Ui, t: &Tokens) {
     const MESSAGE_MIN: f32 = 180.0;
     let mono = theme::mono(10.5);
     let proportional = egui::FontId::proportional(10.5);
@@ -818,7 +813,7 @@ fn status_readouts(app: &VectorcraftApp, ui: &mut Ui, t: &Tokens) {
         // The canvas clears hover_doc when the pointer leaves. While inspecting a readout,
         // retain its last value so its tooltip can show the complete coordinate.
         let inspecting = ui.input(|i| i.pointer.hover_pos()).is_some_and(|p| coord_rect.contains(p)) && ui.rect_contains_pointer(coord_rect);
-        let point = app.hover_doc.or_else(|| inspecting.then(|| ui.data(|data| data.get_temp::<vectorcraft_geom::Point>(point_id))).flatten());
+        let point = app.hover_doc.or_else(|| inspecting.then(|| ui.data(|data| data.get_temp::<oracle_vector_geom::Point>(point_id))).flatten());
         if let Some(p) = point {
             for (id, x, value) in [("X", left, p.x), ("Y", left + axis_width, p.y)] {
                 let rect = egui::Rect::from_min_size(egui::pos2(x, area.top()), vec2(axis_width, area.height()));
@@ -1059,7 +1054,7 @@ fn hint_for(tool: &str) -> Option<&'static [(&'static str, bool)]> {
 /// can insist a complete language covers them.
 pub fn hint_strings() -> Vec<&'static str> {
     let mut v = Vec::new();
-    for tool in vectorcraft_tools::catalog::all_tools().map(|t| t.id).chain([ANIMATED_ZOOM_HINT]) {
+    for tool in oracle_vector_tools::catalog::all_tools().map(|t| t.id).chain([ANIMATED_ZOOM_HINT]) {
         for &(text, bold) in hint_for(tool).unwrap_or(&[]) {
             let text = if bold { text.rsplit_once('+').map_or(text, |(_, k)| k) } else { text };
             if !text.is_empty() && !text.chars().all(|c| c.is_ascii_digit()) && !v.contains(&text) {
@@ -1102,7 +1097,7 @@ fn hint_segments(tool: &str) -> Vec<(Cow<'static, str>, bool)> {
         .collect()
 }
 
-pub fn hint_bar(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn hint_bar(app: &mut OracleVectorApp, ui: &mut Ui) {
     let t = Tokens::get(ui.ctx());
     let panel = egui::Panel::bottom("hint_bar")
         .exact_size(28.0)
@@ -1148,12 +1143,12 @@ mod tests {
     use super::{StatusReadoutWidths, status_readouts};
     use crate::theme::Tokens;
     use serde_json::json;
-    use vectorcraft_engine::Session;
+    use oracle_vector_engine::Session;
 
     #[test]
     fn hints_name_keys_as_the_menus_do() {
         let text = |tool: &str| super::hint_segments(tool).into_iter().map(|(s, _)| s).collect::<String>();
-        for tool in vectorcraft_tools::catalog::all_tools().map(|t| t.id) {
+        for tool in oracle_vector_tools::catalog::all_tools().map(|t| t.id) {
             let hint = text(tool);
             assert!(!hint.contains("Option"), "{tool}: {hint}");
             assert!(cfg!(target_os = "macos") || !hint.contains("Cmd"), "{tool}: {hint}");
@@ -1181,12 +1176,12 @@ mod tests {
     }
 
     /// Collect status-bar text layout from a headless frame without pointer events.
-    fn status_readout_frame(app: &mut crate::VectorcraftApp, ctx: &egui::Context, width: f32) -> Vec<StatusText> {
+    fn status_readout_frame(app: &mut crate::OracleVectorApp, ctx: &egui::Context, width: f32) -> Vec<StatusText> {
         status_readout_frame_events(app, ctx, width, vec![])
     }
 
     /// Collect status-bar text, positions, clips and elision state with explicit pointer events.
-    fn status_readout_frame_events(app: &mut crate::VectorcraftApp, ctx: &egui::Context, width: f32, events: Vec<egui::Event>) -> Vec<StatusText> {
+    fn status_readout_frame_events(app: &mut crate::OracleVectorApp, ctx: &egui::Context, width: f32, events: Vec<egui::Event>) -> Vec<StatusText> {
         let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(width, 300.0));
         let mut out = ctx.run_ui(egui::RawInput { screen_rect: Some(screen), events, ..Default::default() }, |ui| super::status_bar(app, ui));
         out.textures_delta.clear();
@@ -1211,9 +1206,9 @@ mod tests {
     }
 
     /// Prepare an English test document with the app fonts and a status message.
-    fn status_readout_app() -> (crate::VectorcraftApp, egui::Context) {
+    fn status_readout_app() -> (crate::OracleVectorApp, egui::Context) {
         crate::i18n::set_current(crate::i18n::Lang::EN);
-        let mut app = crate::VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = crate::OracleVectorApp::new(Session::new(), Default::default());
         app.session.execute("file.new", &json!({"width": 100, "height": 100})).unwrap();
         app.ui.status = "Saved recovery data for Untitled-1".to_owned();
         let ctx = egui::Context::default();
@@ -1223,7 +1218,7 @@ mod tests {
     }
 
     /// Draw the production readouts and observe the cached measurement object across frames.
-    fn status_width_cache_frame(app: &crate::VectorcraftApp, ctx: &egui::Context, width: f32, ppp: f32) -> Arc<StatusReadoutWidths> {
+    fn status_width_cache_frame(app: &crate::OracleVectorApp, ctx: &egui::Context, width: f32, ppp: f32) -> Arc<StatusReadoutWidths> {
         let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(width, 300.0));
         let mut input = egui::RawInput { screen_rect: Some(screen), ..Default::default() };
         input.viewports.entry(egui::ViewportId::ROOT).or_default().native_pixels_per_point = Some(ppp);
@@ -1244,7 +1239,7 @@ mod tests {
         let first = status_width_cache_frame(&app, &ctx, 1400.0, 1.0);
         for width in [1400.0_f32, 500.0, 2200.0] {
             app.perf = crate::Perf { render_ms: f64::from(width), frame_ms: f64::from(width) / 3.0, fps: 120.0 };
-            app.hover_doc = Some(vectorcraft_geom::Point::new(-width as f64, width as f64));
+            app.hover_doc = Some(oracle_vector_geom::Point::new(-width as f64, width as f64));
             let cached = status_width_cache_frame(&app, &ctx, width, 1.0);
             assert!(Arc::ptr_eq(&first, &cached), "live state or window size remeasured the samples");
         }
@@ -1259,12 +1254,12 @@ mod tests {
         let mut previous = status_width_cache_frame(&app, &ctx, 4000.0, 1.0);
         let french = crate::i18n::Lang::from_code("fr").unwrap();
         for (lang, unit, ppp) in [
-            (french, vectorcraft_doc::Unit::Points, 1.0),
-            (french, vectorcraft_doc::Unit::Millimeters, 1.0),
-            (french, vectorcraft_doc::Unit::Millimeters, 1.5),
-            (crate::i18n::Lang::EN, vectorcraft_doc::Unit::Millimeters, 1.5),
-            (crate::i18n::Lang::EN, vectorcraft_doc::Unit::Points, 1.5),
-            (crate::i18n::Lang::EN, vectorcraft_doc::Unit::Points, 1.0),
+            (french, oracle_vector_doc::Unit::Points, 1.0),
+            (french, oracle_vector_doc::Unit::Millimeters, 1.0),
+            (french, oracle_vector_doc::Unit::Millimeters, 1.5),
+            (crate::i18n::Lang::EN, oracle_vector_doc::Unit::Millimeters, 1.5),
+            (crate::i18n::Lang::EN, oracle_vector_doc::Unit::Points, 1.5),
+            (crate::i18n::Lang::EN, oracle_vector_doc::Unit::Points, 1.0),
         ] {
             crate::i18n::set_current(lang);
             app.session.execute("document.setUnits", &json!({"units": unit.key()})).unwrap();
@@ -1290,7 +1285,7 @@ mod tests {
             (99999.9, 9999.9, 999.0, -999.99, 9999.99),
         ] {
             app.perf = crate::Perf { render_ms: render, frame_ms: frame, fps };
-            app.hover_doc = Some(vectorcraft_geom::Point::new(x, y));
+            app.hover_doc = Some(oracle_vector_geom::Point::new(x, y));
             let texts = status_readout_frame(&mut app, &ctx, 1400.0);
             let message = status_text(&texts, "Saved recovery data");
             let extent = (message.at, message.clip, message.bounds, message.elided);
@@ -1332,7 +1327,7 @@ mod tests {
     fn status_messages_keep_their_origin_when_the_pointer_enters_and_leaves() {
         let (mut app, ctx) = status_readout_app();
         let mut first = None;
-        for hover in [None, Some(vectorcraft_geom::Point::new(7.0, 5.0)), None] {
+        for hover in [None, Some(oracle_vector_geom::Point::new(7.0, 5.0)), None] {
             app.hover_doc = hover;
             let texts = status_readout_frame(&mut app, &ctx, 1400.0);
             let message = status_text(&texts, "Saved recovery data");
@@ -1351,7 +1346,7 @@ mod tests {
     #[test]
     fn hovering_a_coordinate_retains_its_full_value_for_inspection() {
         let (mut app, ctx) = status_readout_app();
-        app.hover_doc = Some(vectorcraft_geom::Point::new(1e12, -1e12));
+        app.hover_doc = Some(oracle_vector_geom::Point::new(1e12, -1e12));
         let first = status_readout_frame(&mut app, &ctx, 1400.0);
         let x = status_text(&first, "X:");
         assert!(x.elided);
@@ -1371,7 +1366,7 @@ mod tests {
     #[test]
     fn narrow_status_bars_preserve_the_message_and_hide_optional_readouts() {
         let (mut app, ctx) = status_readout_app();
-        app.hover_doc = Some(vectorcraft_geom::Point::new(7.0, 5.0));
+        app.hover_doc = Some(oracle_vector_geom::Point::new(7.0, 5.0));
         let mut origin = None;
         for (width, coords, perf) in [(1400.0, true, true), (1000.0, true, false), (800.0, false, false)] {
             let texts = status_readout_frame(&mut app, &ctx, width);
@@ -1408,7 +1403,7 @@ mod tests {
         crate::background::run(
             &mut app,
             true,
-            "Saving test.vectorcraft".to_owned(),
+            "Saving test.oracle-vector".to_owned(),
             None,
             move |_| {
                 rx.recv().unwrap();
@@ -1421,11 +1416,11 @@ mod tests {
         )
         .unwrap();
         let busy = status_readout_frame(&mut app, &ctx, 1400.0);
-        let message = status_text(&busy, "Saving test.vectorcraft");
+        let message = status_text(&busy, "Saving test.oracle-vector");
         assert_eq!((before.at, before.clip), (message.at, message.clip));
         crate::background::run(&mut app, true, "Exporting test.svg".to_owned(), None, |_| Ok(json!({})), |_, result| result).unwrap();
         let several = status_readout_frame(&mut app, &ctx, 1400.0);
-        let message = status_text(&several, "Saving test.vectorcraft");
+        let message = status_text(&several, "Saving test.oracle-vector");
         assert!(message.text.ends_with("(+1)"));
         assert_eq!((before.at, before.clip), (message.at, message.clip));
         let tree = crate::widgets::accessibility_tests::tree(|ui| super::status_bar(&mut app, ui));
@@ -1441,11 +1436,11 @@ mod tests {
     #[test]
     fn ordinary_coordinates_are_readable_in_every_unit() {
         let (mut app, ctx) = status_readout_app();
-        for unit in vectorcraft_doc::Unit::ALL {
+        for unit in oracle_vector_doc::Unit::ALL {
             app.session.execute("document.setUnits", &json!({"units": unit.key()})).unwrap();
             for (x, y) in [(-1234.56, 1234.56), (-9999.99, 9999.99), (9999.99, -9999.99)] {
                 let (x, y) = (unit.to_pt(x), unit.to_pt(y));
-                app.hover_doc = Some(vectorcraft_geom::Point::new(x, y));
+                app.hover_doc = Some(oracle_vector_geom::Point::new(x, y));
                 let texts = status_readout_frame(&mut app, &ctx, 1400.0);
                 for (axis, value) in [("X:", x), ("Y:", y)] {
                     let field = status_text(&texts, axis);
@@ -1495,13 +1490,13 @@ mod tests {
     /// Linux and the web, before it on macOS; clicking it closes that document.
     #[test]
     fn a_tabs_close_box_sits_where_the_platform_puts_it() {
-        let mut app = crate::VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = crate::OracleVectorApp::new(Session::new(), Default::default());
         app.session.execute("file.new", &json!({"width": 100, "height": 100})).unwrap();
         app.session.execute("file.new", &json!({"width": 100, "height": 100})).unwrap();
         let ctx = egui::Context::default();
         crate::theme::install_fonts(&ctx);
         let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(1200.0, 200.0));
-        let frame = |app: &mut crate::VectorcraftApp, events: Vec<egui::Event>| {
+        let frame = |app: &mut crate::OracleVectorApp, events: Vec<egui::Event>| {
             let mut out = ctx.run_ui(egui::RawInput { screen_rect: Some(screen), events, ..Default::default() }, |ui| super::doc_tabs(app, ui));
             out.textures_delta.clear();
             let mut titles = vec![];
@@ -1531,7 +1526,7 @@ mod tests {
 
     /// One headless frame of the status bar; returns the artboard navigator's buttons, left to
     /// right: first, previous, next, last.
-    fn navigator(app: &mut crate::VectorcraftApp, ctx: &egui::Context, events: Vec<egui::Event>) -> Vec<egui::Rect> {
+    fn navigator(app: &mut crate::OracleVectorApp, ctx: &egui::Context, events: Vec<egui::Event>) -> Vec<egui::Rect> {
         let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(1200.0, 300.0));
         let mut out = ctx.run_ui(egui::RawInput { screen_rect: Some(screen), events, ..Default::default() }, |ui| super::status_bar(app, ui));
         out.textures_delta.clear();
@@ -1545,8 +1540,8 @@ mod tests {
     /// Artboard navigation updates the active artboard and fitted view together.
     #[test]
     fn the_artboard_navigator_goes_to_artboards_and_fitting_shows_the_current_one() {
-        use vectorcraft_geom::Point;
-        let mut app = crate::VectorcraftApp::new(Session::new(), Default::default());
+        use oracle_vector_geom::Point;
+        let mut app = crate::OracleVectorApp::new(Session::new(), Default::default());
         // Three 200 × 100 artboards in a row, centred at x = 100, 320 and 540.
         app.run("file.new", json!({"width": 200, "height": 100})).unwrap();
         app.run("artboard.new", json!({})).unwrap();
@@ -1556,7 +1551,7 @@ mod tests {
         crate::theme::install_fonts(&ctx);
         let buttons = navigator(&mut app, &ctx, vec![]);
         assert_eq!(buttons.len(), 4);
-        let click = |app: &mut crate::VectorcraftApp, r: egui::Rect| {
+        let click = |app: &mut crate::OracleVectorApp, r: egui::Rect| {
             let b = |pressed| egui::Event::PointerButton {
                 pos: r.center(),
                 button: egui::PointerButton::Primary,
@@ -1567,7 +1562,7 @@ mod tests {
             navigator(app, &ctx, vec![b(true)]);
             navigator(app, &ctx, vec![b(false)]);
         };
-        let at = |app: &crate::VectorcraftApp| (app.view().unwrap().artboard, app.view().unwrap().center);
+        let at = |app: &crate::OracleVectorApp| (app.view().unwrap().artboard, app.view().unwrap().center);
         click(&mut app, buttons[2]);
         assert_eq!(at(&app), (1, Point::new(320.0, 50.0)), "next");
         click(&mut app, buttons[3]);
@@ -1587,10 +1582,10 @@ mod tests {
         assert!(app.run("view.goToArtboard", json!({"index": "sideways"})).is_err());
     }
 
-    /// storytold/vectorcraft#2719: status-bar 100% matches Actual Size when Display Print Size is on.
+    /// Marvingxx/oracle-vector#2719: status-bar 100% matches Actual Size when Display Print Size is on.
     #[test]
     fn set_zoom_100_matches_actual_size_with_display_print_size() {
-        let mut app = crate::VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = crate::OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 100})).unwrap();
         app.session.execute("prefs.set", &json!({"key": "displayPrintSize", "value": true})).unwrap();
         app.run("view.setZoom", json!({"zoom": 100})).unwrap();
@@ -1602,7 +1597,7 @@ mod tests {
     #[test]
     fn screen_readers_name_the_artboard_navigators_buttons() {
         use crate::widgets::accessibility_tests::{named, tree};
-        let mut app = crate::VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = crate::OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 100, "artboards": 3})).unwrap();
         let tree = tree(|ui| super::status_bar(&mut app, ui));
         for (label, enabled) in [("First Artboard", false), ("Previous Artboard", false), ("Next Artboard", true), ("Last Artboard", true)] {
@@ -1613,7 +1608,7 @@ mod tests {
 
     /// One headless frame of the status bar, with room above it for the artboard list; returns the
     /// texts painted and where they are.
-    fn status_texts(app: &mut crate::VectorcraftApp, ctx: &egui::Context, events: Vec<egui::Event>) -> Vec<(String, egui::Rect)> {
+    fn status_texts(app: &mut crate::OracleVectorApp, ctx: &egui::Context, events: Vec<egui::Event>) -> Vec<(String, egui::Rect)> {
         let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(1200.0, 600.0));
         let mut out = ctx.run_ui(egui::RawInput { screen_rect: Some(screen), events, ..Default::default() }, |ui| super::status_bar(app, ui));
         out.textures_delta.clear();
@@ -1627,7 +1622,7 @@ mod tests {
     }
 
     /// A click at `at` in the status bar; returns the texts of the frame after it.
-    fn status_click(app: &mut crate::VectorcraftApp, ctx: &egui::Context, at: egui::Pos2) -> Vec<(String, egui::Rect)> {
+    fn status_click(app: &mut crate::OracleVectorApp, ctx: &egui::Context, at: egui::Pos2) -> Vec<(String, egui::Rect)> {
         let button = |pressed| egui::Event::PointerButton { pos: at, button: egui::PointerButton::Primary, pressed, modifiers: Default::default() };
         for event in [egui::Event::PointerMoved(at), button(true), button(false)] {
             status_texts(app, ctx, vec![event]);
@@ -1641,7 +1636,7 @@ mod tests {
     /// centers on it, and the list closes.
     #[test]
     fn the_artboard_navigator_lists_the_artboards_by_number_and_name() {
-        let mut app = crate::VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = crate::OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 100, "artboards": 3})).unwrap();
         app.run("artboard.setProps", json!({"index": 0, "name": "Front"})).unwrap();
         app.run("artboard.setProps", json!({"index": 1, "name": "Back"})).unwrap();
@@ -1676,7 +1671,7 @@ mod tests {
     /// artboard's row, a swipe scrolls it to the last artboard, and choosing that row goes there.
     #[test]
     fn the_artboard_list_lays_out_only_the_rows_near_the_view() {
-        let mut app = crate::VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = crate::OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 100, "height": 100, "artboards": 1000})).unwrap();
         app.canvas_rect = Some(egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(460.0, 260.0)));
         app.run("view.goToArtboard", json!({"index": 699})).unwrap();
@@ -1706,19 +1701,19 @@ mod tests {
         assert_eq!(app.view().unwrap().artboard, 999);
     }
 
-    fn artboard_navigation_app(tool: &str) -> (crate::VectorcraftApp, vectorcraft_doc::NodeId) {
-        let mut app = crate::VectorcraftApp::new(Session::new(), Default::default());
+    fn artboard_navigation_app(tool: &str) -> (crate::OracleVectorApp, oracle_vector_doc::NodeId) {
+        let mut app = crate::OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 100, "artboards": 3})).unwrap();
         let id = app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 30, "height": 20})).unwrap()["id"].as_u64().unwrap();
         app.run("select.set", json!({"ids": [id]})).unwrap();
         app.canvas_rect = Some(egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(460.0, 260.0)));
         app.select_tool(tool);
         crate::i18n::set_current(crate::i18n::Lang::EN);
-        (app, vectorcraft_doc::NodeId(id))
+        (app, oracle_vector_doc::NodeId(id))
     }
 
     /// Click the actual status-bar Next control, without sending a canvas pointer event.
-    fn artboard_navigation_next(app: &mut crate::VectorcraftApp, ctx: &egui::Context) {
+    fn artboard_navigation_next(app: &mut crate::OracleVectorApp, ctx: &egui::Context) {
         let buttons = navigator(app, ctx, vec![]);
         assert_eq!(buttons.len(), 4);
         let at = buttons[2].center();
@@ -1730,7 +1725,7 @@ mod tests {
     }
 
     fn artboard_navigation_properties_frame(
-        app: &mut crate::VectorcraftApp,
+        app: &mut crate::OracleVectorApp,
         ctx: &egui::Context,
         events: Vec<egui::Event>,
     ) -> Vec<(String, egui::Rect)> {
@@ -1886,7 +1881,7 @@ mod tests {
     }
 
     /// One headless frame of the Control bar; returns the isolation button's rectangle, if it shows.
-    fn isolation_button(app: &mut crate::VectorcraftApp, ctx: &egui::Context, events: Vec<egui::Event>) -> Option<egui::Rect> {
+    fn isolation_button(app: &mut crate::OracleVectorApp, ctx: &egui::Context, events: Vec<egui::Event>) -> Option<egui::Rect> {
         let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(1600.0, 300.0));
         let mut out = ctx.run_ui(egui::RawInput { screen_rect: Some(screen), events, ..Default::default() }, |ui| super::control_bar(app, ui));
         out.textures_delta.clear();
@@ -1897,13 +1892,13 @@ mod tests {
     /// canvas and takes no layout height from it (#3126).
     #[test]
     fn the_isolation_bar_does_not_take_layout_height_from_the_canvas() {
-        let mut app = crate::VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = crate::OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 400, "height": 200})).unwrap();
         let id = app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 30, "height": 20})).unwrap()["id"].as_u64().unwrap();
         let ctx = egui::Context::default();
         crate::theme::install_fonts(&ctx);
         let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(1200.0, 700.0));
-        let top = |app: &mut crate::VectorcraftApp| {
+        let top = |app: &mut crate::OracleVectorApp| {
             let mut below = 0.0;
             let mut out = ctx.run_ui(egui::RawInput { screen_rect: Some(screen), ..Default::default() }, |ui| {
                 super::doc_tabs(app, ui);
@@ -1927,10 +1922,10 @@ mod tests {
     /// editing gets no exit button.
     #[test]
     fn the_control_bar_isolates_the_selected_object_and_exits_isolation_mode() {
-        use vectorcraft_doc::NodeId;
-        let mut app = crate::VectorcraftApp::new(Session::new(), Default::default());
+        use oracle_vector_doc::NodeId;
+        let mut app = crate::OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 400, "height": 200})).unwrap();
-        let rect = |app: &mut crate::VectorcraftApp, x: f64| {
+        let rect = |app: &mut crate::OracleVectorApp, x: f64| {
             app.run("shape.rectangle", json!({"x": x, "y": 10, "width": 30, "height": 20})).unwrap()["id"].as_u64().unwrap()
         };
         let (a, b) = (rect(&mut app, 10.0), rect(&mut app, 50.0));
@@ -1940,7 +1935,7 @@ mod tests {
         app.run("select.anchors", json!({"id": a, "anchors": [[0, 0]]})).unwrap();
         let ctx = egui::Context::default();
         crate::theme::install_fonts(&ctx);
-        let click = |app: &mut crate::VectorcraftApp| {
+        let click = |app: &mut crate::OracleVectorApp| {
             let r = isolation_button(app, &ctx, vec![]).expect("the bar shows the isolation button");
             let press = |pressed| egui::Event::PointerButton {
                 pos: r.center(),
@@ -1994,11 +1989,11 @@ mod tests {
                 _ => {}
             }
         }
-        let mut app = crate::VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = crate::OracleVectorApp::new(Session::new(), Default::default());
         app.select_tool("zoom");
         let ctx = egui::Context::default();
         crate::theme::install_fonts(&ctx);
-        let hint = |app: &mut crate::VectorcraftApp| {
+        let hint = |app: &mut crate::OracleVectorApp| {
             let mut out = ctx.run_ui(egui::RawInput::default(), |ui| super::hint_bar(app, ui));
             out.textures_delta.clear();
             let mut shown = String::new();
@@ -2012,8 +2007,8 @@ mod tests {
         assert!(off.contains(" to zoom into an area") && !off.contains("Hold"), "{off}");
     }
 
-    fn title_test_app(custom_titlebar: bool) -> crate::VectorcraftApp {
-        let mut app = crate::VectorcraftApp::new(Session::new(), Default::default());
+    fn title_test_app(custom_titlebar: bool) -> crate::OracleVectorApp {
+        let mut app = crate::OracleVectorApp::new(Session::new(), Default::default());
         app.custom_titlebar = custom_titlebar;
         // The preference that makes the shell launch without its own title bar.
         app.run("prefs.set", json!({"key": "systemTitleBar", "value": !custom_titlebar})).unwrap();
@@ -2023,23 +2018,23 @@ mod tests {
     #[test]
     fn without_the_preference_the_mark_stays() {
         // The default (e.g. the web build): no custom bar, no preference.
-        let app = crate::VectorcraftApp::new(Session::new(), Default::default());
+        let app = crate::OracleVectorApp::new(Session::new(), Default::default());
         assert!(!super::system_title_bar(&app));
     }
 
     #[test]
     fn window_title_with_no_document_is_the_app_name() {
-        assert_eq!(super::window_title(&title_test_app(true)), "VectorCraft");
+        assert_eq!(super::window_title(&title_test_app(true)), "Oracle Vector");
     }
 
     #[test]
     fn window_title_follows_the_active_file() {
         let mut app = title_test_app(true);
         app.run("file.new", json!({"width": 100, "height": 100, "name": "foo.svg"})).unwrap();
-        assert_eq!(super::window_title(&app), "foo.svg \u{2014} VectorCraft");
+        assert_eq!(super::window_title(&app), "foo.svg \u{2014} Oracle Vector");
         // Unsaved changes gain a `*` prefix, like the `*` in the document tabs.
         app.run("shape.rectangle", json!({"x": 0, "y": 0, "width": 10, "height": 10})).unwrap();
-        assert_eq!(super::window_title(&app), "*foo.svg \u{2014} VectorCraft");
+        assert_eq!(super::window_title(&app), "*foo.svg \u{2014} Oracle Vector");
     }
 
     #[test]
@@ -2073,11 +2068,11 @@ mod tests {
         let ctx = egui::Context::default();
         crate::theme::install_fonts(&ctx);
         super::sync_window_title(&mut app, &ctx);
-        assert_eq!(app.last_window_title, "VectorCraft");
+        assert_eq!(app.last_window_title, "Oracle Vector");
         let mut out = ctx.run_ui(egui::RawInput::default(), |_| {});
         out.textures_delta.clear();
         let cmds = out.viewport_output.remove(&egui::ViewportId::ROOT).map(|v| v.commands).unwrap_or_default();
-        assert!(cmds.iter().any(|c| matches!(c, egui::ViewportCommand::Title(t) if t == "VectorCraft")), "{cmds:?}");
+        assert!(cmds.iter().any(|c| matches!(c, egui::ViewportCommand::Title(t) if t == "Oracle Vector")), "{cmds:?}");
         // Same document state again: the cached title stops a repeat command.
         super::sync_window_title(&mut app, &ctx);
         let mut out = ctx.run_ui(egui::RawInput::default(), |_| {});
@@ -2086,10 +2081,10 @@ mod tests {
         assert!(!cmds.iter().any(|c| matches!(c, egui::ViewportCommand::Title(_))), "repeat Title: {cmds:?}");
         app.run("file.new", json!({"width": 100, "height": 100, "name": "foo.svg"})).unwrap();
         super::sync_window_title(&mut app, &ctx);
-        assert_eq!(app.last_window_title, "foo.svg \u{2014} VectorCraft");
+        assert_eq!(app.last_window_title, "foo.svg \u{2014} Oracle Vector");
     }
     /// Draw actual tabs, including the same per-frame view synchronization as the app.
-    fn artboard_document_tabs_frame(app: &mut crate::VectorcraftApp, ctx: &egui::Context, events: Vec<egui::Event>) -> Vec<egui::Rect> {
+    fn artboard_document_tabs_frame(app: &mut crate::OracleVectorApp, ctx: &egui::Context, events: Vec<egui::Event>) -> Vec<egui::Rect> {
         app.sync_views();
         let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(1200.0, 700.0));
         let mut out = ctx.run_ui(egui::RawInput { screen_rect: Some(screen), events, ..Default::default() }, |ui| super::doc_tabs(app, ui));
@@ -2106,7 +2101,7 @@ mod tests {
         titles
     }
 
-    fn artboard_document_click_tab(app: &mut crate::VectorcraftApp, ctx: &egui::Context, index: usize) {
+    fn artboard_document_click_tab(app: &mut crate::OracleVectorApp, ctx: &egui::Context, index: usize) {
         let titles = artboard_document_tabs_frame(app, ctx, vec![]);
         assert_eq!(titles.len(), 2, "both real document tabs must be visible");
         let at = titles[index].center();
@@ -2118,8 +2113,8 @@ mod tests {
         assert_eq!(app.session.active_index(), Some(index), "the actual tab click must activate its document");
     }
 
-    fn artboard_document_app() -> (crate::VectorcraftApp, egui::Context) {
-        let mut app = crate::VectorcraftApp::new(Session::new(), Default::default());
+    fn artboard_document_app() -> (crate::OracleVectorApp, egui::Context) {
+        let mut app = crate::OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 100, "artboards": 2})).unwrap();
         app.run("artboard.setProps", json!({"index": 0, "name": "Keep"})).unwrap();
         app.run("artboard.setProps", json!({"index": 1, "name": "Shown"})).unwrap();
@@ -2249,13 +2244,13 @@ mod tests {
     #[test]
     fn artboard_close_active_tab_properties_delete_uses_shown_board() {
         let (mut app, ctx) = artboard_document_app();
-        let history = |st: &vectorcraft_engine::DocState| {
-            let entries = |items: &[vectorcraft_engine::HistoryEntry]| {
+        let history = |st: &oracle_vector_engine::DocState| {
+            let entries = |items: &[oracle_vector_engine::HistoryEntry]| {
                 items.iter().map(|e| (e.label.clone(), e.doc.clone(), e.selection.clone())).collect::<Vec<_>>()
             };
             (entries(&st.history.undo), entries(&st.history.redo))
         };
-        let outside_canvas = |app: &crate::VectorcraftApp| {
+        let outside_canvas = |app: &crate::OracleVectorApp| {
             let p = ctx.input(|i| i.pointer.hover_pos()).expect("a real chrome or panel pointer position");
             assert!(!app.canvas_rect.unwrap().contains(p), "the pointer must stay outside the canvas: {p:?}");
         };
@@ -2426,13 +2421,13 @@ mod visual_regressions {
         for brightness in theme::Brightness::ALL {
             for width in [800.0, 1280.0] {
                 for scale in [1.0, 1.5, 2.0] {
-                    let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+                    let mut app = OracleVectorApp::new(oracle_vector_engine::Session::new(), Default::default());
                     app.services.native_menu = Some(crate::native_menu::NativeMenu::new(Box::new(NativeMenus)));
                     app.ui.status = format!("Saved /Users/example/Documents/{}/illustration.svg", "long-folder-name/".repeat(10));
                     let mut ready = false;
                     let mut harness =
                         egui_kittest::Harness::builder().with_size(vec2(width, 200.0)).with_pixels_per_point(scale).wgpu().build_ui_state(
-                            move |ui, app: &mut VectorcraftApp| {
+                            move |ui, app: &mut OracleVectorApp| {
                                 if !ready {
                                     egui_extras::install_image_loaders(ui.ctx());
                                     theme::install_fonts(ui.ctx());
@@ -2447,7 +2442,7 @@ mod visual_regressions {
                         );
                     harness.input_mut().max_texture_side = Some(8192);
                     harness.run_steps(4);
-                    let stem = format!("vectorcraft-chrome-{brightness:?}-{width}-{scale}x");
+                    let stem = format!("oracle-vector-chrome-{brightness:?}-{width}-{scale}x");
                     harness.render().unwrap().save(directory.join(format!("{stem}.png"))).unwrap();
                     let mut regions = serde_json::Map::new();
                     for id in ["app_bar", "status_bar"] {
@@ -2488,7 +2483,7 @@ mod visual_regressions {
                     egui_extras::install_image_loaders(&ctx);
                     theme::install_fonts(&ctx);
                     theme::apply(&ctx, brightness);
-                    let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+                    let mut app = OracleVectorApp::new(oracle_vector_engine::Session::new(), Default::default());
                     app.services.native_menu = Some(crate::native_menu::NativeMenu::new(Box::new(NativeMenus)));
                     let mut output = ctx.run_ui(scaled_input(vec2(width, 640.0), scale), |ui| app_bar(&mut app, ui));
                     output.textures_delta.clear();
@@ -2502,12 +2497,12 @@ mod visual_regressions {
                             _ => None,
                         })
                         .collect();
-                    let title = texts.iter().find(|text| text.galley.job.text == "VectorCraft");
+                    let title = texts.iter().find(|text| text.galley.job.text == "Oracle Vector");
                     if width >= 1280.0 {
                         assert!(title.is_some(), "the title remains visible when the header has room");
                     }
                     if let Some(title) = title {
-                        for text in texts.iter().filter(|text| text.galley.job.text != "VectorCraft") {
+                        for text in texts.iter().filter(|text| text.galley.job.text != "Oracle Vector") {
                             assert!(
                                 !title.visual_bounding_rect().intersects(text.visual_bounding_rect()),
                                 "{width}: title overlaps {:?}",
@@ -2529,7 +2524,7 @@ mod visual_regressions {
                     egui_extras::install_image_loaders(&ctx);
                     theme::install_fonts(&ctx);
                     theme::apply(&ctx, brightness);
-                    let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+                    let mut app = OracleVectorApp::new(oracle_vector_engine::Session::new(), Default::default());
                     app.ui.status = format!("Saved /Users/example/Documents/{}/illustration.svg", "long-folder-name/".repeat(10));
                     let mut output = ctx.run_ui(scaled_input(vec2(width, 640.0), scale), |ui| status_bar(&mut app, ui));
                     output.textures_delta.clear();

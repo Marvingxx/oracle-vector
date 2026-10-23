@@ -1,4 +1,4 @@
-//! VectorCraft PDF export and import.
+//! Oracle Vector PDF export and import.
 //!
 //! - [`export`] writes one PDF page per artboard with `krilla`: vector paths (fills, strokes with
 //!   caps/joins/miter/dashes, inside/outside alignment as clips, non-zero/even-odd; arrowheads,
@@ -83,7 +83,7 @@ pub use presets::*;
 pub use print::*;
 pub use settings::*;
 
-use vectorcraft_doc::Document;
+use oracle_vector_doc::Document;
 
 /// Export options: the Save PDF settings plus what one export run decides (pages, title, date).
 #[derive(Clone, Debug, Default)]
@@ -97,7 +97,7 @@ pub struct PdfOptions {
     pub created: Option<i64>,
     /// Modification date as Unix seconds (UTC); `None` = the creation date.
     pub modified: Option<i64>,
-    /// The native document (`.vectorcraft` bytes) Preserve Editing embeds.
+    /// The native document (`.oracle-vector` bytes) Preserve Editing embeds.
     pub native: Option<Vec<u8>>,
     /// The pages drawn small, in page order: what Embed Page Thumbnails embeds (the writer
     /// doesn't draw; [`page_areas`] says what each page shows).
@@ -210,7 +210,7 @@ pub enum PdfError {
     Unsupported(String),
     #[error("PDF writer error: {0}")]
     Write(String),
-    /// The caller asked for the export to stop ([`vectorcraft_doc::cancel`]).
+    /// The caller asked for the export to stop ([`oracle_vector_doc::cancel`]).
     #[error("cancelled")]
     Cancelled,
     #[error("cannot read PDF: {0}")]

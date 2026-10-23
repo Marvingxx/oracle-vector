@@ -1,40 +1,40 @@
 [package]
-name = "vectorcraft-engine"
+name = "oracle-vector-engine"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "VectorCraft engine: sessions, history, selection, the command registry"
+description = "Oracle Vector engine: sessions, history, selection, the command registry"
 
 [lints]
 workspace = true
 
 [features]
 default = ["bundled-fonts"]
-# The fonts vectorcraft-text bundles (see its `bundled-fonts`). Embedders that supply every font at
-# run time (`vectorcraft_text::FontDb::add_font`) build with `default-features = false`.
-bundled-fonts = ["vectorcraft-text/bundled-fonts"]
+# The fonts oracle-vector-text bundles (see its `bundled-fonts`). Embedders that supply every font at
+# run time (`oracle_vector_text::FontDb::add_font`) build with `default-features = false`.
+bundled-fonts = ["oracle-vector-text/bundled-fonts"]
 
 [dependencies]
 # Which paths stored in documents may be opened.
 craft-docpath = { workspace = true }
-vectorcraft-geom = { workspace = true }
-vectorcraft-color = { workspace = true }
-vectorcraft-doc = { workspace = true }
-vectorcraft-tools = { workspace = true }
-vectorcraft-text = { workspace = true }
-vectorcraft-render = { workspace = true }
-vectorcraft-pathops = { workspace = true }
-vectorcraft-brush = { workspace = true }
-vectorcraft-trace = { workspace = true }
-vectorcraft-svg = { workspace = true }
-vectorcraft-format = { workspace = true }
-vectorcraft-pdf = { workspace = true }
-vectorcraft-cad = { workspace = true }
-vectorcraft-eps = { workspace = true }
-vectorcraft-metafile = { workspace = true }
-vectorcraft-plugins = { workspace = true }
-vectorcraft-affinity = { workspace = true }
-vectorcraft-scriptcheck = { workspace = true }
+oracle-vector-geom = { workspace = true }
+oracle-vector-color = { workspace = true }
+oracle-vector-doc = { workspace = true }
+oracle-vector-tools = { workspace = true }
+oracle-vector-text = { workspace = true }
+oracle-vector-render = { workspace = true }
+oracle-vector-pathops = { workspace = true }
+oracle-vector-brush = { workspace = true }
+oracle-vector-trace = { workspace = true }
+oracle-vector-svg = { workspace = true }
+oracle-vector-format = { workspace = true }
+oracle-vector-pdf = { workspace = true }
+oracle-vector-cad = { workspace = true }
+oracle-vector-eps = { workspace = true }
+oracle-vector-metafile = { workspace = true }
+oracle-vector-plugins = { workspace = true }
+oracle-vector-affinity = { workspace = true }
+oracle-vector-scriptcheck = { workspace = true }
 image = { workspace = true }
 flate2 = { workspace = true }
 # The XML parts of Word documents placed as type (place/docx.rs).
@@ -46,12 +46,12 @@ thiserror = { workspace = true }
 log = { workspace = true }
 
 [dev-dependencies]
-vectorcraft-affinity = { workspace = true, features = ["synth"] }
+oracle-vector-affinity = { workspace = true, features = ["synth"] }
 crc32fast = { workspace = true }
-vectorcraft-testkit = { workspace = true }
+oracle-vector-testkit = { workspace = true }
 proptest = { workspace = true }
 # A variable font built in code (no font file is committed).
-vectorcraft-text = { workspace = true, features = ["test-fonts"] }
+oracle-vector-text = { workspace = true, features = ["test-fonts"] }
 wat = { workspace = true }
 # Zstandard streams for the Illustrator editing data fuzz tests.
 ruzstd = { workspace = true }

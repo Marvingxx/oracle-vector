@@ -6,17 +6,17 @@ use std::collections::HashMap;
 
 use egui::{Sense, Stroke, StrokeKind, Ui, vec2};
 use serde_json::{Value, json};
-use vectorcraft_doc::{Document, Node, NodeKind};
+use oracle_vector_doc::{Document, Node, NodeKind};
 
 use super::{pstate, set_pstate};
-use crate::VectorcraftApp;
+use crate::OracleVectorApp;
 use crate::theme::Tokens;
 use crate::widgets::{self, PanelDrag, menu_item};
 
 /// A thumbnail of symbol `name` (an instance at its natural size), cached by the art's identity.
 fn thumb(ui: &Ui, doc: &Document, name: &str, size: f32) -> Option<egui::TextureHandle> {
     thread_local! {
-        static RENDERER: RefCell<vectorcraft_render::Renderer> = RefCell::new(vectorcraft_render::Renderer::new());
+        static RENDERER: RefCell<oracle_vector_render::Renderer> = RefCell::new(oracle_vector_render::Renderer::new());
         static CACHE: crate::graphics::TexCache<HashMap<(usize, String, u32), egui::TextureHandle>> = crate::graphics::TexCache::default();
     }
     let sym = doc.symbols.iter().find(|s| s.name == name)?;
@@ -34,7 +34,7 @@ fn thumb(ui: &Ui, doc: &Document, name: &str, size: f32) -> Option<egui::Texture
     let mut d = Document::new(w.max(1.0), h.max(1.0));
     d.symbols.push(sym.clone());
     let id = d.alloc_id();
-    let xf = vectorcraft_geom::Affine::scale_non_uniform(w / 20.0, h / 20.0);
+    let xf = oracle_vector_geom::Affine::scale_non_uniform(w / 20.0, h / 20.0);
     let l = d.layers[0].id;
     d.insert(Some(l), 0, Node::new(id, NodeKind::SymbolInstance { symbol: name.into(), xf })).ok()?;
     let img = RENDERER.with(|r| r.borrow_mut().render_thumbnail(&d, id, px))?;
@@ -59,11 +59,11 @@ pub(crate) fn chip(ui: &Ui, doc: &Document, r: egui::Rect, name: &str) {
     }
 }
 
-fn current(app: &mut VectorcraftApp) -> Option<String> {
+fn current(app: &mut OracleVectorApp) -> Option<String> {
     app.run("symbol.list", json!({})).ok().and_then(|v| v["current"].as_str().map(str::to_string))
 }
 
-fn has_instances_selected(app: &VectorcraftApp) -> bool {
+fn has_instances_selected(app: &OracleVectorApp) -> bool {
     app.session.active().is_some_and(|st| {
         st.selection.objects.iter().any(|id| {
             let mut any = false;
@@ -75,7 +75,7 @@ fn has_instances_selected(app: &VectorcraftApp) -> bool {
     })
 }
 
-pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn show(app: &mut OracleVectorApp, ui: &mut Ui) {
     let t = Tokens::get(ui.ctx());
     let Some(doc) = app.session.active().map(|d| d.doc.clone()) else { return };
     let names: Vec<String> = doc.symbols.iter().map(|s| s.name.clone()).collect();
@@ -167,7 +167,7 @@ pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
     });
 }
 
-pub fn menu(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn menu(app: &mut OracleVectorApp, ui: &mut Ui) {
     let sel = current(app);
     let has_sel = app.session.active().is_some_and(|d| !d.selection.is_empty());
     let inst = has_instances_selected(app);
@@ -202,13 +202,13 @@ pub fn menu(app: &mut VectorcraftApp, ui: &mut Ui) {
 #[cfg(test)]
 mod tests {
     use egui::{Pos2, Rect, pos2};
-    use vectorcraft_doc::NodeId;
-    use vectorcraft_engine::Session;
+    use oracle_vector_doc::NodeId;
+    use oracle_vector_engine::Session;
 
     use super::*;
 
     /// One headless frame of the panel, 236 pt wide as in the dock.
-    fn frame(ctx: &egui::Context, app: &mut VectorcraftApp, events: Vec<egui::Event>) {
+    fn frame(ctx: &egui::Context, app: &mut OracleVectorApp, events: Vec<egui::Event>) {
         let raw = egui::RawInput { screen_rect: Some(Rect::from_min_size(Pos2::ZERO, vec2(236.0, 400.0))), events, ..Default::default() };
         let mut out = ctx.run_ui(raw, |ui| show(app, ui));
         out.textures_delta.clear();
@@ -218,14 +218,14 @@ mod tests {
         egui::Event::PointerButton { pos: at, button: egui::PointerButton::Primary, pressed, modifiers: Default::default() }
     }
 
-    fn symbols(app: &mut VectorcraftApp) -> Vec<String> {
+    fn symbols(app: &mut OracleVectorApp) -> Vec<String> {
         let list = app.run("symbol.list", json!({})).unwrap();
         list["symbols"].as_array().unwrap().iter().map(|s| s["name"].as_str().unwrap_or_default().to_string()).collect()
     }
 
     #[test]
     fn art_dropped_on_the_panel_becomes_a_symbol_and_a_symbol_drags_out() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 100})).unwrap();
         let id = app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 30, "height": 20})).unwrap()["id"].as_u64().unwrap();
         // Selected, as art dragged off the canvas is.
@@ -250,7 +250,7 @@ mod tests {
     }
 
     /// One headless frame of the panel menu; returns its painted labels.
-    fn menu_frame(ctx: &egui::Context, app: &mut VectorcraftApp, events: Vec<egui::Event>) -> Vec<(String, Rect)> {
+    fn menu_frame(ctx: &egui::Context, app: &mut OracleVectorApp, events: Vec<egui::Event>) -> Vec<(String, Rect)> {
         let raw = egui::RawInput { screen_rect: Some(Rect::from_min_size(Pos2::ZERO, vec2(236.0, 400.0))), events, ..Default::default() };
         let mut out = ctx.run_ui(raw, |ui| menu(app, ui));
         out.textures_delta.clear();
@@ -259,7 +259,7 @@ mod tests {
 
     #[test]
     fn new_symbol_asks_for_symbol_options_before_making_the_symbol() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 100})).unwrap();
         app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 30, "height": 20})).unwrap();
         let ctx = egui::Context::default();
@@ -321,7 +321,7 @@ mod tests {
         let chord = crate::shortcuts::parse("F8").expect("parses");
         assert_eq!((chord.modifiers, chord.logical_key), (egui::Modifiers::NONE, egui::Key::F8));
         assert_eq!(crate::menus::pretty_shortcut("F8"), "F8");
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         let listed = app.run("shortcuts.list", json!({"query": "ui.symbolOptions"})).unwrap();
         let rows: Vec<_> = listed.as_array().expect("rows").iter().map(|r| (r["label"].clone(), r["default"].clone())).collect();
         assert_eq!(rows, [(json!("Symbol Options…"), json!("F8"))], "Keyboard Shortcuts lists it");
@@ -335,21 +335,21 @@ mod tests {
     /// status bar says that nothing is selected.
     #[test]
     fn f8_opens_symbol_options_for_a_new_symbol_as_new_symbol_does() {
-        fn press(app: &mut VectorcraftApp) {
+        fn press(app: &mut OracleVectorApp) {
             let ctx = egui::Context::default();
             let ev = egui::Event::Key { key: egui::Key::F8, physical_key: None, pressed: true, repeat: false, modifiers: Default::default() };
             let mut out = ctx.run_ui(egui::RawInput { events: vec![ev], ..Default::default() }, |ui| crate::shortcuts::handle(app, ui.ctx()));
             out.textures_delta.clear();
         }
         /// A document with one selected rectangle.
-        fn one_rect() -> VectorcraftApp {
-            let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        fn one_rect() -> OracleVectorApp {
+            let mut app = OracleVectorApp::new(Session::new(), Default::default());
             app.run("file.new", json!({"width": 200, "height": 100})).unwrap();
             app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 30, "height": 20})).unwrap();
             app
         }
         /// Click the panel menu's New Symbol… item.
-        fn click_new_symbol(app: &mut VectorcraftApp) {
+        fn click_new_symbol(app: &mut OracleVectorApp) {
             let ctx = egui::Context::default();
             crate::theme::install_fonts(&ctx);
             let labels = menu_frame(&ctx, app, vec![]);
@@ -357,7 +357,7 @@ mod tests {
             menu_frame(&ctx, app, vec![egui::Event::PointerMoved(item), button(item, true)]);
             menu_frame(&ctx, app, vec![button(item, false)]);
         }
-        let dialog = |app: &VectorcraftApp| app.ui.dialog.as_ref().map(|d| (d.kind.clone(), d.fields.clone()));
+        let dialog = |app: &OracleVectorApp| app.ui.dialog.as_ref().map(|d| (d.kind.clone(), d.fields.clone()));
         let mut keyed = one_rect();
         press(&mut keyed);
         let mut clicked = one_rect();
@@ -402,8 +402,8 @@ mod tests {
     fn an_imported_symbols_thumbnail_frames_its_whole_art() {
         // The symbol of the SVG import tests: an orange 20 × 20 square from (0, 0) with a white dot.
         let svg = r##"<svg xmlns="http://www.w3.org/2000/svg" width="200" height="120"><defs><symbol id="Star" data-name="Gold Star"><path d="M0 0H20V20H0Z" fill="#e0a000"/><circle cx="10" cy="10" r="4" fill="#fff"/></symbol></defs><use href="#Star" x="20" y="30"/></svg>"##;
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
-        app.run("document.open", json!({"name": "star.svg", "dataBase64": vectorcraft_format::base64_encode(svg.as_bytes())})).unwrap();
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
+        app.run("document.open", json!({"name": "star.svg", "dataBase64": oracle_vector_format::base64_encode(svg.as_bytes())})).unwrap();
         let ctx = egui::Context::default();
         let raw = egui::RawInput { screen_rect: Some(Rect::from_min_size(Pos2::ZERO, vec2(236.0, 400.0))), ..Default::default() };
         let mut out = ctx.run_ui(raw, |ui| show(&mut app, ui));

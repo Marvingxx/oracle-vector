@@ -3,8 +3,8 @@
 
 use super::*;
 use kurbo::{Affine, Point, Rect, Shape};
-use vectorcraft_doc::{CharStyle, RubyAlign, RubyPosition, RubySpan, TextKind};
-use vectorcraft_geom::PathData;
+use oracle_vector_doc::{CharStyle, RubyAlign, RubyPosition, RubySpan, TextKind};
+use oracle_vector_geom::PathData;
 
 fn db() -> &'static FontDb {
     FontDb::global()

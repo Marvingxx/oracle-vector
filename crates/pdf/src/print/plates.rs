@@ -3,12 +3,12 @@
 
 use std::sync::Arc;
 
-use vectorcraft_color::Color;
-use vectorcraft_color::cms::{self, Cms, Model, ProfileKind};
-use vectorcraft_color::swatch::REGISTRATION;
-use vectorcraft_doc::inks::{Link, inks, plates, visit_node_colors};
-use vectorcraft_doc::overprint::darken_overprints;
-use vectorcraft_doc::{ColorMode, Document, Node};
+use oracle_vector_color::Color;
+use oracle_vector_color::cms::{self, Cms, Model, ProfileKind};
+use oracle_vector_color::swatch::REGISTRATION;
+use oracle_vector_doc::inks::{Link, inks, plates, visit_node_colors};
+use oracle_vector_doc::overprint::darken_overprints;
+use oracle_vector_doc::{ColorMode, Document, Node};
 
 use super::{DEFAULT_FREQUENCY, PrintInk, PrintSettings};
 

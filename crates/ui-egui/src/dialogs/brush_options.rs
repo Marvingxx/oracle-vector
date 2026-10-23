@@ -19,13 +19,13 @@
 
 use egui::{Color32, Sense, Stroke, pos2, vec2};
 use serde_json::{Map, Value, json};
-use vectorcraft_brush::{Bristle, Brush, BrushKind, Calligraphic, Variation};
+use oracle_vector_brush::{Bristle, Brush, BrushKind, Calligraphic, Variation};
 
 use super::swatch_options::{grid, label};
 use super::{DialogSpec, brush_art_options, form};
 use crate::state::Dialog;
 use crate::theme::Tokens;
-use crate::{VectorcraftApp, widgets};
+use crate::{OracleVectorApp, widgets};
 
 /// The dialog kind of Brush Options.
 pub const KIND: &str = "brushOptions";
@@ -88,7 +88,7 @@ fn variation_key(key: &str) -> String {
 }
 
 /// Open the options of brush `name` (default: the selected path's brush, else the current one).
-pub fn open(app: &mut VectorcraftApp, name: Option<&str>) -> Result<Value, String> {
+pub fn open(app: &mut OracleVectorApp, name: Option<&str>) -> Result<Value, String> {
     let name = match name {
         Some(n) => n.to_string(),
         None => target(app).ok_or("no brush selected")?,
@@ -129,16 +129,16 @@ fn fields(b: &Brush, def: Value) -> Result<Map<String, Value>, String> {
 }
 
 /// Can Brush Options open without a name (the selected path's brush, else the current one, exists)?
-pub fn available(app: &VectorcraftApp) -> bool {
+pub fn available(app: &OracleVectorApp) -> bool {
     let Some(st) = app.session.active() else { return false };
-    target(app).is_some_and(|n| vectorcraft_brush::find(&st.doc, &n).is_some())
+    target(app).is_some_and(|n| oracle_vector_brush::find(&st.doc, &n).is_some())
 }
 
 /// The brush Brush Options opens on without a name: the selected path's brush, else the current one.
-fn target(app: &VectorcraftApp) -> Option<String> {
+fn target(app: &OracleVectorApp) -> Option<String> {
     let st = app.session.active()?;
     let selected = st.selection.subjects().first().and_then(|id| st.doc.node(*id)).and_then(|n| n.appearance.stroke()?.brush.clone());
-    selected.or_else(|| vectorcraft_brush::current(&st.doc))
+    selected.or_else(|| oracle_vector_brush::current(&st.doc))
 }
 
 /// Open the Brush Options of a new brush of type `ty` (`calligraphic` | `scatter` | `art` |
@@ -147,10 +147,10 @@ fn target(app: &VectorcraftApp) -> Option<String> {
 /// brush takes the art `brush.selectionArt` gives for `ids` (else for the selection) as its art,
 /// and a pattern brush takes it as its side tile; the preview draws it. Without that art nothing
 /// opens.
-pub(super) fn open_new(app: &mut VectorcraftApp, ty: &str, ids: Option<Value>) -> Result<Value, String> {
+pub(super) fn open_new(app: &mut OracleVectorApp, ty: &str, ids: Option<Value>) -> Result<Value, String> {
     let st = app.session.active().ok_or("no document open")?;
     let title: String = ty.chars().take(1).flat_map(char::to_uppercase).chain(ty.chars().skip(1)).collect();
-    let name = vectorcraft_brush::unique_name(&vectorcraft_brush::library(&st.doc), &format!("New {title} Brush"));
+    let name = oracle_vector_brush::unique_name(&oracle_vector_brush::library(&st.doc), &format!("New {title} Brush"));
     let mut def = json!({ "name": name, "type": ty });
     let art_key = match ty {
         "scatter" | "art" => Some("art"),
@@ -179,7 +179,7 @@ pub(super) fn open_new(app: &mut VectorcraftApp, ty: &str, ids: Option<Value>) -
 
 /// OK of a new brush's Brush Options: `brush.new` with the type, the name, the values set and the
 /// dropped art's ids. The dialog closes once the brush is made.
-fn create(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn create(app: &mut OracleVectorApp, d: &Dialog) -> Result<Value, String> {
     let mut p = json!({ "type": d.str("__type"), "name": d.str("name").trim(), "params": params(d) });
     if let Some(ids) = d.fields.get(IDS) {
         p["ids"] = ids.clone();
@@ -192,7 +192,7 @@ fn create(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
 }
 
 /// OK: make the new brush when New Brush opened the dialog, else edit the brush.
-fn ok(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn ok(app: &mut OracleVectorApp, d: &Dialog) -> Result<Value, String> {
     if d.bool(CREATE) { create(app, d) } else { confirm(app, d) }
 }
 
@@ -231,7 +231,7 @@ fn params(d: &Dialog) -> Value {
     }
 }
 
-fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
+fn body(app: &mut OracleVectorApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     grid(ui, |ui| {
         label(ui, tl!("Name:"));
         let max = if d.str("__type") == "bristle" { Bristle::MAX_NAME_CHARS } else { usize::MAX };
@@ -279,7 +279,7 @@ fn calligraphic_body(ui: &mut egui::Ui, d: &mut Dialog) {
     });
 }
 
-fn bristle_body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) {
+fn bristle_body(app: &mut OracleVectorApp, ui: &mut egui::Ui, d: &mut Dialog) {
     form::choice(ui, d, "shape", tl!("Shape:"), (LABEL_W, 150.0), &SHAPES);
     widgets::label_row(ui, tl!("Size:"), LABEL_W, |ui| {
         form::length(ui, d, "size", app.session.general_unit(), 80.0);
@@ -348,7 +348,7 @@ fn nib_preview(ui: &mut egui::Ui, c: &Calligraphic, size: egui::Vec2) {
 
 /// OK: edit the brush (and rename it). A name another brush has, or a new bristle brush name that
 /// is too long, keeps the dialog open.
-fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn confirm(app: &mut OracleVectorApp, d: &Dialog) -> Result<Value, String> {
     let name = d.str("name").trim().to_string();
     let r = app.run("brush.options", json!({ "name": d.str("__brush"), "newName": name, "params": params(d) }));
     if r.is_ok() {
@@ -360,22 +360,22 @@ fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vectorcraft_engine::Session;
+    use oracle_vector_engine::Session;
 
-    fn app() -> VectorcraftApp {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    fn app() -> OracleVectorApp {
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 300, "height": 200})).unwrap();
         app
     }
 
-    fn set(app: &mut VectorcraftApp, fields: Value) {
+    fn set(app: &mut OracleVectorApp, fields: Value) {
         let d = app.ui.dialog.as_mut().unwrap();
         for (k, v) in fields.as_object().unwrap() {
             d.fields.insert(k.clone(), v.clone());
         }
     }
 
-    fn shown(app: &mut VectorcraftApp) -> String {
+    fn shown(app: &mut OracleVectorApp) -> String {
         crate::tests_labels::painted_text(app, |app, ui| super::super::show(app, ui.ctx()))
     }
 
@@ -438,7 +438,7 @@ mod tests {
         for (brush, kept) in [("Bristle Round", 31), ("6 pt. Flat", 40)] {
             let ctx = egui::Context::default();
             crate::theme::install_fonts(&ctx);
-            let frame = |app: &mut VectorcraftApp, events: Vec<egui::Event>| {
+            let frame = |app: &mut OracleVectorApp, events: Vec<egui::Event>| {
                 let mut out = ctx.run_ui(egui::RawInput { events, ..Default::default() }, |ui| super::super::show(app, ui.ctx()));
                 out.textures_delta.clear();
             };
@@ -460,17 +460,17 @@ mod tests {
     }
 
     /// A path painted with brush `name`, and the height of the art its stroke draws.
-    fn brushed(app: &mut VectorcraftApp, name: &str) -> (vectorcraft_doc::NodeId, f64) {
+    fn brushed(app: &mut OracleVectorApp, name: &str) -> (oracle_vector_doc::NodeId, f64) {
         let id = app.run("shape.line", json!({"x1": 20, "y1": 100, "x2": 280, "y2": 100})).unwrap()["id"].as_u64().unwrap();
-        let id = vectorcraft_doc::NodeId(id);
+        let id = oracle_vector_doc::NodeId(id);
         app.run("brush.apply", json!({ "name": name, "ids": [id.0] })).unwrap();
         (id, drawn_height(app, id))
     }
 
-    fn drawn_height(app: &VectorcraftApp, id: vectorcraft_doc::NodeId) -> f64 {
+    fn drawn_height(app: &OracleVectorApp, id: oracle_vector_doc::NodeId) -> f64 {
         let st = app.session.active().unwrap();
-        let pieces = vectorcraft_brush::node_pieces(&st.doc, st.doc.node(id).unwrap()).unwrap();
-        vectorcraft_brush::pieces_bounds(&pieces).unwrap().height()
+        let pieces = oracle_vector_brush::node_pieces(&st.doc, st.doc.node(id).unwrap()).unwrap();
+        oracle_vector_brush::pieces_bounds(&pieces).unwrap().height()
     }
 
     #[test]
@@ -523,7 +523,7 @@ mod tests {
 
     #[test]
     fn brush_key_color_eyedropper_updates_the_open_dialog() {
-        use vectorcraft_tools::{PointerEvent, PointerKind};
+        use oracle_vector_tools::{PointerEvent, PointerKind};
         let mut app = app();
         app.run("paint.setFill", json!({"color": "#336699"})).unwrap();
         app.run("shape.rectangle", json!({"x": 40, "y": 40, "width": 80, "height": 60})).unwrap();
@@ -536,7 +536,7 @@ mod tests {
         let view = app.view_info();
         crate::canvas::dispatch(&mut app, &PointerEvent::new(PointerKind::Down, 80.0, 70.0), view);
         let key = app.ui.dialog.as_ref().unwrap().fields.get("keyColor").cloned().unwrap();
-        assert_eq!(vectorcraft_engine::cmd::color_value(&key).unwrap().to_hex(), "#336699");
+        assert_eq!(oracle_vector_engine::cmd::color_value(&key).unwrap().to_hex(), "#336699");
         assert_eq!(app.session.tool_id(), back);
     }
 
@@ -596,7 +596,7 @@ mod tests {
 
     /// Runs one 1200 × 900 frame with `events` through the app's key handling and the dialogs, and
     /// returns the center of the text `label` if the frame shows it.
-    fn frame(ctx: &egui::Context, app: &mut VectorcraftApp, events: Vec<egui::Event>, label: &str) -> Option<egui::Pos2> {
+    fn frame(ctx: &egui::Context, app: &mut OracleVectorApp, events: Vec<egui::Event>, label: &str) -> Option<egui::Pos2> {
         use egui::{Pos2, Rect};
         let raw = egui::RawInput { screen_rect: Some(Rect::from_min_size(Pos2::ZERO, vec2(1200.0, 900.0))), events, ..Default::default() };
         let mut out = ctx.run_ui(raw, |ui| {
@@ -611,7 +611,7 @@ mod tests {
     }
 
     /// Clicks the text `label` the open dialog shows.
-    fn click_text(ctx: &egui::Context, app: &mut VectorcraftApp, label: &str) {
+    fn click_text(ctx: &egui::Context, app: &mut OracleVectorApp, label: &str) {
         use egui::{Event, PointerButton};
         frame(ctx, app, vec![], label);
         let at = frame(ctx, app, vec![], label).unwrap_or_else(|| panic!("no {label:?} shown"));
@@ -622,7 +622,7 @@ mod tests {
     }
 
     /// Presses Escape.
-    fn escape(ctx: &egui::Context, app: &mut VectorcraftApp) {
+    fn escape(ctx: &egui::Context, app: &mut OracleVectorApp) {
         let key = egui::Event::Key { key: egui::Key::Escape, physical_key: None, pressed: true, repeat: false, modifiers: Default::default() };
         frame(ctx, app, vec![key], "");
         frame(ctx, app, vec![], "");
@@ -709,17 +709,17 @@ mod tests {
         let mut app = app();
         app.run("ui.brushOptions", json!({"name": "Confetti"})).unwrap();
         let d = app.ui.dialog.as_ref().unwrap();
-        let key: vectorcraft_color::Color = serde_json::from_value(d.fields["keyColor"].clone()).unwrap();
+        let key: oracle_vector_color::Color = serde_json::from_value(d.fields["keyColor"].clone()).unwrap();
         let colors = |id: &str| -> Vec<String> {
-            let method = vectorcraft_brush::Colorization::parse(id, key).unwrap();
+            let method = oracle_vector_brush::Colorization::parse(id, key).unwrap();
             let doc = brush_art_options::tip_doc(&brush_art_options::edited_def(d), "scatter", method, 120.0, 44.0).unwrap();
-            let mut hex: Vec<String> = vectorcraft_brush::art_colors(doc.layers.iter().map(|l| l.as_ref())).iter().map(|c| c.to_hex()).collect();
+            let mut hex: Vec<String> = oracle_vector_brush::art_colors(doc.layers.iter().map(|l| l.as_ref())).iter().map(|c| c.to_hex()).collect();
             hex.sort();
             hex
         };
         let (black, blue) = ("#000000".to_string(), brush_art_options::TIP_STROKE.to_hex());
-        let confetti = vectorcraft_brush::defaults().iter().find(|b| b.name == "Confetti").unwrap();
-        let art: Vec<String> = vectorcraft_brush::art_colors(confetti.art()).iter().map(|c| c.to_hex()).collect();
+        let confetti = oracle_vector_brush::defaults().iter().find(|b| b.name == "Confetti").unwrap();
+        let art: Vec<String> = oracle_vector_brush::art_colors(confetti.art()).iter().map(|c| c.to_hex()).collect();
         let none = colors("none");
         assert!(none.len() == 2 && art.iter().all(|c| none.contains(c)), "None keeps the art's colors {art:?}: {none:?}");
         let (tints, shades, hue) = (colors("tints"), colors("tintsAndShades"), colors("hueShift"));

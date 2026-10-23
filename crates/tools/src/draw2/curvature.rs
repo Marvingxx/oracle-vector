@@ -17,8 +17,8 @@
 //! `path.curvatureEdit`, `path.convertAnchor` or `path.removeAnchor` (one undo step).
 
 use serde_json::{Value, json};
-use vectorcraft_doc::{NodeId, Selection};
-use vectorcraft_geom::{Anchor, AnchorKind, BezPath, Point, SubPath, Vec2};
+use oracle_vector_doc::{NodeId, Selection};
+use oracle_vector_geom::{Anchor, AnchorKind, BezPath, Point, SubPath, Vec2};
 
 use super::{FEEDBACK, anchor_in, curvature_spline, editable_paths, end_handle, remove_anchor, segment_in, smooth_handles};
 use crate::guides::{DrawSnap, Leave, Targets};
@@ -659,8 +659,8 @@ impl Tool for CurvatureTool {
 mod tests {
     use super::*;
     use crate::testutil::*;
-    use vectorcraft_doc::{Appearance, Document, Node, Selection};
-    use vectorcraft_geom::{ParamCurve, PathData};
+    use oracle_vector_doc::{Appearance, Document, Node, Selection};
+    use oracle_vector_geom::{ParamCurve, PathData};
 
     /// The Curvature tool has its own cursor, not the Pen's start-a-path one.
     #[test]

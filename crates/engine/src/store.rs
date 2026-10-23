@@ -22,7 +22,7 @@
 use std::io::Read;
 use std::path::{Path, PathBuf};
 
-use vectorcraft_pdf::{PdfPreset, builtin_preset};
+use oracle_vector_pdf::{PdfPreset, builtin_preset};
 
 use crate::Session;
 use crate::cmd::pdfcmds::{PRESET_FORMAT, PresetFile};
@@ -98,7 +98,7 @@ fn put(dir: &Path, file: &str, bytes: &[u8]) -> bool {
 
 #[cfg(not(target_arch = "wasm32"))]
 fn write_atomic(path: &Path, bytes: &[u8]) -> std::io::Result<()> {
-    vectorcraft_format::write_atomic(path, bytes)
+    oracle_vector_format::write_atomic(path, bytes)
 }
 
 /// The browser has no folders to keep anything in (the apps there never attach a store).
@@ -194,7 +194,7 @@ impl Session {
             }
             let loaded = read_capped(&path, MAX_PROFILE_FILE.min(left)).and_then(|bytes| {
                 left -= bytes.len() as u64;
-                vectorcraft_color::cms::register_icc(&bytes, None).map_err(|e| e.to_string())
+                oracle_vector_color::cms::register_icc(&bytes, None).map_err(|e| e.to_string())
             });
             if let Err(e) = loaded {
                 log::warn!("skipping the stored colour profile {}: {e}", path.display());
@@ -219,7 +219,7 @@ impl Session {
     /// Keep the plug-ins this session installs in `dir`, and install the ones already there (a
     /// module that doesn't load is skipped with a log record).
     pub fn attach_plugin_store(&mut self, dir: PathBuf) {
-        let limits = vectorcraft_plugins::Limits::default();
+        let limits = oracle_vector_plugins::Limits::default();
         let mut left = MAX_PLUGIN_STORE;
         for path in list_files(&dir, PLUGIN_EXT) {
             if left == 0 {
@@ -228,11 +228,11 @@ impl Session {
             }
             let loaded = read_capped(&path, (limits.max_module_bytes as u64).min(left)).and_then(|bytes| {
                 left -= bytes.len() as u64;
-                vectorcraft_plugins::Plugin::load(&bytes, limits.clone()).map_err(|e| e.to_string())
+                oracle_vector_plugins::Plugin::load(&bytes, limits.clone()).map_err(|e| e.to_string())
             });
             match loaded {
                 Ok(plugin) => {
-                    vectorcraft_plugins::registry::install(plugin.with_source(path.display().to_string()));
+                    oracle_vector_plugins::registry::install(plugin.with_source(path.display().to_string()));
                 }
                 Err(e) => log::warn!("skipping the stored plug-in {}: {e}", path.display()),
             }

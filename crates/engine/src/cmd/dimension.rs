@@ -2,10 +2,10 @@
 use super::*;
 use serde_json::{Value, json};
 use std::sync::Arc;
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::dimension::{ArrowStyle, Dimension, DimensionMode, DimensionOptions, DimensionSource, LineType, TextAlignment, TextPosition};
-use vectorcraft_doc::{Appearance, Arrowhead, CharStyle, Dash, Document, Node, NodeId, NodeKind, TextObject};
-use vectorcraft_geom::{Affine, BezPath, PathData, Point, Vec2};
+use oracle_vector_color::{Color, Paint};
+use oracle_vector_doc::dimension::{ArrowStyle, Dimension, DimensionMode, DimensionOptions, DimensionSource, LineType, TextAlignment, TextPosition};
+use oracle_vector_doc::{Appearance, Arrowhead, CharStyle, Dash, Document, Node, NodeId, NodeKind, TextObject};
+use oracle_vector_geom::{Affine, BezPath, PathData, Point, Vec2};
 
 pub fn specs() -> Vec<CommandSpec> {
     vec![
@@ -252,7 +252,7 @@ fn appearance(o: &DimensionOptions, ext: bool, arrows: bool) -> Appearance {
         st.dash = match kind {
             LineType::Dashed => Some(Dash { pattern: vec![width * 5.0, width * 3.0], ..Default::default() }),
             LineType::Dotted => {
-                st.cap = vectorcraft_doc::LineCap::Round;
+                st.cap = oracle_vector_doc::LineCap::Round;
                 Some(Dash { pattern: vec![0.0, width * 3.0], ..Default::default() })
             }
             LineType::Solid => None,
@@ -267,7 +267,7 @@ fn appearance(o: &DimensionOptions, ext: bool, arrows: bool) -> Appearance {
             st.start_arrow = head;
             st.end_arrow = head;
             st.arrow_scale = (o.arrow_scale, o.arrow_scale);
-            st.arrow_align = vectorcraft_doc::appearance::ArrowAlign::Tip;
+            st.arrow_align = oracle_vector_doc::appearance::ArrowAlign::Tip;
         }
     }
     a
@@ -352,7 +352,7 @@ fn artwork(doc: &mut Document, d: &Dimension, old: &[NodeId]) -> Result<Vec<Arc<
         ..Default::default()
     };
     let mut text = TextObject::point(Point::ZERO, &label, style);
-    text.para.justify = vectorcraft_doc::Justify::Center;
+    text.para.justify = oracle_vector_doc::Justify::Center;
     text.system_layout = doc.setup.system_layout;
     super::typecmd::refresh_bounds(&mut text);
     // Centre the label's box on its anchor point, along the line.

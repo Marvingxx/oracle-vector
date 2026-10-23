@@ -1,5 +1,5 @@
 use super::*;
-use vectorcraft_geom::SubPath;
+use oracle_vector_geom::SubPath;
 
 fn square(x: f64) -> PathData {
     PathData::single(SubPath::polyline(&[Point::new(x, 0.0), Point::new(x + 10.0, 0.0), Point::new(x + 10.0, 10.0), Point::new(x, 10.0)], true))
@@ -51,7 +51,7 @@ fn targets_are_selected_paths_in_paint_order() {
 #[test]
 fn objects_round_trip_through_the_json_model() {
     let (mut d, ids, _) = doc();
-    let mut g = vectorcraft_color::GradientPaint::new(vectorcraft_color::Gradient::default());
+    let mut g = oracle_vector_color::GradientPaint::new(oracle_vector_color::Gradient::default());
     g.gradient.stops[0].swatch = Some("White".into());
     d.node_mut(ids[0]).unwrap().appearance.set_stroke(Paint::Gradient(Box::new(g)));
     let input: Value = serde_json::from_slice(&encode_input(&d, &ids)).unwrap();
@@ -73,13 +73,13 @@ fn objects_round_trip_through_the_json_model() {
 fn an_unchanged_path_stays_a_live_shape() {
     let (mut d, ids, _) = doc();
     let a = ids[0];
-    let live = vectorcraft_doc::LiveShape::Rectangle {
+    let live = oracle_vector_doc::LiveShape::Rectangle {
         w: 10.0,
         h: 10.0,
         radii: [0.0; 4],
         radii_relative: false,
         kinds: Default::default(),
-        xf: vectorcraft_geom::Affine::IDENTITY,
+        xf: oracle_vector_geom::Affine::IDENTITY,
     };
     if let Some(NodeKind::Path { live: l, .. }) = d.node_mut(a).map(|n| &mut n.kind) {
         *l = Some(Box::new(live));

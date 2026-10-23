@@ -9,7 +9,7 @@ use serde_json::json;
 
 use crate::state::{DockTab, ICON_PANEL_GROUPS, ICON_PANELS};
 use crate::theme::{self, Tokens};
-use crate::{VectorcraftApp, floating, icons, panels, widgets};
+use crate::{OracleVectorApp, floating, icons, panels, widgets};
 
 const ICON_COL: f32 = 38.0;
 /// Height of the strip along the top of a dock column that carries its double arrow.
@@ -39,7 +39,7 @@ fn seed_dock_panel_width(ctx: &egui::Context, panel: &str, width: f32) {
     ctx.data_mut(|data| data.insert_persisted(egui::Id::new(panel), state));
 }
 
-pub(crate) fn apply_pending_dock_width(app: &mut VectorcraftApp, ctx: &egui::Context, panel: &str, clamp: fn(f32) -> f32) {
+pub(crate) fn apply_pending_dock_width(app: &mut OracleVectorApp, ctx: &egui::Context, panel: &str, clamp: fn(f32) -> f32) {
     if !app.ui.dock_width_pending {
         return;
     }
@@ -49,7 +49,7 @@ pub(crate) fn apply_pending_dock_width(app: &mut VectorcraftApp, ctx: &egui::Con
     app.ui.dock_width_pending = false;
 }
 
-pub(crate) fn note_dock_width(app: &mut VectorcraftApp, ctx: &egui::Context, panel: &str) {
+pub(crate) fn note_dock_width(app: &mut OracleVectorApp, ctx: &egui::Context, panel: &str) {
     if let Some(state) = egui::containers::panel::PanelState::load(ctx, egui::Id::new(panel)) {
         let width = state.size().x;
         if width.is_finite() && width > 0.0 {
@@ -81,7 +81,7 @@ pub(crate) fn dock_left_id() -> egui::Id {
 
 /// Collapse the tabbed group to icons or expand it again (`window.collapseDock`). Expanding while
 /// one of its panels is popped out shows that panel's tab instead.
-pub fn set_collapsed(app: &mut VectorcraftApp, collapsed: bool) {
+pub fn set_collapsed(app: &mut OracleVectorApp, collapsed: bool) {
     app.ui.dock_collapsed = collapsed;
     app.ui.dock = true;
     if !collapsed && let Some(tab) = app.ui.open_panel.as_deref().and_then(DockTab::from_id) {
@@ -105,7 +105,7 @@ pub(crate) fn collapse_header(ui: &mut Ui, collapsed: bool) -> bool {
 }
 
 /// Run `window.collapseDock` for a click on a double arrow.
-fn toggle(app: &mut VectorcraftApp, collapsed: bool) {
+fn toggle(app: &mut OracleVectorApp, collapsed: bool) {
     // It only fails on bad params, which this never sends; show it all the same.
     if let Err(e) = app.run("window.collapseDock", json!({ "collapsed": collapsed })) {
         app.ui.status = e;
@@ -114,7 +114,7 @@ fn toggle(app: &mut VectorcraftApp, collapsed: bool) {
 
 /// One icon of the column: a click pops its panel out (or puts it away); dragged out of the
 /// column (`column`), the panel floats.
-fn panel_icon(app: &mut VectorcraftApp, ui: &mut Ui, id: &'static str, label: &str, icon: &str, _column: Rect) {
+fn panel_icon(app: &mut OracleVectorApp, ui: &mut Ui, id: &'static str, label: &str, icon: &str, _column: Rect) {
     let open = app.ui.open_panel.as_deref() == Some(id);
     // Its own id: the icons below it move up when it floats, and mustn't take over its drag.
     let (_, rect) = ui.allocate_space(vec2(30.0, 30.0));
@@ -126,7 +126,7 @@ fn panel_icon(app: &mut VectorcraftApp, ui: &mut Ui, id: &'static str, label: &s
     crate::panel_docking::legacy_tab(app, ui, id, &resp, false);
 }
 
-pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn show(app: &mut OracleVectorApp, ui: &mut Ui) {
     crate::panel_docking::prune_collapsed(&mut app.ui);
     if crate::panel_docking::show(app, ui) {
         return;
@@ -238,7 +238,7 @@ pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
 /// The tabbed group's tab strip, showing `active`: a click on a tab shows it, a double-click
 /// collapses the group to its tabs or expands it, a tab dragged out of the strip floats on its own,
 /// and the strip right of the tabs floats the whole group. True when the shown panel floats now.
-fn tab_strip(app: &mut VectorcraftApp, ui: &mut Ui, active: DockTab) -> bool {
+fn tab_strip(app: &mut OracleVectorApp, ui: &mut Ui, active: DockTab) -> bool {
     let t = Tokens::get(ui.ctx());
     let (strip, _) = ui.allocate_exact_size(vec2(ui.available_width(), 33.0), Sense::hover());
     ui.painter().line_segment([strip.left_bottom(), strip.right_bottom()], Stroke::new(1.0, t.divider));
@@ -317,7 +317,7 @@ pub(crate) fn tab_reorder_on_release(
     (from != to).then_some((from, to))
 }
 
-fn apply_dock_tab_reorder(app: &mut VectorcraftApp, visible: &[DockTab], from: usize, to: usize) {
+fn apply_dock_tab_reorder(app: &mut OracleVectorApp, visible: &[DockTab], from: usize, to: usize) {
     let Some(from_tab) = visible.get(from) else { return };
     let Some(to_tab) = visible.get(to) else { return };
     if let Err(error) = crate::panel_docking::strip_tab_reorder(app, from_tab.info().0, to_tab.info().0) {
@@ -409,7 +409,7 @@ pub(crate) fn panel_tabs(
 
 /// A panel popped out next to the icon column: an icon panel, or one of the tabbed group's panels
 /// while the dock is collapsed. Dragging its title floats it.
-pub fn floating_panel(app: &mut VectorcraftApp, ctx: &egui::Context) {
+pub fn floating_panel(app: &mut OracleVectorApp, ctx: &egui::Context) {
     let open = app.ui.open_panel.as_deref();
     let Some(id) =
         open.and_then(|p| crate::state::all_panels().map(|(q, _)| q).find(|q| *q == p).or_else(|| crate::panels::library_panel::intern(p)))
@@ -504,7 +504,7 @@ pub(crate) fn panel_width(id: &str) -> f32 {
 
 /// Panel `id`'s contents in a popped-out or floating panel `width` wide; the tabbed group's panels
 /// fill (Layers) or scroll (Properties) `tall` points.
-pub(crate) fn panel_body(app: &mut VectorcraftApp, ui: &mut Ui, id: &str, width: f32, tall: f32) {
+pub(crate) fn panel_body(app: &mut OracleVectorApp, ui: &mut Ui, id: &str, width: f32, tall: f32) {
     egui::Frame::NONE.inner_margin(egui::Margin::same(10)).show(ui, |ui| {
         ui.set_width(width - 20.0);
         match DockTab::from_id(id) {
@@ -536,7 +536,7 @@ pub(crate) fn panel_body(app: &mut VectorcraftApp, ui: &mut Ui, id: &str, width:
 #[cfg(test)]
 mod tests {
     use serde_json::json;
-    use vectorcraft_engine::Session;
+    use oracle_vector_engine::Session;
 
     use super::*;
     use crate::toolbar::tests::{wheel, widget_rects};
@@ -635,7 +635,7 @@ mod tests {
 
     #[test]
     fn every_flyout_stays_left_of_the_icon_column() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 300, "height": 300})).unwrap();
         let id = app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 50, "height": 40})).unwrap()["id"].clone();
         app.run("select.set", json!({ "ids": [id] })).unwrap();
@@ -662,7 +662,7 @@ mod tests {
 
     #[test]
     fn the_icon_column_scrolls_in_a_short_window() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 300, "height": 300})).unwrap();
         let ctx = egui::Context::default();
         theme::install_fonts(&ctx);
@@ -686,14 +686,14 @@ mod tests {
 
     /// A frame of the dock and its flyout on a 1600 × 1000 window.
     struct Harness {
-        app: VectorcraftApp,
+        app: OracleVectorApp,
         ctx: egui::Context,
         time: f64,
     }
 
     impl Harness {
         fn new() -> Self {
-            let mut app = VectorcraftApp::new(Session::new(), Default::default());
+            let mut app = OracleVectorApp::new(Session::new(), Default::default());
             app.run("file.new", json!({"width": 300, "height": 300})).unwrap();
             app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 50, "height": 40})).unwrap();
             let ctx = egui::Context::default();
@@ -859,7 +859,7 @@ mod tests {
 
     #[test]
     fn window_panel_move_reorders_legacy_dock_tabs_and_persists_order() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 300, "height": 300})).unwrap();
         assert!(app.ui.docking.is_none());
         app.run("window.panel.move", json!({ "panel": "libraries", "anchor": "properties", "before": "properties" })).unwrap();
@@ -881,7 +881,7 @@ mod tests {
 
     #[test]
     fn the_collapse_command_sets_or_toggles_the_dock() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         assert_eq!(app.run("window.collapseDock", json!({})).unwrap(), json!(true));
         assert!(app.ui.dock_collapsed && crate::menus::checked(&app, "window.collapseDock", &json!({})) == Some(true));
         assert_eq!(app.run("window.collapseDock", json!({"collapsed": true})).unwrap(), json!(true));

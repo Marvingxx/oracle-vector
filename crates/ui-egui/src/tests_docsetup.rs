@@ -3,14 +3,14 @@
 //! the grid and Simulate Colored Paper tints the artboard.
 
 use serde_json::json;
-use vectorcraft_engine::Session;
+use oracle_vector_engine::Session;
 
 use crate::theme::Tokens;
-use crate::{VectorcraftApp, canvas};
+use crate::{OracleVectorApp, canvas};
 
 /// One headless canvas frame: its shapes, the transparency grid tile uploaded in it (2 × 2
 /// pixels: the grid colours) and the grid mesh, if any.
-fn frame(app: &mut VectorcraftApp) -> (Vec<egui::Shape>, Option<Vec<egui::Color32>>, Option<egui::Mesh>) {
+fn frame(app: &mut OracleVectorApp) -> (Vec<egui::Shape>, Option<Vec<egui::Color32>>, Option<egui::Mesh>) {
     let ctx = egui::Context::default();
     let raw = egui::RawInput { screen_rect: Some(egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(800.0, 600.0))), ..Default::default() };
     let mut out = ctx.run_ui(raw, |ui| canvas::show(app, ui));
@@ -50,8 +50,8 @@ fn outlines(shapes: &[egui::Shape], color: egui::Color32) -> Vec<Vec<egui::Pos2>
         .collect()
 }
 
-fn app() -> VectorcraftApp {
-    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+fn app() -> OracleVectorApp {
+    let mut app = OracleVectorApp::new(Session::new(), Default::default());
     app.run("file.new", json!({"width": 200, "height": 100})).unwrap();
     app
 }
@@ -103,7 +103,7 @@ fn an_artboard_color_draws_its_paper_in_that_color() {
     app.run("artboard.new", json!({})).unwrap();
     app.run("artboard.setProps", json!({"index": 1, "color": "#336699"})).unwrap();
     // The fill colors of the closed shapes drawn.
-    let fills = |app: &mut VectorcraftApp| {
+    let fills = |app: &mut OracleVectorApp| {
         let mut all = vec![];
         flatten(&frame(app).0, &mut all);
         all.into_iter()

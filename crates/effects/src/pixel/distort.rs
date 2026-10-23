@@ -9,7 +9,7 @@
 
 use std::sync::Arc;
 
-use vectorcraft_geom::{Point, Vec2};
+use oracle_vector_geom::{Point, Vec2};
 
 use super::loaded::{LOADED, LoadedTexture, texture};
 use super::pixelate::{Place, value_noise};

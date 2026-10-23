@@ -131,7 +131,7 @@ pub use save_pdf::{open as open_save_pdf, open_preset as open_pdf_preset};
 pub use tools::open_tool_dialog;
 
 use crate::state::Dialog;
-use crate::{VectorcraftApp, widgets};
+use crate::{OracleVectorApp, widgets};
 
 type DialogResult = Result<Value, String>;
 
@@ -152,18 +152,18 @@ pub(crate) enum DialogAction {
 /// differs.
 pub(crate) struct DialogSpec {
     /// Draws its own window instead of the shared frame (the frame fields below are then unused).
-    pub window: Option<fn(&mut VectorcraftApp, &egui::Context)>,
+    pub window: Option<fn(&mut OracleVectorApp, &egui::Context)>,
     /// The heading (and window title), in the UI language: the spec translates its own text and
     /// leaves names in it (a document's, a plug-in's) as they are.
     pub heading: fn(&Dialog) -> String,
     /// Optional heading band inside the shared window; normal dialogs use `modal::heading`.
     pub header: Option<fn(&mut egui::Ui, &str)>,
     /// Draws the fields. Returns true to close the dialog as Cancel would.
-    pub body: fn(&mut VectorcraftApp, &mut egui::Ui, &mut Dialog) -> bool,
+    pub body: fn(&mut OracleVectorApp, &mut egui::Ui, &mut Dialog) -> bool,
     /// Optional body with inline buttons; replaces `body` and the shared footer.
-    pub body_with_actions: Option<fn(&mut VectorcraftApp, &mut egui::Ui, &mut Dialog) -> DialogAction>,
+    pub body_with_actions: Option<fn(&mut OracleVectorApp, &mut egui::Ui, &mut Dialog) -> DialogAction>,
     /// OK, Enter or `ui.dialog.confirm`: applies the dialog and closes it when done.
-    pub confirm: fn(&mut VectorcraftApp, &Dialog) -> DialogResult,
+    pub confirm: fn(&mut OracleVectorApp, &Dialog) -> DialogResult,
     /// The OK button's label. None: no OK button, Enter does nothing and Cancel reads "Close".
     pub ok: Option<&'static str>,
     /// An extra button left of Cancel that sets `discard: true` and confirms ("Don't Save").
@@ -174,9 +174,9 @@ pub(crate) struct DialogSpec {
     pub preview: bool,
     /// The OK button's label when it depends on the app (Export for Screens' "Download" on the
     /// web); `ok` when none. Only with an `ok`.
-    pub ok_label: Option<fn(&VectorcraftApp) -> &'static str>,
+    pub ok_label: Option<fn(&OracleVectorApp) -> &'static str>,
     /// Can OK (or Enter) apply the dialog as it is? None: always. The body says why not.
-    pub ok_enabled: Option<fn(&VectorcraftApp, &Dialog) -> bool>,
+    pub ok_enabled: Option<fn(&OracleVectorApp, &Dialog) -> bool>,
 }
 
 impl DialogSpec {
@@ -204,7 +204,7 @@ impl DialogSpec {
     };
 
     /// A dialog that draws its own window and confirms through its module.
-    const fn window(show: fn(&mut VectorcraftApp, &egui::Context), confirm: fn(&mut VectorcraftApp, &Dialog) -> DialogResult) -> Self {
+    const fn window(show: fn(&mut OracleVectorApp, &egui::Context), confirm: fn(&mut OracleVectorApp, &Dialog) -> DialogResult) -> Self {
         Self { window: Some(show), confirm, ..Self::FORM }
     }
 }
@@ -375,7 +375,7 @@ fn spec(kind: &str) -> &'static DialogSpec {
 }
 
 /// Run a command and close the dialog (whether or not the command succeeded).
-fn run_and_close(app: &mut VectorcraftApp, id: &str, params: Value) -> DialogResult {
+fn run_and_close(app: &mut OracleVectorApp, id: &str, params: Value) -> DialogResult {
     let r = app.run(id, params);
     app.ui.dialog = None;
     r
@@ -392,7 +392,7 @@ pub(crate) fn parent(d: &Dialog) -> Option<Dialog> {
 
 /// Close the open dialog as Cancel does, rolling back a live preview and showing the dialog it was
 /// opened over (`ui.dialog.cancel`).
-pub fn cancel(app: &mut VectorcraftApp) {
+pub fn cancel(app: &mut OracleVectorApp) {
     missing_fonts::requeue_replaced(app);
     if let Some(d) = app.ui.dialog.take() {
         if spec(&d.kind).preview {
@@ -404,7 +404,7 @@ pub fn cancel(app: &mut VectorcraftApp) {
 }
 
 /// Apply the open dialog (OK).
-pub fn confirm(app: &mut VectorcraftApp) -> DialogResult {
+pub fn confirm(app: &mut OracleVectorApp) -> DialogResult {
     missing_fonts::requeue_replaced(app);
     let Some(d) = app.ui.dialog.clone() else { return Err("no dialog open".into()) };
     // A file dialog it shows off the UI thread confirms the dialog as it is again.
@@ -417,7 +417,7 @@ pub fn confirm(app: &mut VectorcraftApp) -> DialogResult {
 /// for its turn again, the search a Missing Fonts or Find Linked Files dialog started stops once
 /// that dialog is gone, and with no dialog open the next document's Missing Fonts dialog opens
 /// (one dialog at a time).
-pub(crate) fn settle(app: &mut VectorcraftApp) {
+pub(crate) fn settle(app: &mut OracleVectorApp) {
     missing_fonts::requeue_replaced(app);
     missing_fonts::stop_when_closed(app);
     find_links::stop_when_closed(app);
@@ -430,7 +430,7 @@ pub(crate) const AFTER_PANEL: &str = "__afterPanel";
 
 /// Marks the open dialog, if any, as one a save panel opened ([`AFTER_PANEL`]): the Enter that
 /// closed the panel, still held, doesn't confirm it.
-pub(crate) fn opened_by_panel(app: &mut VectorcraftApp) {
+pub(crate) fn opened_by_panel(app: &mut OracleVectorApp) {
     if let Some(d) = app.ui.dialog.as_mut() {
         d.fields.insert(AFTER_PANEL.into(), json!(true));
     }
@@ -438,7 +438,7 @@ pub(crate) fn opened_by_panel(app: &mut VectorcraftApp) {
 
 /// Draws the active dialog and handles shared initial focus, keyboard shortcuts and actions.
 /// Inline actions and footer buttons use the same confirmation and preview rollback paths.
-pub fn show(app: &mut VectorcraftApp, ctx: &egui::Context) {
+pub fn show(app: &mut OracleVectorApp, ctx: &egui::Context) {
     about::show(app, ctx);
     settle(app);
     confirm::show_waiting(app);

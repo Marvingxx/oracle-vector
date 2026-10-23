@@ -4,8 +4,8 @@
 
 use std::borrow::Cow;
 
-use vectorcraft_render::encode::on_white;
-use vectorcraft_render::encode::tiff::{self, ByteOrder, Compression, Image, Layout, Photometric};
+use oracle_vector_render::encode::on_white;
+use oracle_vector_render::encode::tiff::{self, ByteOrder, Compression, Image, Layout, Photometric};
 
 use crate::Raster;
 

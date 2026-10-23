@@ -5,8 +5,8 @@
 //! go back to the Selection tool. The Control bar edits the box through the `rect` option.
 
 use serde_json::{Value, json};
-use vectorcraft_doc::{Document, NodeId, NodeKind, Selection};
-use vectorcraft_geom::{Point, Rect, Vec2};
+use oracle_vector_doc::{Document, NodeId, NodeKind, Selection};
+use oracle_vector_geom::{Point, Rect, Vec2};
 
 use crate::bbox::{Handle, hit_handle};
 use crate::xform::CYAN;
@@ -266,8 +266,8 @@ impl Tool for CropImageTool {
 
 #[cfg(test)]
 mod tests {
-    use vectorcraft_doc::{ImageObject, Node};
-    use vectorcraft_geom::Affine;
+    use oracle_vector_doc::{ImageObject, Node};
+    use oracle_vector_geom::Affine;
 
     use super::*;
     use crate::testutil::{cx, paint, turned_view};

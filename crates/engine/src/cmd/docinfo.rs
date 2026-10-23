@@ -4,10 +4,10 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use serde_json::{Value, json};
-use vectorcraft_color::Paint;
-use vectorcraft_doc::{ColorMode, Document, Node, NodeId, NodeKind, RepeatKind, RepeatSpec};
-use vectorcraft_geom::{Affine, Rect};
-use vectorcraft_text::embed::Embedding;
+use oracle_vector_color::Paint;
+use oracle_vector_doc::{ColorMode, Document, Node, NodeId, NodeKind, RepeatKind, RepeatSpec};
+use oracle_vector_geom::{Affine, Rect};
+use oracle_vector_text::embed::Embedding;
 
 use super::*;
 
@@ -185,7 +185,7 @@ fn sections(
                 "symbols" => names("symbols"),
                 "fonts" => fonts.iter().map(|f| (super::fonts::font_label(f), String::new())).collect(),
                 "fontDetails" => {
-                    let db = vectorcraft_text::FontDb::global();
+                    let db = oracle_vector_text::FontDb::global();
                     fonts
                         .iter()
                         .map(|used| {
@@ -195,11 +195,11 @@ fn sections(
                             let resolved =
                                 db.resolve(family, style).map(|(f, m)| (db.face_version(family, style, version.as_deref()).unwrap_or(f), m));
                             let detail = match resolved {
-                                Some((f, m)) if m != vectorcraft_text::FontMatch::Missing => {
+                                Some((f, m)) if m != oracle_vector_text::FontMatch::Missing => {
                                     let file =
                                         f.path().and_then(|p| p.file_name()).map_or_else(|| "built in".into(), |n| n.to_string_lossy().into_owned());
                                     let found = format!("{file}; {}", embedding_label(f.fs_type()));
-                                    if m == vectorcraft_text::FontMatch::Style {
+                                    if m == oracle_vector_text::FontMatch::Style {
                                         format!("substituted: shown in {} {} ({found})", f.family, f.style)
                                     } else {
                                         found
@@ -289,7 +289,7 @@ fn info(s: &mut Session, p: &Value) -> Result<Value> {
     let mut spot = BTreeSet::new();
     let mut styles: Vec<&str> = if selection_only { vec![] } else { d.graphic_styles.iter().map(|g| g.name.as_str()).collect() };
     // `brushes` holds the Brushes panel's brushes, or with selectionOnly it holds the brushes that the selected objects' strokes use.
-    let mut brushes: Vec<String> = if selection_only { vec![] } else { vectorcraft_brush::library(d).into_iter().map(|b| b.name).collect() };
+    let mut brushes: Vec<String> = if selection_only { vec![] } else { oracle_vector_brush::library(d).into_iter().map(|b| b.name).collect() };
     // `repeats` and `repeat_rows` hold the `repeatObjects` entries and the rows of the Repeat objects that the walk visits, in walk order.
     let mut repeats: Vec<Value> = vec![];
     let mut repeat_rows: Vec<(String, String)> = vec![];
@@ -339,8 +339,8 @@ fn info(s: &mut Session, p: &Value) -> Result<Value> {
             }
             for item in &n.appearance.items {
                 let paint = match item {
-                    vectorcraft_doc::AppearanceItem::Fill(f) => &f.paint,
-                    vectorcraft_doc::AppearanceItem::Stroke(s) => &s.paint,
+                    oracle_vector_doc::AppearanceItem::Fill(f) => &f.paint,
+                    oracle_vector_doc::AppearanceItem::Stroke(s) => &s.paint,
                 };
                 if let Some(k) = paint_kind(paint) {
                     *counts.entry(k).or_default() += 1;
@@ -368,7 +368,7 @@ fn info(s: &mut Session, p: &Value) -> Result<Value> {
             }
             if selection_only {
                 for item in &n.appearance.items {
-                    if let vectorcraft_doc::AppearanceItem::Stroke(st) = item
+                    if let oracle_vector_doc::AppearanceItem::Stroke(st) = item
                         && let Some(b) = &st.brush
                         && !brushes.contains(b)
                     {
@@ -445,11 +445,11 @@ fn pixel_perfect(s: &mut Session, p: &Value) -> Result<Value> {
             // Whole-pixel stroke weights; odd ones centre on half pixels.
             let mut odd = false;
             for item in &mut node.appearance.items {
-                if let vectorcraft_doc::AppearanceItem::Stroke(st) = item
+                if let oracle_vector_doc::AppearanceItem::Stroke(st) = item
                     && st.width > 0.0
                 {
                     st.width = st.width.round().max(1.0);
-                    odd |= st.width as i64 % 2 == 1 && st.align == vectorcraft_doc::StrokeAlign::Center;
+                    odd |= st.width as i64 % 2 == 1 && st.align == oracle_vector_doc::StrokeAlign::Center;
                 }
             }
             if let Some(b) = node.geometric_bounds() {

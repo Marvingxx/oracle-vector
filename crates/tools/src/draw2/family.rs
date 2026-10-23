@@ -7,7 +7,7 @@
 //! change grid columns / radial dividers.
 
 use serde_json::{Value, json};
-use vectorcraft_geom::Point;
+use oracle_vector_geom::Point;
 
 use crate::guides::{DrawSnap, Leave};
 use crate::shape::drag_rect;
@@ -115,7 +115,7 @@ impl FamilyTool {
             _ => {
                 let r = drag_rect(start, p, m).abs();
                 let (w, h) = (r.width().max(1e-9), r.height().max(1e-9));
-                let rp = vectorcraft_geom::reference_point(vectorcraft_geom::Rect::new(0.0, 0.0, w, h), self.reference.min(8));
+                let rp = oracle_vector_geom::reference_point(oracle_vector_geom::Rect::new(0.0, 0.0, w, h), self.reference.min(8));
                 let anchor = Point::new(r.x0 + rp.x, r.y0 + rp.y);
                 (
                     "shape.arc".into(),
@@ -292,7 +292,7 @@ fn arc_length(v: &Value, current: f64) -> f64 {
 
 /// A grid divider skew from option value `v`: a finite number within the range, else `current`.
 fn grid_skew(v: &Value, current: f64) -> f64 {
-    let max = vectorcraft_geom::shapes::GRID_SKEW_MAX;
+    let max = oracle_vector_geom::shapes::GRID_SKEW_MAX;
     v.as_f64().filter(|s| s.is_finite()).map_or(current, |s| s.clamp(-max, max))
 }
 
@@ -300,7 +300,7 @@ fn grid_skew(v: &Value, current: f64) -> f64 {
 mod tests {
     use super::*;
     use crate::testutil::*;
-    use vectorcraft_doc::Selection;
+    use oracle_vector_doc::Selection;
 
     #[test]
     fn grid_drag_and_arrows() {

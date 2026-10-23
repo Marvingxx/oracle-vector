@@ -1,8 +1,8 @@
 //! Panel-support commands (`cmd/{panelcmds,gradient,appearance,stroke,swatch,style}.rs`).
 
 use serde_json::json;
-use vectorcraft_color::{Color, GradientKind, Paint};
-use vectorcraft_doc::{AppearanceItem, NodeKind};
+use oracle_vector_color::{Color, GradientKind, Paint};
+use oracle_vector_doc::{AppearanceItem, NodeKind};
 
 use super::*;
 
@@ -17,7 +17,7 @@ fn rect(s: &mut Session) -> NodeId {
     NodeId(r["id"].as_u64().unwrap())
 }
 
-fn node(s: &Session, id: NodeId) -> vectorcraft_doc::Node {
+fn node(s: &Session, id: NodeId) -> oracle_vector_doc::Node {
     s.doc().unwrap().doc.node(id).unwrap().clone()
 }
 
@@ -169,12 +169,12 @@ fn artboard_color_round_trips_through_the_native_format() {
     let mut s = session();
     s.execute("artboard.new", &json!({})).unwrap();
     s.execute("artboard.setProps", &json!({"index": 1, "color": {"c": 10, "m": 20, "y": 30, "k": 40}})).unwrap();
-    let bytes = vectorcraft_format::save(&s.doc().unwrap().doc, false);
+    let bytes = oracle_vector_format::save(&s.doc().unwrap().doc, false);
     let saved: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
     let keys = |i: usize| saved["document"]["artboards"][i].as_object().unwrap().keys().cloned().collect::<Vec<_>>();
     assert_eq!(keys(0), ["id", "name", "rect", "show_center_mark", "show_cross_hairs"]);
     assert!(keys(1).contains(&"color".to_string()), "{:?}", keys(1));
-    let back = vectorcraft_format::load(&bytes).unwrap();
+    let back = oracle_vector_format::load(&bytes).unwrap();
     assert_eq!(back.artboards[0].color, None);
     assert_eq!(back.artboards[1].color, Some(Color::cmyk(0.1, 0.2, 0.3, 0.4)));
     assert_eq!(back.artboards, s.doc().unwrap().doc.artboards);
@@ -477,7 +477,7 @@ fn copied_artboards_take_a_free_id_and_keep_their_own_guides() {
         ("edit.paste", json!({})),
     ] {
         let mut s = Session::new();
-        let mut d = vectorcraft_doc::Document::new(800.0, 600.0);
+        let mut d = oracle_vector_doc::Document::new(800.0, 600.0);
         d.artboards[0].id = u32::MAX;
         s.add_document(d, None);
         s.execute("guide.add", &json!({"vertical": true, "pos": 100, "artboard": 0})).unwrap();
@@ -573,7 +573,7 @@ fn a_locked_artboard_protects_the_art_on_it() {
 /// keeps the members selected.
 #[test]
 fn new_art_on_a_locked_artboard_stays_editable_until_the_selection_leaves_it() {
-    use vectorcraft_tools::{PointerEvent, PointerKind};
+    use oracle_vector_tools::{PointerEvent, PointerKind};
     let mut s = session();
     let a = rect(&mut s);
     s.execute("artboard.new", &json!({"x": 1000, "y": 0, "width": 400, "height": 400})).unwrap();
@@ -791,7 +791,7 @@ fn a_list_of_artboards_takes_each_entrys_lock() {
 fn artboard_lock_round_trips_through_the_native_format() {
     let mut s = session();
     s.execute("artboard.new", &json!({})).unwrap();
-    let save = |s: &Session| vectorcraft_format::save(&s.doc().unwrap().doc, false);
+    let save = |s: &Session| oracle_vector_format::save(&s.doc().unwrap().doc, false);
     let before = save(&s);
     s.execute("artboard.setProps", &json!({"index": 1, "locked": true})).unwrap();
     let bytes = save(&s);
@@ -799,7 +799,7 @@ fn artboard_lock_round_trips_through_the_native_format() {
     let keys = saved["document"]["artboards"][0].as_object().unwrap().keys().cloned().collect::<Vec<_>>();
     assert_eq!(keys, ["id", "name", "rect", "show_center_mark", "show_cross_hairs"]);
     assert_eq!(saved["document"]["artboards"][1]["locked"], true);
-    let back = vectorcraft_format::load(&bytes).unwrap();
+    let back = oracle_vector_format::load(&bytes).unwrap();
     assert!(back.artboards[1].locked && !back.artboards[0].locked);
     assert_eq!(back.artboards, s.doc().unwrap().doc.artboards);
     s.execute("artboard.setProps", &json!({"index": 1, "locked": false})).unwrap();
@@ -865,15 +865,15 @@ fn text_set_format() {
     assert_eq!(t.first_style().kerning, None);
     assert!(s.execute("text.setFormat", &json!({"ids": [id.0]})).is_err());
     // Paragraph composer: Every-line by default, undoable.
-    assert_eq!(t.para.composer, vectorcraft_doc::Composer::EveryLine);
+    assert_eq!(t.para.composer, oracle_vector_doc::Composer::EveryLine);
     s.execute("text.setFormat", &json!({"ids": [id.0], "composer": "singleLine"})).unwrap();
     let NodeKind::Text(t) = node(&s, id).kind else { panic!() };
-    assert_eq!(t.para.composer, vectorcraft_doc::Composer::SingleLine);
+    assert_eq!(t.para.composer, oracle_vector_doc::Composer::SingleLine);
     assert!(s.execute("text.setFormat", &json!({"ids": [id.0], "composer": "best"})).is_err());
     assert!(s.execute("text.setFormat", &json!({"ids": [id.0], "composer": 1})).is_err());
     s.execute("edit.undo", &json!({})).unwrap();
     let NodeKind::Text(t) = node(&s, id).kind else { panic!() };
-    assert_eq!(t.para.composer, vectorcraft_doc::Composer::EveryLine);
+    assert_eq!(t.para.composer, oracle_vector_doc::Composer::EveryLine);
 }
 
 #[test]
@@ -887,9 +887,9 @@ fn stroke_advanced_scale_swap_flip() {
     let n = node(&s, id);
     let st = n.appearance.stroke().unwrap();
     assert_eq!(st.start_arrow, None);
-    assert_eq!(st.end_arrow, Some(vectorcraft_doc::Arrowhead::Triangle));
+    assert_eq!(st.end_arrow, Some(oracle_vector_doc::Arrowhead::Triangle));
     assert_eq!(st.arrow_scale, (200.0, 50.0));
-    assert_eq!(st.profile.as_ref().unwrap().points, vectorcraft_doc::WidthProfile::taper_start().points);
+    assert_eq!(st.profile.as_ref().unwrap().points, oracle_vector_doc::WidthProfile::taper_start().points);
     assert!(s.execute("stroke.setAdvanced", &json!({})).is_err());
     assert!(s.execute("stroke.setAdvanced", &json!({"flipProfile": "sideways"})).is_err());
 }

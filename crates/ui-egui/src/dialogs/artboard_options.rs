@@ -5,13 +5,13 @@
 //! changes only the active artboard around stationary artwork.
 
 use serde_json::{Value, json};
-use vectorcraft_color::Color;
-use vectorcraft_doc::Unit;
-use vectorcraft_engine::cmd::color_value;
-use vectorcraft_geom::{Point, Rect};
+use oracle_vector_color::Color;
+use oracle_vector_doc::Unit;
+use oracle_vector_engine::cmd::color_value;
+use oracle_vector_geom::{Point, Rect};
 
 use super::{DialogSpec, form, run_and_close};
-use crate::VectorcraftApp;
+use crate::OracleVectorApp;
 use crate::panels::artboards::{FILLS, fill_colors, fill_name};
 use crate::panels::properties::ArtboardSizeChoice;
 use crate::panels::transform::{artboard_rect, reference_index, reference_locator};
@@ -33,7 +33,7 @@ fn placed(d: &Dialog) -> Rect {
 /// reference point where it was, as their sizes do.
 /// Then Background Color: the Fill list (None, White, Black; Custom for another color) and a swatch
 /// that picks a color of its own.
-fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
+fn body(app: &mut OracleVectorApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     let (unit, origin, refi) = (app.session.general_unit(), app.ruler_origin(), reference_index(ui));
     let (was, w0, h0) = (placed(d), d.f64("width", 0.0), d.f64("height", 0.0));
     let bounds = [fit_bounds(app, ui.ctx(), false), fit_bounds(app, ui.ctx(), true)];
@@ -131,7 +131,7 @@ struct ArtworkFitBounds {
 /// Artwork fitting includes all drawn artwork, even outside every artboard; selection uses
 /// the shared selection cache. Draft/target geometry never restricts membership. Global artwork
 /// bounds are cached only for the active document and its revision.
-fn fit_bounds(app: &mut VectorcraftApp, ctx: &egui::Context, selection: bool) -> Option<Rect> {
+fn fit_bounds(app: &mut OracleVectorApp, ctx: &egui::Context, selection: bool) -> Option<Rect> {
     if selection {
         return app.selection_bounds();
     }
@@ -143,7 +143,7 @@ fn fit_bounds(app: &mut VectorcraftApp, ctx: &egui::Context, selection: bool) ->
     {
         return cached.bounds;
     }
-    let bounds = vectorcraft_render::encode::art_bounds(&st.doc);
+    let bounds = oracle_vector_render::encode::art_bounds(&st.doc);
     ctx.data_mut(|data| data.insert_temp(id, ArtworkFitBounds { key, bounds }));
     bounds
 }
@@ -153,7 +153,7 @@ fn fit_bounds(app: &mut VectorcraftApp, ctx: &egui::Context, selection: bool) ->
 /// lands there.
 fn position_rows(ui: &mut egui::Ui, d: &mut Dialog, refi: usize, unit: Unit, origin: Point) {
     let r = placed(d);
-    let rp = vectorcraft_geom::reference_point(r, refi);
+    let rp = oracle_vector_geom::reference_point(r, refi);
     let mut indent = 0.0;
     for (key, label, at, zero) in [("x", "X:", rp.x, origin.x), ("y", "Y:", rp.y, origin.y)] {
         ui.horizontal(|ui| {
@@ -184,7 +184,7 @@ pub const KIND: &str = "artboardOptions";
 
 /// Open Artboard Options for the active artboard: the Artboard tool's while it is in use, else the
 /// window's.
-pub fn open(app: &mut VectorcraftApp) -> Result<Value, String> {
+pub fn open(app: &mut OracleVectorApp) -> Result<Value, String> {
     let index = if app.session.tool_id() == "artboard" {
         app.session.tool_options()["active"].as_u64().and_then(|i| usize::try_from(i).ok()).unwrap_or(0)
     } else {
@@ -205,7 +205,7 @@ pub fn open(app: &mut VectorcraftApp) -> Result<Value, String> {
 /// point the form's last Width or Height change used (fields `__refx` and `__refy`, its column and
 /// row; the top-left corner when the form set none), all in one undo step. Fitting applies only
 /// to this artboard and never moves its artwork.
-fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn confirm(app: &mut OracleVectorApp, d: &Dialog) -> Result<Value, String> {
     if d.bool("new") {
         return confirm_new(app, d);
     }
@@ -250,10 +250,10 @@ fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
 /// `ui.newArtboard` (Alt-click on the Artboards panel's New Artboard): Artboard Options for a new
 /// artboard (field `new`), filled in as `artboard.new {}` would make it: named Artboard N (N one
 /// more than the number of artboards), as large as the last artboard and 20 pt to the right of it.
-pub fn open_new(app: &mut VectorcraftApp) -> Result<Value, String> {
+pub fn open_new(app: &mut OracleVectorApp) -> Result<Value, String> {
     let st = app.session.active().ok_or("no document")?;
     let abs = &st.doc.artboards;
-    let last = abs.last().map_or(vectorcraft_geom::Rect::new(0.0, 0.0, 612.0, 792.0), |a| a.rect);
+    let last = abs.last().map_or(oracle_vector_geom::Rect::new(0.0, 0.0, 612.0, 792.0), |a| a.rect);
     let fields = json!({
         "new": true, "name": format!("Artboard {}", abs.len() + 1),
         "x": last.x1 + 20.0, "y": last.y0, "width": last.width(), "height": last.height(),
@@ -264,7 +264,7 @@ pub fn open_new(app: &mut VectorcraftApp) -> Result<Value, String> {
 
 /// OK for a new artboard: `artboard.new` with the fields (an empty name gives the default one) and
 /// the background color picked, and the new artboard becomes the active one.
-fn confirm_new(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn confirm_new(app: &mut OracleVectorApp, d: &Dialog) -> Result<Value, String> {
     let mut p = json!({});
     for k in ["x", "y", "width", "height"] {
         p[k] = json!(d.f64(k, 0.0));

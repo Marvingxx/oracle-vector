@@ -16,7 +16,7 @@ use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
-use vectorcraft_geom::{Affine, PathData, Point};
+use oracle_vector_geom::{Affine, PathData, Point};
 
 use crate::blend::Spine;
 use crate::symbols::SymbolBoxes;
@@ -241,7 +241,7 @@ fn placed_frame(n: &Node, symbols: &SymbolBoxes, m: &Member, pivot: u8, at: Poin
     }
     let mut local = n.clone();
     local.transform(m.frame.inverse(), false);
-    let q = vectorcraft_geom::reference_point(local.geometric_bounds_with(symbols)?, usize::from(pivot.min(8)));
+    let q = oracle_vector_geom::reference_point(local.geometric_bounds_with(symbols)?, usize::from(pivot.min(8)));
     let [a0, a1, a2, a3, _, _] = m.frame.as_coeffs();
     let shape = Affine::rotate(-m.angle) * Affine::new([a0, a1, a2, a3, 0.0, 0.0]);
     Some(Affine::translate(at.to_vec2()) * Affine::rotate(angle) * shape * Affine::translate(-q.to_vec2()))
@@ -300,7 +300,7 @@ pub fn place(g: &mut Node, symbols: &SymbolBoxes) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vectorcraft_geom::{Rect, shapes};
+    use oracle_vector_geom::{Rect, shapes};
 
     fn rect(id: u64, r: Rect) -> Node {
         Node::path(NodeId(id), shapes::rectangle(r), Default::default())

@@ -9,7 +9,7 @@
 //! Visibility is a painter's algorithm, as for Revolve: faces of a closed solid that face away
 //! from the viewer are left out, the rest are drawn back to front.
 
-use vectorcraft_geom::{BezPath, FillRule, ParamCurve, PathData, Point, Rect, Vec2};
+use oracle_vector_geom::{BezPath, FillRule, ParamCurve, PathData, Point, Rect, Vec2};
 
 use crate::{MAX_FACES, Revolve, V3, eye_distance, perspective_scale};
 
@@ -299,7 +299,7 @@ const MAX_PIECES: usize = 64;
 
 /// How many straight pieces follow `c` within `tolerance` (Wang's bound on a cubic's distance from
 /// its chords), 1 to 32.
-fn pieces(c: vectorcraft_geom::CubicBez, tolerance: f64) -> u32 {
+fn pieces(c: oracle_vector_geom::CubicBez, tolerance: f64) -> u32 {
     let d = |a: Point, b: Point, c: Point| (a.to_vec2() - 2.0 * b.to_vec2() + c.to_vec2()).hypot();
     let bend = d(c.p0, c.p1, c.p2).max(d(c.p1, c.p2, c.p3));
     let n = (0.75 * bend / tolerance).sqrt().ceil();
@@ -1264,8 +1264,8 @@ fn cell_triangles(pieces: &[Vec<Point>]) -> Option<Vec<[Point; 3]>> {
 
 /// The part of `outline` (its rings, each with its bounds) inside `cell`, as rings (holes running
 /// the other way). Only the rings whose bounds meet the cell's go into the boolean.
-fn material(outline: &[(Rect, vectorcraft_geom::SubPath)], cell: Rect) -> Option<Vec<Vec<Point>>> {
-    let r = PathData::single(vectorcraft_geom::SubPath::polyline(
+fn material(outline: &[(Rect, oracle_vector_geom::SubPath)], cell: Rect) -> Option<Vec<Vec<Point>>> {
+    let r = PathData::single(oracle_vector_geom::SubPath::polyline(
         &[Point::new(cell.x0, cell.y0), Point::new(cell.x1, cell.y0), Point::new(cell.x1, cell.y1), Point::new(cell.x0, cell.y1)],
         true,
     ));
@@ -1274,7 +1274,7 @@ fn material(outline: &[(Rect, vectorcraft_geom::SubPath)], cell: Rect) -> Option
     );
     let rule = FillRule::NonZero;
     let part =
-        vectorcraft_pathops::try_boolean(&r, rule, &near, rule, vectorcraft_pathops::BoolOp::Intersect, vectorcraft_pathops::DEFAULT_PRECISION)
+        oracle_vector_pathops::try_boolean(&r, rule, &near, rule, oracle_vector_pathops::BoolOp::Intersect, oracle_vector_pathops::DEFAULT_PRECISION)
             .ok()?;
     rings(&part, rule, cell.width(), MAX_PLANE_POINTS).ok()
 }
@@ -1339,11 +1339,11 @@ pub fn inflate_together(shapes: &[(&PathData, FillRule)], bounds: Rect, options:
 /// shape's own, if higher): `reach` is the highest puff of the shapes drawn together.
 fn inflated(p: Puff, bounds: Rect, o: Inflate, view: View, reach: f64) -> Result<Vec<Facet>, String> {
     let Puff { rings, edges, cell, nx, ny, m, height } = p;
-    let outline: Vec<(Rect, vectorcraft_geom::SubPath)> = rings
+    let outline: Vec<(Rect, oracle_vector_geom::SubPath)> = rings
         .iter()
         .filter_map(|r| {
             let b = r.iter().skip(1).fold(Rect::from_points(*r.first()?, *r.first()?), |b, p| b.union_pt(*p));
-            Some((b, vectorcraft_geom::SubPath::polyline(r, true)))
+            Some((b, oracle_vector_geom::SubPath::polyline(r, true)))
         })
         .collect();
     // When no shape puffs (no volume, or shapes too narrow for the grid), every front (and a back

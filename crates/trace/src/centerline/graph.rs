@@ -12,7 +12,7 @@
 use std::collections::BTreeSet;
 
 use kurbo::Vec2;
-use vectorcraft_geom::Point;
+use oracle_vector_geom::Point;
 
 use super::Grid;
 

@@ -16,10 +16,10 @@
 //! the open dialog (`brushKeyColor` UI request) and switches back.
 
 use serde_json::{Value, json};
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::hit::{HitKind, hit_test, hit_test_visible};
-use vectorcraft_doc::{Node, NodeKind};
-use vectorcraft_geom::Point;
+use oracle_vector_color::{Color, Paint};
+use oracle_vector_doc::hit::{HitKind, hit_test, hit_test_visible};
+use oracle_vector_doc::{Node, NodeKind};
+use oracle_vector_geom::Point;
 
 use super::paint_owner;
 use crate::params::color_json;
@@ -37,7 +37,7 @@ pub struct EyedropperTool {
 
 /// The colour of `paint` at `p` (gradients are sampled along their vector, radial ones honouring
 /// their aspect ratio).
-pub fn paint_color_at(paint: &Paint, bounds: Option<vectorcraft_geom::Rect>, p: Point) -> Option<Color> {
+pub fn paint_color_at(paint: &Paint, bounds: Option<oracle_vector_geom::Rect>, p: Point) -> Option<Color> {
     match paint {
         Paint::Solid { color, .. } => Some(*color),
         Paint::Gradient(g) => {
@@ -74,7 +74,7 @@ fn image_color_at(cx: &ToolContext, n: &Node, p: Point) -> Option<Color> {
         return Some(Color::cmyk(c, m, y, k));
     }
     let [r, g, b, _] = blob.sample_object(px.x, px.y, object, cx.raster_sample)?;
-    let [r, g, b] = vectorcraft_color::cms::active().srgb_to_rgb([r, g, b].map(|v| f32::from(v) / 255.0));
+    let [r, g, b] = oracle_vector_color::cms::active().srgb_to_rgb([r, g, b].map(|v| f32::from(v) / 255.0));
     Some(Color::rgb(r, g, b))
 }
 
@@ -89,7 +89,7 @@ impl Tool for EyedropperTool {
         }
         // A click inside a fill or among characters samples it too, whatever Object and Type
         // Object Selection by Path Only say.
-        let opts = vectorcraft_doc::hit::HitOptions { path_only: false, type_path_only: false, ..cx.hit_options() };
+        let opts = oracle_vector_doc::hit::HitOptions { path_only: false, type_path_only: false, ..cx.hit_options() };
         if self.brush_key_color {
             let h = hit_test_visible(cx.doc, ev.pos, opts);
             let Some(h) = h else { return vec![] };
@@ -167,7 +167,7 @@ impl Tool for EyedropperTool {
 mod tests {
     use super::*;
     use crate::testutil::*;
-    use vectorcraft_doc::Selection;
+    use oracle_vector_doc::Selection;
 
     /// Upstream brush-key sampling and highlighted-text transfer keep independent state.
     #[test]
@@ -301,7 +301,7 @@ mod tests {
 
     #[test]
     fn clicking_an_image_samples_its_pixels() {
-        use vectorcraft_doc::{Document, ImageBlob, ImageObject, Node, NodeKind};
+        use oracle_vector_doc::{Document, ImageBlob, ImageObject, Node, NodeKind};
         let mut d = Document::new(500.0, 500.0);
         let l = d.layers[0].id;
         let id = d.alloc_id();
@@ -314,7 +314,7 @@ mod tests {
             key: "px".into(),
             width: 3,
             height: 1,
-            xf: vectorcraft_geom::Affine::scale(10.0),
+            xf: oracle_vector_geom::Affine::scale(10.0),
             link: None,
             placement: Default::default(),
         };
@@ -338,8 +338,8 @@ mod tests {
     /// #2276: a CMYK image gives its ink amounts as they are, not the RGB its decoder shows.
     #[test]
     fn clicking_a_cmyk_image_samples_its_inks() {
-        use vectorcraft_doc::cmyk::Inks;
-        use vectorcraft_doc::{Document, ImageBlob, ImageObject, Node, NodeKind};
+        use oracle_vector_doc::cmyk::Inks;
+        use oracle_vector_doc::{Document, ImageBlob, ImageObject, Node, NodeKind};
         let mut d = Document::new(500.0, 500.0);
         let l = d.layers[0].id;
         let id = d.alloc_id();
@@ -350,7 +350,7 @@ mod tests {
             key: "ink".into(),
             width: 2,
             height: 1,
-            xf: vectorcraft_geom::Affine::scale(10.0),
+            xf: oracle_vector_geom::Affine::scale(10.0),
             link: None,
             placement: Default::default(),
         };
@@ -373,23 +373,23 @@ mod tests {
 
     #[test]
     fn gradient_sampled_along_vector() {
-        let g = vectorcraft_color::GradientPaint::new(vectorcraft_color::Gradient::default());
+        let g = oracle_vector_color::GradientPaint::new(oracle_vector_color::Gradient::default());
         let paint = Paint::Gradient(Box::new(g));
-        let r = vectorcraft_geom::Rect::new(0.0, 0.0, 100.0, 10.0);
+        let r = oracle_vector_geom::Rect::new(0.0, 0.0, 100.0, 10.0);
         assert_eq!(paint_color_at(&paint, Some(r), Point::new(0.0, 5.0)).unwrap().to_hex(), "#ffffff");
         assert_eq!(paint_color_at(&paint, Some(r), Point::new(100.0, 5.0)).unwrap().to_hex(), "#000000");
     }
 
     #[test]
     fn type_gradients_are_sampled_in_text_space() {
-        use vectorcraft_color::{Gradient, GradientGeom, GradientPaint};
-        use vectorcraft_doc::{CharStyle, Document, Node, NodeKind, TextObject};
+        use oracle_vector_color::{Gradient, GradientGeom, GradientPaint};
+        use oracle_vector_doc::{CharStyle, Document, Node, NodeKind, TextObject};
         let mut d = Document::new(500.0, 500.0);
         let l = d.layers[0].id;
         let id = d.alloc_id();
         // Type turned 90°: its baseline runs down from (100, 100).
         let mut t = TextObject::point(Point::ZERO, "Gradient", CharStyle { size: 20.0, ..Default::default() });
-        t.xf = vectorcraft_geom::Affine::translate((100.0, 100.0)) * vectorcraft_geom::Affine::rotate(std::f64::consts::FRAC_PI_2);
+        t.xf = oracle_vector_geom::Affine::translate((100.0, 100.0)) * oracle_vector_geom::Affine::rotate(std::f64::consts::FRAC_PI_2);
         let mut g = GradientPaint::new(Gradient::default());
         g.geom = Some(GradientGeom { start: Point::ZERO, end: Point::new(100.0, 0.0), aspect: 1.0, focal: None });
         t.runs[0].style.fill = Paint::Gradient(Box::new(g));
@@ -403,12 +403,12 @@ mod tests {
 
     #[test]
     fn radial_sample_honours_aspect() {
-        let mut g = vectorcraft_color::GradientPaint::new(vectorcraft_color::Gradient {
-            kind: vectorcraft_color::GradientKind::Radial,
+        let mut g = oracle_vector_color::GradientPaint::new(oracle_vector_color::Gradient {
+            kind: oracle_vector_color::GradientKind::Radial,
             ..Default::default()
         });
         // Radius 100 along x, 50 across: 50 pt above the centre is already the outer (black) edge.
-        g.geom = Some(vectorcraft_color::GradientGeom { start: Point::ZERO, end: Point::new(100.0, 0.0), aspect: 0.5, focal: None });
+        g.geom = Some(oracle_vector_color::GradientGeom { start: Point::ZERO, end: Point::new(100.0, 0.0), aspect: 0.5, focal: None });
         let paint = Paint::Gradient(Box::new(g));
         assert_eq!(paint_color_at(&paint, None, Point::new(0.0, -50.0)).unwrap().to_hex(), "#000000");
         assert_eq!(paint_color_at(&paint, None, Point::new(50.0, 0.0)).unwrap().to_hex(), "#808080");

@@ -8,10 +8,10 @@ use std::collections::HashMap;
 
 use egui::{Sense, Ui, vec2};
 use serde_json::{Value, json};
-use vectorcraft_doc::{Appearance, Document, Node, PressureProfile, color::Color, color::Paint};
+use oracle_vector_doc::{Appearance, Document, Node, PressureProfile, color::Color, color::Paint};
 
 use super::{first_selected, pstate, set_pstate};
-use crate::VectorcraftApp;
+use crate::OracleVectorApp;
 use crate::dialogs::brush_options;
 use crate::theme::Tokens;
 use crate::widgets::{self, PanelDrag, menu_item};
@@ -20,7 +20,7 @@ const KINDS: [(&str, &str); 5] =
     [("calligraphic", "Calligraphic"), ("scatter", "Scatter"), ("art", "Art"), ("bristle", "Bristle"), ("pattern", "Pattern")];
 
 /// (name, type) of every brush in the active document's library.
-pub fn brushes(app: &mut VectorcraftApp) -> (Vec<(String, String)>, Option<String>) {
+pub fn brushes(app: &mut OracleVectorApp) -> (Vec<(String, String)>, Option<String>) {
     let Ok(v) = app.run("brush.list", json!({})) else { return (vec![], None) };
     let list = v["brushes"]
         .as_array()
@@ -42,13 +42,13 @@ fn preview(ui: &Ui, def: &Value, size: egui::Vec2) -> Option<egui::TextureHandle
         st.brush = Some(name);
         st.pressure = Some(PressureProfile::sample());
         // A gentle S-curve across the swatch.
-        let mut bp = vectorcraft_geom::BezPath::new();
+        let mut bp = oracle_vector_geom::BezPath::new();
         let (x0, x1) = (h * 0.5, w - h * 0.5);
         bp.move_to((x0, h * 0.5));
         bp.curve_to((x0 + (x1 - x0) * 0.35, h * 0.1), (x0 + (x1 - x0) * 0.65, h * 0.9), (x1, h * 0.5));
         let id = doc.alloc_id();
         let l = doc.layers[0].id;
-        doc.insert(Some(l), 0, Node::path(id, vectorcraft_geom::PathData::from_bezpath(&bp), ap)).ok()?;
+        doc.insert(Some(l), 0, Node::path(id, oracle_vector_geom::PathData::from_bezpath(&bp), ap)).ok()?;
         Some(doc)
     })
 }
@@ -62,7 +62,7 @@ pub(crate) fn chip(ui: &Ui, r: egui::Rect, def: &Value) {
     }
 }
 
-fn selected_brush(app: &VectorcraftApp) -> Option<String> {
+fn selected_brush(app: &OracleVectorApp) -> Option<String> {
     first_selected(app).and_then(|n| n.appearance.stroke().and_then(|s| s.brush.clone()))
 }
 
@@ -70,13 +70,13 @@ fn selected_brush(app: &VectorcraftApp) -> Option<String> {
 /// brush.
 type ClickKey = (u64, Vec<u64>, Option<String>);
 
-fn click_key(app: &VectorcraftApp, current: Option<&str>) -> Option<ClickKey> {
+fn click_key(app: &OracleVectorApp, current: Option<&str>) -> Option<ClickKey> {
     app.session.active().map(|st| (st.uid, st.selection.objects.iter().map(|id| id.0).collect(), current.map(str::to_string)))
 }
 
 /// Whether the panel's last click was made with the document, objects and current brush active
 /// now. Panel state `br-selected` holds the multi-selection and the key of that click.
-fn same_click(app: &VectorcraftApp, ctx: &egui::Context, current: Option<&str>) -> bool {
+fn same_click(app: &OracleVectorApp, ctx: &egui::Context, current: Option<&str>) -> bool {
     let (_, key): (Option<Vec<String>>, Option<ClickKey>) = pstate(ctx, "br-selected");
     key.is_some() && key == click_key(app, current)
 }
@@ -86,7 +86,7 @@ fn same_click(app: &VectorcraftApp, ctx: &egui::Context, current: Option<&str>) 
 /// document, other objects or another current brush is active, which also clears it and the key
 /// of the last click; `Some` of an empty list after Cmd/Ctrl-clicks deselected every brush or
 /// Select All Unused found none.
-fn multi(app: &VectorcraftApp, ctx: &egui::Context, list: &[(String, String)], current: Option<&str>) -> Option<Vec<String>> {
+fn multi(app: &OracleVectorApp, ctx: &egui::Context, list: &[(String, String)], current: Option<&str>) -> Option<Vec<String>> {
     if !same_click(app, ctx, current) {
         set_pstate(ctx, "br-selected", (None::<Vec<String>>, None::<ClickKey>));
         return None;
@@ -102,12 +102,12 @@ fn multi(app: &VectorcraftApp, ctx: &egui::Context, list: &[(String, String)], c
 
 /// The brushes Delete Brush and Duplicate Brush act on: the multi-selection, else the selected
 /// path's brush, else the current one.
-fn targets(app: &VectorcraftApp, ctx: &egui::Context, list: &[(String, String)], current: Option<&str>) -> Vec<String> {
+fn targets(app: &OracleVectorApp, ctx: &egui::Context, list: &[(String, String)], current: Option<&str>) -> Vec<String> {
     multi(app, ctx, list, current).unwrap_or_else(|| selected_brush(app).or(current.map(str::to_string)).into_iter().collect())
 }
 
 /// Runs `brush.delete` or `brush.duplicate` on `names`.
-fn run_on(app: &mut VectorcraftApp, id: &str, names: &[String]) {
+fn run_on(app: &mut OracleVectorApp, id: &str, names: &[String]) {
     let p = match names {
         [name] => json!({ "name": name }),
         _ => json!({ "names": names }),
@@ -159,7 +159,7 @@ fn reorder_drop(
     }
 }
 
-pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn show(app: &mut OracleVectorApp, ui: &mut Ui) {
     let t = Tokens::get(ui.ctx());
     let (list, current) = brushes(app);
     let sel_brush = selected_brush(app);
@@ -320,7 +320,7 @@ pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
     });
 }
 
-pub fn menu(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn menu(app: &mut OracleVectorApp, ui: &mut Ui) {
     let sel = selected_brush(app);
     let (list, current) = brushes(app);
     let targets = targets(app, ui.ctx(), &list, current.as_deref());
@@ -397,13 +397,13 @@ pub fn menu(app: &mut VectorcraftApp, ui: &mut Ui) {
 #[cfg(test)]
 mod tests {
     use egui::{Pos2, Rect, pos2};
-    use vectorcraft_doc::NodeId;
-    use vectorcraft_engine::Session;
+    use oracle_vector_doc::NodeId;
+    use oracle_vector_engine::Session;
 
     use super::*;
 
     /// One headless frame of the panel, 236 pt wide as in the dock.
-    fn frame(ctx: &egui::Context, app: &mut VectorcraftApp, events: Vec<egui::Event>) {
+    fn frame(ctx: &egui::Context, app: &mut OracleVectorApp, events: Vec<egui::Event>) {
         let raw = egui::RawInput { screen_rect: Some(Rect::from_min_size(Pos2::ZERO, vec2(236.0, 600.0))), events, ..Default::default() };
         let mut out = ctx.run_ui(raw, |ui| show(app, ui));
         out.textures_delta.clear();
@@ -416,11 +416,11 @@ mod tests {
     /// One frame of `draw` at `time` with `modifiers` held, its output kept.
     fn frame_with(
         ctx: &egui::Context,
-        app: &mut VectorcraftApp,
+        app: &mut OracleVectorApp,
         events: Vec<egui::Event>,
         modifiers: egui::Modifiers,
         time: f64,
-        draw: fn(&mut VectorcraftApp, &mut Ui),
+        draw: fn(&mut OracleVectorApp, &mut Ui),
     ) -> egui::FullOutput {
         let screen_rect = Some(Rect::from_min_size(Pos2::ZERO, vec2(236.0, 600.0)));
         let events = std::iter::once(egui::Event::ModifiersChanged(modifiers)).chain(events).collect();
@@ -431,7 +431,7 @@ mod tests {
     }
 
     /// A click at `at` with `modifiers` held, in a frame of `draw` at `time`.
-    fn click(ctx: &egui::Context, app: &mut VectorcraftApp, at: Pos2, modifiers: egui::Modifiers, time: f64, draw: fn(&mut VectorcraftApp, &mut Ui)) {
+    fn click(ctx: &egui::Context, app: &mut OracleVectorApp, at: Pos2, modifiers: egui::Modifiers, time: f64, draw: fn(&mut OracleVectorApp, &mut Ui)) {
         let press = |pressed| egui::Event::PointerButton { pos: at, button: egui::PointerButton::Primary, pressed, modifiers };
         frame_with(ctx, app, vec![egui::Event::PointerMoved(at), press(true), press(false)], modifiers, time, draw);
     }
@@ -456,13 +456,13 @@ mod tests {
     /// painted with it). A single click only applies the brush.
     #[test]
     fn double_clicking_a_brush_opens_its_options() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 100})).unwrap();
         let ctx = egui::Context::default();
         let clicks = |at: Pos2, n: usize| -> Vec<egui::Event> {
             std::iter::once(egui::Event::PointerMoved(at)).chain((0..n).flat_map(|_| [button(at, true), button(at, false)])).collect()
         };
-        let at_time = |app: &mut VectorcraftApp, time: f64, events: Vec<egui::Event>| {
+        let at_time = |app: &mut OracleVectorApp, time: f64, events: Vec<egui::Event>| {
             let raw = egui::RawInput {
                 screen_rect: Some(Rect::from_min_size(Pos2::ZERO, vec2(236.0, 600.0))),
                 time: Some(time),
@@ -498,7 +498,7 @@ mod tests {
     /// too, and make no brush.
     #[test]
     fn the_new_brush_button_and_menu_item_open_new_brush() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 100})).unwrap();
         let ctx = egui::Context::default();
         ctx.enable_accesskit();
@@ -506,7 +506,7 @@ mod tests {
         let out = frame_with(&ctx, &mut app, vec![], egui::Modifiers::NONE, 0.0, show);
         let new = clickable(&out).into_iter().find(|(l, _)| l.as_deref() == Some("New Brush")).expect("a New Brush button").1.center();
         click(&ctx, &mut app, new, egui::Modifiers::NONE, 1.0, show);
-        let kind = |app: &VectorcraftApp| app.ui.dialog.as_ref().map(|d| d.kind.clone());
+        let kind = |app: &OracleVectorApp| app.ui.dialog.as_ref().map(|d| d.kind.clone());
         assert_eq!(kind(&app).as_deref(), Some(crate::dialogs::new_brush::KIND));
         app.ui.dialog = None;
         menu_click(&ctx, &mut app, "New Brush…", 2.0);
@@ -526,16 +526,16 @@ mod tests {
             .collect()
     }
 
-    fn brush_of(app: &VectorcraftApp, id: NodeId) -> Option<String> {
+    fn brush_of(app: &OracleVectorApp, id: NodeId) -> Option<String> {
         app.session.active().unwrap().doc.node(id).unwrap().appearance.stroke().and_then(|s| s.brush.clone())
     }
 
-    fn names(app: &mut VectorcraftApp) -> Vec<String> {
+    fn names(app: &mut OracleVectorApp) -> Vec<String> {
         brushes(app).0.into_iter().map(|b| b.0).collect()
     }
 
     /// Click the panel menu's item `label` (frames at `time`, `time + 0.5`).
-    fn menu_click(ctx: &egui::Context, app: &mut VectorcraftApp, label: &str, time: f64) {
+    fn menu_click(ctx: &egui::Context, app: &mut OracleVectorApp, label: &str, time: f64) {
         let out = frame_with(ctx, app, vec![], egui::Modifiers::NONE, time, menu);
         let at = clickable(&out).into_iter().find(|(l, _)| l.as_deref() == Some(label)).unwrap_or_else(|| panic!("no `{label}`")).1.center();
         click(ctx, app, at, egui::Modifiers::NONE, time + 0.5, menu);
@@ -544,7 +544,7 @@ mod tests {
     /// The first three brushes (the Calligraphic ones): a click on the first applies it to the
     /// selected rectangle, and then a Shift-click on the third selects all three without applying
     /// the third.
-    fn select_three(ctx: &egui::Context, app: &mut VectorcraftApp, rect: NodeId) -> (Vec<String>, Vec<Rect>) {
+    fn select_three(ctx: &egui::Context, app: &mut OracleVectorApp, rect: NodeId) -> (Vec<String>, Vec<Rect>) {
         let out = frame_with(ctx, app, vec![], egui::Modifiers::NONE, 0.0, show);
         let tiles: Vec<Rect> = clickable(&out).into_iter().map(|c| c.1).filter(|r| r.width() == 64.0).take(3).collect();
         let (list, _) = brushes(app);
@@ -561,7 +561,7 @@ mod tests {
     /// highlights them, and Duplicate Brush and Delete Brush act on all of them in one undo step.
     #[test]
     fn shift_and_command_clicks_select_brushes_for_delete_and_duplicate() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 100})).unwrap();
         let rect = NodeId(app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 50, "height": 40})).unwrap()["id"].as_u64().unwrap());
         let ctx = egui::Context::default();
@@ -574,7 +574,7 @@ mod tests {
         click(&ctx, &mut app, tiles[1].center(), egui::Modifiers::COMMAND, 3.0, show);
         let out = frame_with(&ctx, &mut app, vec![], egui::Modifiers::NONE, 3.5, show);
         assert_eq!(lit_tiles(&out), [0, 2]);
-        let undo = |app: &VectorcraftApp| app.session.active().unwrap().history.undo.len();
+        let undo = |app: &OracleVectorApp| app.session.active().unwrap().history.undo.len();
         let before = (names(&mut app), undo(&app));
         menu_click(&ctx, &mut app, "Duplicate Brush", 4.0);
         let copies = [format!("{} copy", three[0]), format!("{} copy", three[2])];
@@ -596,9 +596,9 @@ mod tests {
     /// brush and Delete Brush deletes it alone.
     #[test]
     fn selecting_other_art_ends_the_brush_multi_selection() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 100})).unwrap();
-        let rect = |app: &mut VectorcraftApp, x: f64| {
+        let rect = |app: &mut OracleVectorApp, x: f64| {
             NodeId(app.run("shape.rectangle", json!({"x": x, "y": 10, "width": 40, "height": 40})).unwrap()["id"].as_u64().unwrap())
         };
         let a = rect(&mut app, 10.0);
@@ -628,7 +628,7 @@ mod tests {
     /// the brush clicked before.
     #[test]
     fn a_shift_click_after_selecting_other_art_starts_from_its_brush() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 100})).unwrap();
         app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 50, "height": 40})).unwrap();
         let ctx = egui::Context::default();
@@ -648,7 +648,7 @@ mod tests {
     /// Duplicate Brush are off.
     #[test]
     fn command_clicks_deselect_every_brush() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 100})).unwrap();
         let a = NodeId(app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 50, "height": 40})).unwrap()["id"].as_u64().unwrap());
         let ctx = egui::Context::default();
@@ -671,7 +671,7 @@ mod tests {
     /// painted with, and Delete Brush then deletes all of them.
     #[test]
     fn select_all_unused_selects_the_brushes_no_stroke_paints_with() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 100})).unwrap();
         let (list, _) = brushes(&mut app);
         let a = NodeId(app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 50, "height": 40})).unwrap()["id"].as_u64().unwrap());
@@ -691,7 +691,7 @@ mod tests {
 
     #[test]
     fn art_dropped_on_the_panel_becomes_an_art_brush_and_a_brush_drags_out() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 100})).unwrap();
         let id = app.run("shape.star", json!({"cx": 50, "cy": 50, "radius1": 20, "radius2": 9, "points": 5})).unwrap()["id"].as_u64().unwrap();
         let ctx = egui::Context::default();
@@ -726,7 +726,7 @@ mod tests {
     /// type, it stays where it is and the status bar says why.
     #[test]
     fn a_brush_dragged_onto_another_of_its_type_moves_before_it() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 100})).unwrap();
         let ctx = egui::Context::default();
         ctx.enable_accesskit();
@@ -744,7 +744,7 @@ mod tests {
             lines.collect()
         };
         // Press on a tile, drag it to `to`, hold it there for a frame (its output returned) and release.
-        let drag = |app: &mut VectorcraftApp, from: Pos2, to: Pos2, time: f64| -> egui::FullOutput {
+        let drag = |app: &mut OracleVectorApp, from: Pos2, to: Pos2, time: f64| -> egui::FullOutput {
             frame_with(&ctx, app, vec![egui::Event::PointerMoved(from), button(from, true)], egui::Modifiers::NONE, time, show);
             frame_with(&ctx, app, vec![egui::Event::PointerMoved(from + vec2(20.0, 0.0))], egui::Modifiers::NONE, time + 0.1, show);
             frame_with(&ctx, app, vec![egui::Event::PointerMoved(to)], egui::Modifiers::NONE, time + 0.2, show);
@@ -752,10 +752,10 @@ mod tests {
             frame_with(&ctx, app, vec![button(to, false)], egui::Modifiers::NONE, time + 0.4, show);
             held
         };
-        let undo = |app: &VectorcraftApp| app.session.active().unwrap().history.undo.len();
+        let undo = |app: &OracleVectorApp| app.session.active().unwrap().history.undo.len();
         let steps = undo(&app);
         let calligraphic =
-            |app: &mut VectorcraftApp| -> Vec<String> { brushes(app).0.into_iter().filter(|b| b.1 == "calligraphic").map(|b| b.0).collect() };
+            |app: &mut OracleVectorApp| -> Vec<String> { brushes(app).0.into_iter().filter(|b| b.1 == "calligraphic").map(|b| b.0).collect() };
         // "10 pt. Oval" onto the left half of "3 pt. Round".
         let held = drag(&mut app, tiles[2].center(), tiles[0].center() - vec2(16.0, 0.0), 1.0);
         assert_eq!(bars(&held), [tiles[0].left() - 1.5]);

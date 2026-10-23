@@ -2,7 +2,7 @@
 //! drawn, exported and expanded as its glyph outlines while it stays editable type.
 
 use serde_json::json;
-use vectorcraft_doc::{Node, NodeKind};
+use oracle_vector_doc::{Node, NodeKind};
 
 use super::*;
 
@@ -56,20 +56,20 @@ fn type_with_outline_object_stays_editable_type_and_keeps_its_geometric_bounds()
     assert_eq!(s.transform_bounds(&[id]), before);
     // With Use Preview Bounds on, the type is measured by its glyph outlines.
     s.prefs.use_preview_bounds = true;
-    let glyphs = vectorcraft_render::effects::reshape(&node(&s, id), None).unwrap().geometric_bounds();
+    let glyphs = oracle_vector_render::effects::reshape(&node(&s, id), None).unwrap().geometric_bounds();
     assert_eq!(s.transform_bounds(&[id]), glyphs);
     s.prefs.use_preview_bounds = false;
     // A native save keeps the effect.
-    let back = vectorcraft_format::load(&vectorcraft_format::save(&s.doc().unwrap().doc, false)).unwrap();
+    let back = oracle_vector_format::load(&oracle_vector_format::save(&s.doc().unwrap().doc, false)).unwrap();
     let ids: Vec<String> = back.node(id).unwrap().appearance.effects.iter().map(|e| e.id.clone()).collect();
     assert_eq!(ids, ["path.outlineObject"]);
     // The type is still type, drawn as its outlines, and a text edit changes them.
     let n = node(&s, id);
     assert!(matches!(n.kind, NodeKind::Text(_)));
-    let drawn = vectorcraft_render::effects::reshape(&n, None).unwrap();
+    let drawn = oracle_vector_render::effects::reshape(&n, None).unwrap();
     assert_eq!(count_text(&drawn), 0);
     s.execute("text.setText", &json!({"id": id.0, "text": "OUTLINED TYPE"})).unwrap();
-    let longer = vectorcraft_render::effects::reshape(&node(&s, id), None).unwrap();
+    let longer = oracle_vector_render::effects::reshape(&node(&s, id), None).unwrap();
     assert!(longer.geometric_bounds().unwrap().width() > drawn.geometric_bounds().unwrap().width() + 50.0);
 }
 
@@ -79,7 +79,7 @@ fn type_with_outline_object_exports_and_expands_as_paths() {
     let id = text(&mut s);
     apply(&mut s, id);
     let doc = s.doc().unwrap().doc.clone();
-    let svg = vectorcraft_svg::export(&doc, &Default::default());
+    let svg = oracle_vector_svg::export(&doc, &Default::default());
     assert!(!svg.contains("<text") && !svg.contains("OUTLINE"), "{svg}");
     // Expand Appearance leaves paths and no type, in one undo step.
     let undo = s.doc().unwrap().history.undo.len();

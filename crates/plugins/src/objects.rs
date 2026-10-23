@@ -9,9 +9,9 @@ use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
 use serde_json::{Value, json};
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::{Appearance, AppearanceItem, Document, Effect, FillLayer, LineCap, LineJoin, Node, NodeId, NodeKind, StrokeLayer};
-use vectorcraft_geom::{FillRule, PathData, Point, Rect};
+use oracle_vector_color::{Color, Paint};
+use oracle_vector_doc::{Appearance, AppearanceItem, Document, Effect, FillLayer, LineCap, LineJoin, Node, NodeId, NodeKind, StrokeLayer};
+use oracle_vector_geom::{FillRule, PathData, Point, Rect};
 
 use crate::{Error, Result};
 

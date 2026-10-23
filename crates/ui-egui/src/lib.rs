@@ -1,6 +1,6 @@
-//! VectorCraft's egui frontend: an Illustrator-style UI over `vectorcraft-engine`.
+//! Oracle Vector's egui frontend: an Illustrator-style UI over `oracle-vector-engine`.
 //!
-//! The UI is thin: every action goes through [`VectorcraftApp::run`], which dispatches UI commands
+//! The UI is thin: every action goes through [`OracleVectorApp::run`], which dispatches UI commands
 //! (view/window) here and everything else to the engine. The same entry point serves menus,
 //! shortcuts, the ⌘K palette and the control channel ([`control`]).
 #![forbid(unsafe_code)]
@@ -170,9 +170,9 @@ use std::sync::mpsc::{Receiver, Sender};
 use std::sync::{Arc, Mutex};
 
 use serde_json::{Value, json};
-use vectorcraft_engine::cmd::fileio;
-use vectorcraft_engine::file_access::{self, AutomationRoots};
-use vectorcraft_engine::{Session, ViewInfo};
+use oracle_vector_engine::cmd::fileio;
+use oracle_vector_engine::file_access::{self, AutomationRoots};
+use oracle_vector_engine::{Session, ViewInfo};
 
 pub use control::{ControlRequest, ControlResponse, Ticket as ControlTicket};
 pub use state::{UiState, View};
@@ -295,8 +295,8 @@ pub struct Services {
     /// command answers with an error and the Color Picker's eyedropper button is gray.
     pub screen_color: Option<screen_color::StartSampler>,
     /// Where Data Recovery keeps its copies when not in a folder (the web's browser storage;
-    /// tests): installed into the session ([`vectorcraft_engine::cmd::recovery`]).
-    pub recovery_store: Option<std::sync::Arc<dyn vectorcraft_engine::cmd::recovery::RecoveryStore>>,
+    /// tests): installed into the session ([`oracle_vector_engine::cmd::recovery`]).
+    pub recovery_store: Option<std::sync::Arc<dyn oracle_vector_engine::cmd::recovery::RecoveryStore>>,
     /// File → Print: the system's printers and print queue (desktop), the browser's print dialog
     /// (web). Without it Print saves the job as a PDF.
     pub print: Option<Box<dyn print::PrintService>>,
@@ -321,16 +321,16 @@ pub struct Services {
 
 /// Cached canvas raster.
 pub struct CanvasCache {
-    pub renderer: vectorcraft_render::Renderer,
+    pub renderer: oracle_vector_render::Renderer,
     pub texture: Option<egui::TextureHandle>,
     pub key: Option<CacheKey>,
     /// The document the frame shown was rendered from, and the options it was rendered with, with
     /// [`Self::key`]: when only the document changes, the canvas renders again only where it
-    /// changed ([`vectorcraft_render::changed`]).
-    pub shown: Option<(std::sync::Arc<vectorcraft_doc::Document>, vectorcraft_render::RenderOptions)>,
+    /// changed ([`oracle_vector_render::changed`]).
+    pub shown: Option<(std::sync::Arc<oracle_vector_doc::Document>, oracle_vector_render::RenderOptions)>,
     pub last_ms: f64,
     /// The frame shown drew raster effects from rasters made before their objects moved, or at a
-    /// drag's lower resolution ([`vectorcraft_render::FrameStats::moved`]): the next frame outside
+    /// drag's lower resolution ([`oracle_vector_render::FrameStats::moved`]): the next frame outside
     /// an interaction runs them again, on the worker when there is one.
     pub moved: bool,
     /// The frame shown was rendered on the worker: an interaction's frames stay there
@@ -354,33 +354,33 @@ pub struct CanvasCache {
     /// The marks Type → Show Hidden Characters drew on each text object in the last frame. A frame
     /// that does not draw them drops them ([`canvas::show`]).
     pub hidden_chars: canvas::HiddenChars,
-    /// [`VectorcraftApp::selection_box`] for (document uid, revision, Use Preview Bounds).
-    pub selection_box: Option<((u64, u64, bool), Option<vectorcraft_doc::OrientedBox>)>,
-    /// [`VectorcraftApp::selection_bounds`] for (document uid, revision).
-    pub selection_bounds: Option<((u64, u64), Option<vectorcraft_geom::Rect>)>,
-    /// [`VectorcraftApp::content_bounds`] for (document uid, revision).
-    pub content_bounds: Option<((u64, u64), Option<vectorcraft_geom::Rect>)>,
+    /// [`OracleVectorApp::selection_box`] for (document uid, revision, Use Preview Bounds).
+    pub selection_box: Option<((u64, u64, bool), Option<oracle_vector_doc::OrientedBox>)>,
+    /// [`OracleVectorApp::selection_bounds`] for (document uid, revision).
+    pub selection_bounds: Option<((u64, u64), Option<oracle_vector_geom::Rect>)>,
+    /// [`OracleVectorApp::content_bounds`] for (document uid, revision).
+    pub content_bounds: Option<((u64, u64), Option<oracle_vector_geom::Rect>)>,
     /// The tools' cursors as OS cursor bitmaps.
     pub cursors: cursors::Images,
 }
 
 /// [`CanvasCache::slices`]: the layout of the slices of (document uid, revision).
-pub type SliceCache = ((u64, u64), std::sync::Arc<Vec<vectorcraft_doc::SliceArea>>);
+pub type SliceCache = ((u64, u64), std::sync::Arc<Vec<oracle_vector_doc::SliceArea>>);
 
 /// [`CanvasCache::live_paint_gaps`]: the gap lines of the selected Live Paint groups of (document
 /// uid, revision).
-pub type LivePaintGapsCache = ((u64, u64), std::sync::Arc<Vec<vectorcraft_tools::Overlay>>);
+pub type LivePaintGapsCache = ((u64, u64), std::sync::Arc<Vec<oracle_vector_tools::Overlay>>);
 
 /// [`CanvasCache::print_tiling`]: the print tiling of (document uid, revision).
-pub type PrintTilingCache = ((u64, u64), std::sync::Arc<Vec<vectorcraft_pdf::TilingPage>>);
+pub type PrintTilingCache = ((u64, u64), std::sync::Arc<Vec<oracle_vector_pdf::TilingPage>>);
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct CacheKey {
     pub doc: usize,
     pub revision: u64,
-    /// An interaction is in progress ([`vectorcraft_render::RenderOptions::interacting`]).
+    /// An interaction is in progress ([`oracle_vector_render::RenderOptions::interacting`]).
     pub interacting: bool,
-    /// A tool's drag on the canvas is in progress ([`vectorcraft_render::RenderOptions::dragging`]).
+    /// A tool's drag on the canvas is in progress ([`oracle_vector_render::RenderOptions::dragging`]).
     pub dragging: bool,
     pub zoom: f64,
     pub cx: f64,
@@ -389,7 +389,7 @@ pub struct CacheKey {
     pub h: u32,
     pub outline: bool,
     pub trim: bool,
-    /// View › Hide Template: template layers left out ([`vectorcraft_render::RenderOptions::hide_templates`]).
+    /// View › Hide Template: template layers left out ([`oracle_vector_render::RenderOptions::hide_templates`]).
     pub templates: bool,
     /// View › Show/Hide Guides: whether guide paths are visible in the artwork raster.
     pub guides: bool,
@@ -400,19 +400,19 @@ pub struct CacheKey {
     pub anti_alias: bool,
     /// Type › Highlight Alternate Glyphs (#394).
     pub highlight_alternate_glyphs: bool,
-    /// [`vectorcraft_render::placed_document::generation`]: placed documents' bitmaps made since.
+    /// [`oracle_vector_render::placed_document::generation`]: placed documents' bitmaps made since.
     pub placed: u64,
     /// View › Pixel Preview: the document pixels rendered (x0, y0, x1, y1), one per point, shown
     /// with hard edges. None: the art is rendered for the screen.
     pub pixel: Option<[i64; 4]>,
-    /// Images sampled smoothly ([`vectorcraft_render::RenderOptions::smooth_images`]).
+    /// Images sampled smoothly ([`oracle_vector_render::RenderOptions::smooth_images`]).
     pub smooth_images: bool,
-    /// Isolation mode's group or layer ([`vectorcraft_render::RenderOptions::isolated`]).
+    /// Isolation mode's group or layer ([`oracle_vector_render::RenderOptions::isolated`]).
     pub isolated: Option<u64>,
     /// Appearance of Black › On Screen › Display All Blacks as Rich Black
-    /// ([`vectorcraft_render::RenderOptions::rich_black`]).
+    /// ([`oracle_vector_render::RenderOptions::rich_black`]).
     pub rich_black: bool,
-    /// Colour and style of guide paths ([`vectorcraft_render::RenderOptions::guide`]).
+    /// Colour and style of guide paths ([`oracle_vector_render::RenderOptions::guide`]).
     pub guide: ([u8; 3], bool),
 }
 
@@ -423,7 +423,7 @@ pub struct Perf {
     pub fps: f64,
 }
 
-pub struct VectorcraftApp {
+pub struct OracleVectorApp {
     pub session: Session,
     pub ui: UiState,
     pub views: Vec<View>,
@@ -448,6 +448,8 @@ pub struct VectorcraftApp {
     /// Synthetic input events (from the control channel) injected one step per frame.
     pub synthetic: Vec<egui::Event>,
     styled: bool,
+    /// The Interface Font installed (reinstalled when the preference changes).
+    ui_font: theme::UiFont,
     fonts_ready: bool,
     /// The egui context the UI's textures were uploaded to (0: none yet; see
     /// [`Self::adopt_context`]).
@@ -460,13 +462,13 @@ pub struct VectorcraftApp {
     /// Canvas rect of the last frame (screen points), for control-channel coordinate mapping.
     pub canvas_rect: Option<egui::Rect>,
     /// Hover position in document coordinates.
-    pub hover_doc: Option<vectorcraft_geom::Point>,
+    pub hover_doc: Option<oracle_vector_geom::Point>,
     /// System clipboard: SVG to publish next frame, the last SVG we published (so pasting it back
     /// uses the lossless internal clipboard) and what came with a paste (a Paste event's text, a
     /// picture or file the host read: [`Self::paste_from_host`]).
     clipboard_out: Option<String>,
     clipboard_published: Option<String>,
-    pub(crate) clipboard_in: Option<vectorcraft_engine::cmd::clipboard::Flavour>,
+    pub(crate) clipboard_in: Option<oracle_vector_engine::cmd::clipboard::Flavour>,
     /// The Copy or Cut whose formats go to the system clipboard ([`Self::publish_clipboard`]).
     clipboard_publishing: sysclip::Publishing,
     /// A URL to open through egui next frame (when the host has no `open_url` service).
@@ -526,8 +528,8 @@ pub struct VectorcraftApp {
     /// A numeric field is being scrubbed: the document's edits meanwhile are one undo step
     /// ([`scrub::begin_frame`]).
     scrub_group: bool,
-    /// The undo step of the scrub in progress ([`vectorcraft_engine::Session::begin_undo_scope`]).
-    scrub_scope: Option<vectorcraft_engine::UndoScope>,
+    /// The undo step of the scrub in progress ([`oracle_vector_engine::Session::begin_undo_scope`]).
+    scrub_scope: Option<oracle_vector_engine::UndoScope>,
     /// The folders control requests, and the input they inject, may read and write
     /// (`--automation-read-root`, `--automation-write-root`); `None`: anywhere. See
     /// [`Self::with_automation_roots`].
@@ -535,6 +537,9 @@ pub struct VectorcraftApp {
     /// This frame carries input the control channel injected ([`Self::raw_input_hook`]): it runs
     /// confined to [`Self::automation_roots`].
     synthetic_frame: bool,
+    /// The Oracle Library window (Window › Oracle Library).
+    #[cfg(not(target_arch = "wasm32"))]
+    pub oracle_library: oracle_library_ui::InAppLibrary,
 }
 
 /// A window capture asked for through the control channel (`ui.screenshot`), answered once a
@@ -549,16 +554,16 @@ struct PendingScreenshot {
     deadline: f64,
 }
 
-/// Seconds between two looks at the system clipboard for [`VectorcraftApp::system_paste`].
+/// Seconds between two looks at the system clipboard for [`OracleVectorApp::system_paste`].
 const SYSTEM_CLIPBOARD_POLL: f64 = 0.25;
 /// Seconds between looks for fonts a font manager activated while the app stays in front (#2576).
 #[cfg(not(target_arch = "wasm32"))]
 const FONT_INSTALL_POLL: f64 = 2.0;
 
-impl VectorcraftApp {
+impl OracleVectorApp {
     pub fn new(mut session: Session, services: Services) -> Self {
         // The font menus and the first file opened need the installed fonts: catalog them now.
-        vectorcraft_text::FontDb::global().scan_in_background();
+        oracle_vector_text::FontDb::global().scan_in_background();
         if let Some(store) = &services.recovery_store {
             session.recovery.set_store(store.clone());
         }
@@ -569,7 +574,7 @@ impl VectorcraftApp {
             views,
             services,
             canvas: CanvasCache {
-                renderer: vectorcraft_render::Renderer::new(),
+                renderer: oracle_vector_render::Renderer::new(),
                 texture: None,
                 key: None,
                 shown: None,
@@ -605,6 +610,7 @@ impl VectorcraftApp {
             screenshot_token: 0,
             synthetic: vec![],
             styled: false,
+            ui_font: theme::UiFont::default(),
             fonts_ready: false,
             context: 0,
             ui_fonts: Default::default(),
@@ -638,6 +644,8 @@ impl VectorcraftApp {
             scrub_scope: None,
             automation_roots: None,
             synthetic_frame: false,
+            #[cfg(not(target_arch = "wasm32"))]
+            oracle_library: oracle_library_ui::InAppLibrary::new("oracle-vector"),
         }
     }
 
@@ -713,9 +721,9 @@ impl VectorcraftApp {
 
     /// The zero point shown by rulers and position fields: the document's with global rulers, the
     /// active artboard's with artboard rulers. Command coordinates stay absolute.
-    pub(crate) fn ruler_origin(&self) -> vectorcraft_geom::Point {
+    pub(crate) fn ruler_origin(&self) -> oracle_vector_geom::Point {
         let artboard = self.view().map_or(0, |v| v.artboard);
-        self.session.active().map_or(vectorcraft_geom::Point::ZERO, |d| d.doc.ruler_origin_for(artboard))
+        self.session.active().map_or(oracle_vector_geom::Point::ZERO, |d| d.doc.ruler_origin_for(artboard))
     }
     pub fn view_mut(&mut self) -> Option<&mut View> {
         self.sync_views();
@@ -743,11 +751,11 @@ impl VectorcraftApp {
     }
 
     /// The canvas on screen in document coordinates (none before it is laid out).
-    pub fn screen_frame(&self) -> Option<vectorcraft_tools::ScreenFrame> {
+    pub fn screen_frame(&self) -> Option<oracle_vector_tools::ScreenFrame> {
         let (rect, view) = (self.canvas_rect?, self.view()?);
         let xf = canvas::Xf::new(rect, view);
         let px = |x: f32, y: f32| xf.delta_to_doc(egui::vec2(x, y));
-        Some(vectorcraft_tools::ScreenFrame {
+        Some(oracle_vector_tools::ScreenFrame {
             origin: xf.to_doc(rect.left_top()),
             right: px(1.0, 0.0),
             down: px(0.0, 1.0),
@@ -781,7 +789,7 @@ impl VectorcraftApp {
         // Paste in place, in front and in back (#693), Select › All on Active Artboard (#1006), and Align,
         // Distribute Objects and Distribute Spacing with Align to Artboard act on the active artboard, the
         // view's, which the app passes as `artboard`. A batch passes it on to those steps.
-        if (vectorcraft_engine::ON_ACTIVE_ARTBOARD.contains(&id) || id == "command.batch")
+        if (oracle_vector_engine::ON_ACTIVE_ARTBOARD.contains(&id) || id == "command.batch")
             && params.get("artboard").is_none()
             && self.view().is_some()
             && let Some(n) = self.session.active().map(|d| d.doc.artboards.len())
@@ -792,7 +800,7 @@ impl VectorcraftApp {
         // Object › Artboards › Fit to Artwork Bounds resizes the selected artboards (the Artboard
         // tool's, else the active one), which the app passes as its `indices`, and Fit to Selected
         // Art resizes the active artboard, which the app passes as its `index`.
-        if vectorcraft_engine::FIT_ACTIVE_ARTBOARD.contains(&id)
+        if oracle_vector_engine::FIT_ACTIVE_ARTBOARD.contains(&id)
             && params.get("index").is_none()
             && params.get("indices").is_none()
             && self.view().is_some()
@@ -921,7 +929,7 @@ impl VectorcraftApp {
         {
             panels::artboards::select(self, panels::artboards::selected(self, n));
         }
-        if let Some(g) = vectorcraft_tools::catalog::group_of(id)
+        if let Some(g) = oracle_vector_tools::catalog::group_of(id)
             && let Some(slot) = self.ui.group_tool.get_mut(g)
         {
             *slot = id.to_string();
@@ -945,7 +953,7 @@ impl VectorcraftApp {
             // Guarded per request: a panic must not drop the channel (taken out of `self` above).
             let roots = self.automation_roots.clone();
             self.ui.answering_control = true;
-            let answer = file_access::confine(roots.as_ref(), || vectorcraft_engine::guard::catch_panic(|| control::handle(self, ctx, &req)));
+            let answer = file_access::confine(roots.as_ref(), || oracle_vector_engine::guard::catch_panic(|| control::handle(self, ctx, &req)));
             self.ui.answering_control = false;
             let outcome = match answer {
                 Ok(outcome) => outcome,
@@ -1043,7 +1051,7 @@ impl VectorcraftApp {
     /// Linked files another app changed while their document is open: every two seconds, and as
     /// soon as the window comes back to the front, stamp the active document's linked files on a
     /// worker thread and act on the changed ones as Preferences › File Handling › Update Links
-    /// says ([`vectorcraft_engine::link_watch`]). No look starts while a dialog is open, so an
+    /// says ([`oracle_vector_engine::link_watch`]). No look starts while a dialog is open, so an
     /// Ask When Modified question never goes unseen.
     #[cfg(not(target_arch = "wasm32"))]
     fn tick_link_updates(&mut self, ctx: &egui::Context, now: f64) {
@@ -1148,7 +1156,7 @@ pub fn now_ms() -> f64 {
 /// The most fonts Type › Recent Fonts lists (Preferences › Type › Number of Recent Fonts).
 pub const MAX_RECENT_FONTS: usize = 15;
 
-impl VectorcraftApp {
+impl OracleVectorApp {
     /// Type › Recent Fonts: the fonts used last, newest first, as many as Preferences › Type ›
     /// Number of Recent Fonts says.
     pub fn recent_fonts(&self) -> &[String] {
@@ -1160,7 +1168,7 @@ impl VectorcraftApp {
     /// anchors selected with Direct Selection, the box around them square to the page, which
     /// `object.setBounds` then edits (#1824). The canvas and the transform fields read it every
     /// frame: it is measured once per revision.
-    pub fn selection_box(&mut self) -> Option<vectorcraft_doc::OrientedBox> {
+    pub fn selection_box(&mut self) -> Option<oracle_vector_doc::OrientedBox> {
         let st = self.session.active()?;
         let key = (st.uid, st.revision, self.session.prefs.use_preview_bounds);
         if let Some((k, b)) = self.canvas.selection_box
@@ -1168,8 +1176,8 @@ impl VectorcraftApp {
         {
             return b;
         }
-        let b = match vectorcraft_effects::preview::anchor_bounds(&st.selection, &st.doc, self.session.prefs.use_preview_bounds) {
-            Some(r) => Some(vectorcraft_doc::OrientedBox::aligned(r)),
+        let b = match oracle_vector_effects::preview::anchor_bounds(&st.selection, &st.doc, self.session.prefs.use_preview_bounds) {
+            Some(r) => Some(oracle_vector_doc::OrientedBox::aligned(r)),
             None => self.session.transform_box(&st.selection.objects),
         };
         self.canvas.selection_box = Some((key, b));
@@ -1179,7 +1187,7 @@ impl VectorcraftApp {
     /// The selection's visual bounds (strokes included, effects left out), square to the page:
     /// measured once per revision, as the canvas reads it every frame (a traced photo selects a
     /// group of hundreds of thousands of paths).
-    pub fn selection_bounds(&mut self) -> Option<vectorcraft_geom::Rect> {
+    pub fn selection_bounds(&mut self) -> Option<oracle_vector_geom::Rect> {
         let st = self.session.active()?;
         let key = (st.uid, st.revision);
         if let Some((k, b)) = self.canvas.selection_bounds
@@ -1194,7 +1202,7 @@ impl VectorcraftApp {
 
     /// The art and the artboards together, the span of the canvas's scroll bars: measured once
     /// per revision, as the canvas reads it every frame.
-    pub fn content_bounds(&mut self) -> Option<vectorcraft_geom::Rect> {
+    pub fn content_bounds(&mut self) -> Option<oracle_vector_geom::Rect> {
         let st = self.session.active()?;
         let key = (st.uid, st.revision);
         if let Some((k, b)) = self.canvas.content_bounds
@@ -1203,7 +1211,7 @@ impl VectorcraftApp {
             return b;
         }
         let boards = st.doc.artboards.iter().map(|a| a.rect).reduce(|r, a| r.union(a));
-        let b = vectorcraft_geom::union_opt(st.doc.art_bounds(), boards);
+        let b = oracle_vector_geom::union_opt(st.doc.art_bounds(), boards);
         self.canvas.content_bounds = Some((key, b));
         b
     }
@@ -1211,7 +1219,7 @@ impl VectorcraftApp {
 
 /// eframe isn't a dependency of this crate (the host owns the event loop); these entry points are
 /// called from the host's `eframe::App` impl.
-impl VectorcraftApp {
+impl OracleVectorApp {
     /// The language the UI is drawn in: the Preferences dialog's choice while it is open (so a
     /// change shows before OK), else the `interfaceLanguage` preference (`auto` = the system's).
     pub fn ui_language(&self) -> i18n::Lang {
@@ -1224,7 +1232,7 @@ impl VectorcraftApp {
     /// one frame and shows an error, instead of closing the app with unsaved work.
     pub fn logic(&mut self, ctx: &egui::Context) {
         let confined = self.synthetic_frame.then(|| self.automation_roots.clone()).flatten();
-        if let Err(msg) = file_access::confine(confined.as_ref(), || vectorcraft_engine::guard::catch_panic(|| self.logic_frame(ctx))) {
+        if let Err(msg) = file_access::confine(confined.as_ref(), || oracle_vector_engine::guard::catch_panic(|| self.logic_frame(ctx))) {
             self.picks.recover();
             self.status(format!("Internal error: {msg} (please report this bug)"));
         }
@@ -1238,8 +1246,16 @@ impl VectorcraftApp {
             self.session.ui_language = Some(lang.code().to_string());
         }
         self.adopt_context(ctx);
+        let font = theme::UiFont::parse(&self.session.prefs.ui_font);
+        if self.styled && font != self.ui_font {
+            // A new Interface Font: install the fonts again, then the installed fonts on top.
+            self.styled = false;
+            self.fonts_ready = false;
+            self.ui_fonts = Default::default();
+        }
         if !self.styled {
-            theme::install_fonts(ctx);
+            theme::install_fonts_with(ctx, font);
+            self.ui_font = font;
             theme::apply(ctx, self.ui.brightness);
             egui_extras::install_image_loaders(ctx);
             self.styled = true;
@@ -1298,7 +1314,7 @@ impl VectorcraftApp {
                 }
             } else {
                 // Quitting with nothing unsaved: no copies to leave behind.
-                vectorcraft_engine::cmd::recovery::forget_all(&mut self.session);
+                oracle_vector_engine::cmd::recovery::forget_all(&mut self.session);
             }
         }
         if let Some(wait) = recovery::frame(self, now) {
@@ -1330,6 +1346,9 @@ impl VectorcraftApp {
         // Native only: the web host reads dropped files asynchronously and feeds the inboxes.
         #[cfg(not(target_arch = "wasm32"))]
         self.take_dropped_files(ctx);
+        // The Oracle Library window; what is dragged out of it arrives as dropped files.
+        #[cfg(not(target_arch = "wasm32"))]
+        self.oracle_library.ui(ctx, i18n::current().code() == "fr");
     }
 
     /// Files dropped on the window: documents, libraries, presets, plug-ins and shortcut sets
@@ -1344,7 +1363,7 @@ impl VectorcraftApp {
         let mut files = vec![];
         for f in dropped {
             let path = Some(f.path().to_string_lossy().to_string()).filter(|s| !s.is_empty());
-            let name = path.as_deref().map_or_else(|| "dropped".into(), vectorcraft_engine::cmd::fileio::file_name);
+            let name = path.as_deref().map_or_else(|| "dropped".into(), oracle_vector_engine::cmd::fileio::file_name);
             // Native file drops usually carry a path. Use the same file reader as File → Open
             // (and File → Place), even if the drop handle can't supply the bytes itself.
             let bytes = if path.is_some() && self.services.read.is_some() { Ok(vec![]) } else { f.bytes() };
@@ -1379,7 +1398,7 @@ impl VectorcraftApp {
         let (tx, rx) = std::sync::mpsc::channel();
         let look = move || {
             // The UI gone meanwhile has nothing to refresh.
-            let _ = tx.send(vectorcraft_text::FontDb::global().installed_fonts_changed());
+            let _ = tx.send(oracle_vector_text::FontDb::global().installed_fonts_changed());
         };
         let spawned =
             if cfg!(target_arch = "wasm32") { None } else { std::thread::Builder::new().name("font-check".into()).spawn(look.clone()).ok() };
@@ -1413,6 +1432,8 @@ impl VectorcraftApp {
     /// modifiers egui holds (`i.modifiers`), so a synthetic key, button or wheel turn holds its own
     /// for the frames it spans (a drag's moves included); the keyboard's come back after.
     pub fn raw_input_hook(&mut self, raw: &mut egui::RawInput) {
+        #[cfg(not(target_arch = "wasm32"))]
+        self.oracle_library.inject_drops(raw);
         // The native menu's key equivalents become the input their keys make, ahead of what came
         // after them (see `native_menu`).
         let keys = self.services.native_menu.as_mut().map(native_menu::NativeMenu::take_keys).unwrap_or_default();
@@ -1474,7 +1495,7 @@ impl VectorcraftApp {
     /// Lay out the whole window.
     pub fn ui(&mut self, ui: &mut egui::Ui) {
         let confined = self.synthetic_frame.then(|| self.automation_roots.clone()).flatten();
-        if let Err(msg) = file_access::confine(confined.as_ref(), || vectorcraft_engine::guard::catch_panic(|| self.ui_frame(ui))) {
+        if let Err(msg) = file_access::confine(confined.as_ref(), || oracle_vector_engine::guard::catch_panic(|| self.ui_frame(ui))) {
             self.picks.recover();
             self.status(format!("Internal error: {msg} (please report this bug)"));
         }
@@ -1547,3 +1568,4 @@ impl VectorcraftApp {
         let _ = json!(null);
     }
 }
+

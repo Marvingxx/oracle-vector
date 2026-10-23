@@ -6,11 +6,11 @@ use std::sync::{Mutex, OnceLock};
 
 use egui::{Key, Ui, vec2};
 use serde_json::{Value, json};
-use vectorcraft_doc::{CharStyle, NodeId, NodeKind};
-use vectorcraft_tools::{Mods, ToolKey};
+use oracle_vector_doc::{CharStyle, NodeId, NodeKind};
+use oracle_vector_tools::{Mods, ToolKey};
 
 use super::{pstate, set_pstate};
-use crate::VectorcraftApp;
+use crate::OracleVectorApp;
 use crate::theme::Tokens;
 use crate::widgets::{self, SpinPick, menu_item};
 
@@ -25,18 +25,18 @@ pub const SCALE_PRESETS: [f64; 8] = [25.0, 50.0, 75.0, 90.0, 100.0, 110.0, 125.0
 /// tool edits text, else the first selected text object's first run (including groups). With it, the paragraph
 /// attributes of the paragraph the selection starts in (else of the first paragraph).
 /// Font/paragraph controls and named-style capture use this; dimensional fields use `shared_effective`.
-pub(crate) fn text_style(app: &VectorcraftApp) -> Option<(CharStyle, vectorcraft_doc::ParaStyle)> {
+pub(crate) fn text_style(app: &OracleVectorApp) -> Option<(CharStyle, oracle_vector_doc::ParaStyle)> {
     if let Some((id, a, b)) = text_editing(app)
         && let Some(NodeKind::Text(t)) = app.session.active().and_then(|d| d.doc.node(id)).map(|n| &n.kind)
     {
-        return Some((vectorcraft_text::edit::insertion_style(&t.runs, a, b), t.para_at(t.paragraphs_in(a, a).start).clone()));
+        return Some((oracle_vector_text::edit::insertion_style(&t.runs, a, b), t.para_at(t.paragraphs_in(a, a).start).clone()));
     }
     let t = first_selected_text(app)?;
     Some((t.first_style(), t.para_at(0).clone()))
 }
 
 /// The first selected text descendant, shared by Character and Paragraph controls.
-pub(crate) fn first_selected_text(app: &VectorcraftApp) -> Option<&vectorcraft_doc::TextObject> {
+pub(crate) fn first_selected_text(app: &OracleVectorApp) -> Option<&oracle_vector_doc::TextObject> {
     let st = app.session.active()?;
     for node in st.selection.objects.iter().filter_map(|id| st.doc.node(*id)) {
         let mut text = None;
@@ -57,14 +57,14 @@ pub(crate) fn first_selected_text(app: &VectorcraftApp) -> Option<&vectorcraft_d
 /// `f` of the character styles the panels act on: the runs the Type tool's selection covers (the
 /// caret's style at a caret), else every run of the selected type, groups' included. `None` (a
 /// blank field) where they differ, or with no type.
-pub(crate) fn shared<T: PartialEq>(app: &VectorcraftApp, f: impl Fn(&CharStyle) -> T) -> Option<T> {
+pub(crate) fn shared<T: PartialEq>(app: &OracleVectorApp, f: impl Fn(&CharStyle) -> T) -> Option<T> {
     shared_styles(app, |_, style| Some(f(style)))
 }
 
 /// Dimensional controls use document units and tolerate arithmetic roundoff when comparing
 /// compensated runs. Keep raw styles available to font/paragraph controls and style definitions,
 /// even if a collapsed affine prevents editing dimensions.
-fn shared_effective(app: &VectorcraftApp, f: impl Fn(&CharStyle) -> f64) -> Option<f64> {
+fn shared_effective(app: &OracleVectorApp, f: impl Fn(&CharStyle) -> f64) -> Option<f64> {
     shared_styles(app, |t, style| t.effective_char_style(style).map(|s| Metric(f(&s)))).map(|v| v.0)
 }
 
@@ -76,7 +76,7 @@ impl PartialEq for Metric {
     }
 }
 
-fn shared_styles<T: PartialEq>(app: &VectorcraftApp, f: impl Fn(&vectorcraft_doc::TextObject, &CharStyle) -> Option<T>) -> Option<T> {
+fn shared_styles<T: PartialEq>(app: &OracleVectorApp, f: impl Fn(&oracle_vector_doc::TextObject, &CharStyle) -> Option<T>) -> Option<T> {
     let st = app.session.active()?;
     let text = |id: NodeId| match st.doc.node(id).map(|n| &n.kind) {
         Some(NodeKind::Text(t)) => Some(t),
@@ -86,7 +86,7 @@ fn shared_styles<T: PartialEq>(app: &VectorcraftApp, f: impl Fn(&vectorcraft_doc
     if let Some((id, a, b)) = text_editing(app) {
         let t = text(id)?;
         if b <= a {
-            return f(t, &vectorcraft_text::edit::insertion_style(&t.runs, a, b));
+            return f(t, &oracle_vector_text::edit::insertion_style(&t.runs, a, b));
         }
         let mut end = 0;
         for r in &t.runs {
@@ -131,16 +131,16 @@ impl<T: PartialEq> Shared<T> {
     }
 }
 
-fn style(app: &mut VectorcraftApp, p: Value) {
+fn style(app: &mut OracleVectorApp, p: Value) {
     char_cmd(app, "text.setStyle", p);
 }
-fn format(app: &mut VectorcraftApp, p: Value) {
+fn format(app: &mut OracleVectorApp, p: Value) {
     char_cmd(app, "text.setFormat", p);
 }
 
 /// Apply character attributes: to the selected range while the Type tool edits text (the whole
 /// object when nothing is selected), else to the selected text objects.
-fn char_cmd(app: &mut VectorcraftApp, cmd: &str, p: Value) {
+fn char_cmd(app: &mut OracleVectorApp, cmd: &str, p: Value) {
     if text_editing(app).is_none() {
         app.run(cmd, p).ok();
         return;
@@ -152,7 +152,7 @@ fn char_cmd(app: &mut VectorcraftApp, cmd: &str, p: Value) {
 /// it is the pair kerning after the character before the caret, as Alt+←/→ steps it
 /// (`type.step`); nowhere to set at the start of the text. Else it is a character attribute like
 /// the others: the selected range, or all the text.
-fn set_kerning(app: &mut VectorcraftApp, value: Value) {
+fn set_kerning(app: &mut OracleVectorApp, value: Value) {
     let Some((id, a, b)) = text_editing(app) else {
         format(app, json!({"kerning": value}));
         return;
@@ -162,7 +162,7 @@ fn set_kerning(app: &mut VectorcraftApp, value: Value) {
         return;
     }
     let Some(NodeKind::Text(t)) = app.session.active().and_then(|st| st.doc.node(id)).map(|n| &n.kind) else { return };
-    let start = vectorcraft_text::edit::prev_char(&t.plain_text(), a);
+    let start = oracle_vector_text::edit::prev_char(&t.plain_text(), a);
     if start >= a {
         return;
     }
@@ -232,9 +232,9 @@ fn pick_face<'a>(styles: &'a [String], bold: bool, italic: bool, like: &str) -> 
 /// page layout apps): the family's own Bold or Italic face for the text the panels act on, or back
 /// to its regular weight (upright) when it already is bold (italic). No fake bold or slant: a family
 /// without that face is left as it is, and the message says so (#724).
-pub(crate) fn toggle_face(app: &mut VectorcraftApp, face: Face) -> Result<Value, String> {
+pub(crate) fn toggle_face(app: &mut OracleVectorApp, face: Face) -> Result<Value, String> {
     let (s, _) = text_style(app).ok_or("select some type first")?;
-    let styles = vectorcraft_text::FontDb::global().styles(&s.font_family);
+    let styles = oracle_vector_text::FontDb::global().styles(&s.font_family);
     let (bold, _, italic, _) = face_of(&s.font_style);
     let (want_bold, want_italic) = match face {
         Face::Bold => (!bold, italic),
@@ -256,7 +256,7 @@ pub(crate) fn toggle_face(app: &mut VectorcraftApp, face: Face) -> Result<Value,
 
 /// `text.setRangeStyle` with `p` on the range the Type tool has selected (the whole text when
 /// nothing is selected). Does nothing unless the Type tool edits text.
-pub(crate) fn range_style(app: &mut VectorcraftApp, p: Value) {
+pub(crate) fn range_style(app: &mut OracleVectorApp, p: Value) {
     let Some((id, a, b)) = text_editing(app) else { return };
     end_typing(app);
     let mut q = p;
@@ -271,11 +271,11 @@ pub(crate) fn range_style(app: &mut VectorcraftApp, p: Value) {
 // ---------- Type tool editing glue (selection, clipboard, keys) ----------
 
 /// The text object the Type tool is editing and its selection (clamped to the text).
-pub(crate) fn text_editing(app: &VectorcraftApp) -> Option<(NodeId, usize, usize)> {
+pub(crate) fn text_editing(app: &OracleVectorApp) -> Option<(NodeId, usize, usize)> {
     let o = app.session.tool_options();
     let id = NodeId(o.get("editing")?.as_u64()?);
     let len = match &app.session.active()?.doc.node(id)?.kind {
-        NodeKind::Text(t) => vectorcraft_text::edit::runs_len(&t.runs),
+        NodeKind::Text(t) => oracle_vector_text::edit::runs_len(&t.runs),
         _ => return None,
     };
     let g = |k: &str| o.get(k).and_then(Value::as_u64).map_or(0, |v| (v as usize).min(len));
@@ -283,7 +283,7 @@ pub(crate) fn text_editing(app: &VectorcraftApp) -> Option<(NodeId, usize, usize
 }
 
 /// Close the Type tool's typing session (one undo step) before another command edits the text.
-pub(crate) fn end_typing(app: &mut VectorcraftApp) {
+pub(crate) fn end_typing(app: &mut OracleVectorApp) {
     if app.session.tool_options().get("typing").and_then(Value::as_bool) == Some(true) {
         app.session.set_tool_option("commitTyping", &json!(true));
         app.session.commit_interaction().ok();
@@ -296,7 +296,7 @@ static CTX: OnceLock<egui::Context> = OnceLock::new();
 /// can't read the system clipboard).
 static CLIP: Mutex<String> = Mutex::new(String::new());
 
-fn text_copy(app: &mut VectorcraftApp) -> bool {
+fn text_copy(app: &mut OracleVectorApp) -> bool {
     let Some((id, a, b)) = text_editing(app) else { return false };
     if a == b {
         return false;
@@ -311,14 +311,14 @@ fn text_copy(app: &mut VectorcraftApp) -> bool {
     true
 }
 
-fn text_key(app: &mut VectorcraftApp, k: ToolKey, m: Mods) {
+fn text_key(app: &mut OracleVectorApp, k: ToolKey, m: Mods) {
     let v = app.view_info();
     if let Err(e) = app.session.tool_key(k, m, v) {
         app.status(e.to_string());
     }
 }
 
-fn text_paste(app: &mut VectorcraftApp, s: Option<String>) {
+fn text_paste(app: &mut OracleVectorApp, s: Option<String>) {
     let s = s.unwrap_or_else(|| CLIP.lock().unwrap_or_else(|e| e.into_inner()).clone());
     if !s.is_empty() {
         let v = app.view_info();
@@ -330,7 +330,7 @@ fn text_paste(app: &mut VectorcraftApp, s: Option<String>) {
 
 /// Edit-menu commands while the Type tool edits text act on the text (Cut/Copy/Paste/Clear;
 /// Select All is the engine's `select.all`). `None` = not intercepted.
-pub(crate) fn intercept_text_command(app: &mut VectorcraftApp, id: &str) -> Option<Result<Value, String>> {
+pub(crate) fn intercept_text_command(app: &mut OracleVectorApp, id: &str) -> Option<Result<Value, String>> {
     if !app.session.tool_wants_text() {
         return None;
     }
@@ -361,7 +361,7 @@ enum TextInput {
 
 /// Route editing keys (with modifiers), clipboard events and Cmd+C/X/V to the Type tool (Cmd+A is
 /// left to the Select All shortcut, which selects the text being edited).
-pub(crate) fn route_type_input(app: &mut VectorcraftApp, ctx: &egui::Context) {
+pub(crate) fn route_type_input(app: &mut OracleVectorApp, ctx: &egui::Context) {
     CTX.get_or_init(|| ctx.clone());
     let mut todo = vec![];
     ctx.input_mut(|i| {
@@ -455,7 +455,7 @@ fn cell(ui: &mut Ui, label: &str, tip: &str, add: impl FnOnce(&mut Ui)) {
 /// The Character panel's grid of numeric fields, `w` wide: Font Size, Leading, Kerning and
 /// Tracking, then with `more` the scales, Baseline Shift and Character Rotation (`s`: the style
 /// shown). The Properties panel shows its first rows.
-pub(crate) fn metrics_grid(app: &mut VectorcraftApp, ui: &mut Ui, id: &str, s: &CharStyle, w: f32, more: bool) {
+pub(crate) fn metrics_grid(app: &mut OracleVectorApp, ui: &mut Ui, id: &str, s: &CharStyle, w: f32, more: bool) {
     let fw = ((w - 66.0) / 2.0).clamp(60.0, 100.0);
     let unit = app.session.type_unit();
     egui::Grid::new(id).num_columns(2).spacing([6.0, 4.0]).show(ui, |ui| {
@@ -512,7 +512,7 @@ pub(crate) fn metrics_grid(app: &mut VectorcraftApp, ui: &mut Ui, id: &str, s: &
 
 /// The Font Size combo (Character and Properties panels, Control bar): typed, stepped, scrubbed or
 /// picked from the presets, in the type unit, blank where the selected text's sizes differ.
-pub(crate) fn size_field(app: &mut VectorcraftApp, ui: &mut Ui, id: &str, width: f32) {
+pub(crate) fn size_field(app: &mut OracleVectorApp, ui: &mut Ui, id: &str, width: f32) {
     let size = shared_effective(app, |s| s.size);
     if let Some(v) = widgets::spin_field(ui, id, size, app.session.type_unit(), width, 1.0, 0.1, &SIZE_PRESETS) {
         style(app, json!({"size": v}));
@@ -521,12 +521,12 @@ pub(crate) fn size_field(app: &mut VectorcraftApp, ui: &mut Ui, id: &str, width:
 
 /// The font family menu and the font style dropdown of style `s` (Character and Properties panels,
 /// Control bar), with their `ids` and `widths`.
-pub(crate) fn font_pickers(app: &mut VectorcraftApp, ui: &mut Ui, s: &CharStyle, ids: (&str, &str), widths: (f32, f32)) {
+pub(crate) fn font_pickers(app: &mut OracleVectorApp, ui: &mut Ui, s: &CharStyle, ids: (&str, &str), widths: (f32, f32)) {
     let sample = crate::font_menu::sample_text(app);
     if let Some(pick) = crate::font_menu::font_menu(ui, ids.0, &s.font_family, widths.0, sample.as_deref(), crate::font_menu::MenuLook::of(app)) {
         crate::font_menu::apply(app, ui.ctx(), pick);
     }
-    let styles = vectorcraft_text::FontDb::global().styles(&s.font_family);
+    let styles = oracle_vector_text::FontDb::global().styles(&s.font_family);
     let names: Vec<&str> = styles.iter().map(String::as_str).collect();
     if let Some(name) = widgets::dropdown_names(ui, ids.1, &s.font_style, &names, widths.1).and_then(|i| names.get(i)) {
         style(app, json!({"style": name}));
@@ -535,8 +535,8 @@ pub(crate) fn font_pickers(app: &mut VectorcraftApp, ui: &mut Ui, s: &CharStyle,
 
 /// The Variable Font button, `width` wide, shown when the font of style `s` is a variable font: it
 /// opens the font's axis sliders ([`axis_sliders`]).
-pub(crate) fn variable_font(app: &mut VectorcraftApp, ui: &mut Ui, s: &CharStyle, width: f32) {
-    let Some(face) = vectorcraft_text::FontDb::global().face_version(&s.font_family, &s.font_style, s.font_version.as_deref()) else { return };
+pub(crate) fn variable_font(app: &mut OracleVectorApp, ui: &mut Ui, s: &CharStyle, width: f32) {
+    let Some(face) = oracle_vector_text::FontDb::global().face_version(&s.font_family, &s.font_style, s.font_version.as_deref()) else { return };
     if face.axes().iter().all(|a| a.hidden) {
         return;
     }
@@ -551,9 +551,9 @@ pub(crate) fn variable_font(app: &mut VectorcraftApp, ui: &mut Ui, s: &CharStyle
 /// named as the font names it: each sets that axis of the text the panel acts on
 /// (`text.setFormat {fontAxes}`, or `text.setRangeStyle` while the Type tool edits text), one undo
 /// step per drag. A blank field: the text's settings of that axis differ.
-pub(crate) fn axis_sliders(app: &mut VectorcraftApp, ui: &mut Ui, face: &vectorcraft_text::FontFace) {
+pub(crate) fn axis_sliders(app: &mut OracleVectorApp, ui: &mut Ui, face: &oracle_vector_text::FontFace) {
     let t = Tokens::get(ui.ctx());
-    let db = vectorcraft_text::FontDb::global();
+    let db = oracle_vector_text::FontDb::global();
     for axis in face.axes().into_iter().filter(|a| !a.hidden) {
         let tag = String::from_utf8_lossy(&axis.tag).into_owned();
         // Each character style's setting: its own, else its face's (a named instance's, or the default).
@@ -587,7 +587,7 @@ pub(crate) fn axis_sliders(app: &mut VectorcraftApp, ui: &mut Ui, face: &vectorc
 }
 
 /// Set Variable Font settings `axes` on the text the panel acts on, live while a slider drags.
-fn axes_cmd(app: &mut VectorcraftApp, axes: Value, phase: widgets::Live) {
+fn axes_cmd(app: &mut OracleVectorApp, axes: Value, phase: widgets::Live) {
     match text_editing(app) {
         Some((id, a, b)) => {
             end_typing(app);
@@ -604,7 +604,7 @@ fn axes_cmd(app: &mut VectorcraftApp, axes: Value, phase: widgets::Live) {
 
 /// The Control bar's type controls while type is selected or edited: the Character link (the
 /// Character panel in a popover), the font family and style menus and the Font Size combo.
-pub(crate) fn control_bar(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub(crate) fn control_bar(app: &mut OracleVectorApp, ui: &mut Ui) {
     let Some((s, _)) = text_style(app) else { return };
     let link = ui
         .link(egui::RichText::new(tl!("Character:")).size(12.0).color(Tokens::get(ui.ctx()).text).underline())
@@ -619,7 +619,7 @@ pub(crate) fn control_bar(app: &mut VectorcraftApp, ui: &mut Ui) {
     ui.separator();
 }
 
-pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn show(app: &mut OracleVectorApp, ui: &mut Ui) {
     let Some((s, _)) = text_style(app) else {
         super::empty_state(ui, "type", tl!("No text selected"), tl!("Select a text object to edit its character attributes."));
         return;
@@ -716,8 +716,8 @@ fn style_toggle(ui: &mut Ui, g: Glyph, tip: &str, on: bool) -> bool {
 /// panel acts on ([`char_cmd`]) as the bidi algorithm sets them, or left to right or right to left
 /// inside their paragraph. The direction those characters share is checked, and none is checked
 /// when they differ.
-fn char_direction_items(app: &mut VectorcraftApp, ui: &mut Ui) {
-    use vectorcraft_doc::ParaDirection;
+fn char_direction_items(app: &mut OracleVectorApp, ui: &mut Ui) {
+    use oracle_vector_doc::ParaDirection;
     let direction = shared(app, |s| s.char_direction);
     for (label, d, key) in [
         (tl!("Default"), None, "default"),
@@ -730,7 +730,7 @@ fn char_direction_items(app: &mut VectorcraftApp, ui: &mut Ui) {
     }
 }
 
-pub fn menu(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn menu(app: &mut OracleVectorApp, ui: &mut Ui) {
     let st = text_style(app);
     let has = st.is_some();
     let hidden: bool = pstate(ui.ctx(), "ch-hide-options");
@@ -767,7 +767,7 @@ pub fn menu(app: &mut VectorcraftApp, ui: &mut Ui) {
         ui.add_enabled_ui(has, |ui| {
             // Indented like the items beside it (their check column).
             ui.menu_button(format!("   {}", tl!("Character Alignment")), |ui| {
-                use vectorcraft_doc::CharAlign;
+                use oracle_vector_doc::CharAlign;
                 for (label, a, key) in [
                     (tl!("Roman Baseline"), CharAlign::RomanBaseline, "romanBaseline"),
                     (tl!("Em Box Top/Right"), CharAlign::EmBoxTop, "emBoxTop"),
@@ -800,7 +800,7 @@ pub fn menu(app: &mut VectorcraftApp, ui: &mut Ui) {
         let digits = s.as_ref().map(|s| s.digits);
         ui.add_enabled_ui(has, |ui| {
             ui.menu_button(format!("   {}", tl!("Digits")), |ui| {
-                use vectorcraft_doc::Digits;
+                use oracle_vector_doc::Digits;
                 for (label, d, key) in [
                     (tl!("Default"), Digits::Default, "default"),
                     (tl!("Arabic"), Digits::Arabic, "arabic"),
@@ -856,7 +856,7 @@ pub fn menu(app: &mut VectorcraftApp, ui: &mut Ui) {
 
 /// Whether Fractional Widths is on for the type the panel shows: the object being edited, else
 /// the first selected text object. On when there is no type (the item is disabled then).
-fn fractional_widths_on(app: &VectorcraftApp) -> bool {
+fn fractional_widths_on(app: &OracleVectorApp) -> bool {
     if let Some((id, _, _)) = text_editing(app)
         && let Some(NodeKind::Text(t)) = app.session.active().and_then(|d| d.doc.node(id)).map(|n| &n.kind)
     {
@@ -871,7 +871,7 @@ fn fractional_widths_on(app: &VectorcraftApp) -> bool {
 /// character alignment, Proportional Metrics, Tate-chu-yoko and No Break off, the Default character
 /// direction and the Default digits, whether or not Show East Asian Options and Show Indic Options
 /// are on.
-fn reset_panel(app: &mut VectorcraftApp) {
+fn reset_panel(app: &mut OracleVectorApp) {
     let d = CharStyle::default();
     style(app, json!({"tracking": 0, "leading": "auto"}));
     format(
@@ -888,11 +888,11 @@ fn reset_panel(app: &mut VectorcraftApp) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vectorcraft_engine::Session;
+    use oracle_vector_engine::Session;
 
     #[test]
     fn scaled_dimensions_do_not_show_false_mixed_values_from_roundoff() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 300, "height": 200})).unwrap();
         let a = app.run("text.create", json!({"x": 20, "y": 50, "text": "Axis", "size": 12})).unwrap()["id"].clone();
         app.run("object.scale", json!({"sx": 120, "sy": 110})).unwrap();
@@ -912,7 +912,7 @@ mod tests {
 
     #[test]
     fn scaled_collapsed_text_keeps_nondimensional_controls_available() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 300, "height": 200})).unwrap();
         app.run("text.create", json!({"x": 20, "y": 50, "text": "Axis", "size": 12})).unwrap();
         app.run("object.transform", json!({"matrix": [0, 0, 0, 0, 0, 0]})).unwrap();
@@ -930,7 +930,7 @@ mod tests {
 
     #[test]
     fn scaled_character_fields_show_document_sizes_and_mixed_group_values() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 300, "height": 200})).unwrap();
         let a = app.run("text.create", json!({"x": 20, "y": 50, "text": "Axis", "size": 12})).unwrap()["id"].clone();
         app.run("object.scale", json!({"sx": 200})).unwrap();
@@ -950,11 +950,11 @@ mod tests {
 
     #[test]
     fn scaled_range_fields_follow_the_type_tool_selection() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 300, "height": 200})).unwrap();
         app.session.select_tool("type", Default::default()).unwrap();
         let id = app.run("text.create", json!({"x": 20, "y": 50, "text": "Axis label", "size": 12})).unwrap()["id"].clone();
-        app.session.apply_actions(vec![vectorcraft_tools::Action::Notify("text.editNew".into())]).unwrap();
+        app.session.apply_actions(vec![oracle_vector_tools::Action::Notify("text.editNew".into())]).unwrap();
         assert!(text_editing(&app).is_some());
         app.run("object.scale", json!({"sx": 200})).unwrap();
         app.run("text.setRangeStyle", json!({"id": id, "start": 0, "end": 4, "size": 10})).unwrap();
@@ -968,17 +968,17 @@ mod tests {
     /// The Kerning field at a caret kerns that pair, not the whole text (#2217).
     #[test]
     fn kerning_at_a_caret_sets_the_pair_not_the_whole_text() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 300, "height": 200})).unwrap();
         app.session.select_tool("type", Default::default()).unwrap();
         let id = app.run("text.create", json!({"x": 20, "y": 50, "text": "AVAX", "size": 12})).unwrap()["id"].clone();
-        app.session.apply_actions(vec![vectorcraft_tools::Action::Notify("text.editNew".into())]).unwrap();
+        app.session.apply_actions(vec![oracle_vector_tools::Action::Notify("text.editNew".into())]).unwrap();
         app.session.set_tool_option("select", &json!({"start": 2, "end": 2}));
         set_kerning(&mut app, json!(-50));
-        let kerning = |app: &VectorcraftApp, at: usize| {
+        let kerning = |app: &OracleVectorApp, at: usize| {
             let st = app.session.active().unwrap();
             let Some(NodeKind::Text(t)) = st.doc.node(NodeId(id.as_u64().unwrap())).map(|n| &n.kind) else { panic!("text") };
-            vectorcraft_text::edit::style_at(&t.runs, at + 1).kerning // the character at `at`
+            oracle_vector_text::edit::style_at(&t.runs, at + 1).kerning // the character at `at`
         };
         assert_eq!(kerning(&app, 1), Some(-50.0), "the character before the caret");
         assert_eq!(kerning(&app, 3), None, "the rest is untouched");
@@ -993,10 +993,10 @@ mod tests {
     /// font names it; a drag along one sets that axis of the selected type in one undo step.
     #[test]
     fn variable_fonts_get_a_slider_per_axis() {
-        use vectorcraft_text::test_fonts::{TWO_AXIS_FAMILY, two_axis_font};
-        let db = vectorcraft_text::FontDb::global();
+        use oracle_vector_text::test_fonts::{TWO_AXIS_FAMILY, two_axis_font};
+        let db = oracle_vector_text::FontDb::global();
         db.add_font(two_axis_font().unwrap());
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 300, "height": 200})).unwrap();
         let plain = app.run("text.create", json!({"x": 20, "y": 50, "text": "Static"})).unwrap()["id"].clone();
         let id = app.run("text.create", json!({"x": 20, "y": 120, "text": "lIn", "font": TWO_AXIS_FAMILY})).unwrap()["id"].clone();
@@ -1025,7 +1025,7 @@ mod tests {
         assert_eq!(slider_value(&tree, "Weight"), (Some(400.0), range.0, range.1, Some("400".into())));
         // Drag the Weight slider from its start to past its end.
         let ctx = egui::Context::default();
-        let frame = |app: &mut VectorcraftApp, events: Vec<egui::Event>| {
+        let frame = |app: &mut OracleVectorApp, events: Vec<egui::Event>| {
             let mut slider = None;
             let input = egui::RawInput { events, ..Default::default() };
             ctx.run_ui(input, |ui| {
@@ -1047,7 +1047,7 @@ mod tests {
         }
         frame(&mut app, vec![button(to, false)]);
         frame(&mut app, vec![]);
-        let axes = |app: &VectorcraftApp| shared(app, |s| s.font_axes.clone()).unwrap();
+        let axes = |app: &OracleVectorApp| shared(app, |s| s.font_axes.clone()).unwrap();
         assert_eq!(axes(&app).into_iter().collect::<Vec<_>>(), [("wght".to_string(), 700.0)]);
         app.run("edit.undo", json!({})).unwrap();
         assert!(axes(&app).is_empty(), "one undo step");
@@ -1087,7 +1087,7 @@ mod tests {
         assert_eq!(face_of("SemiBold"), (false, false, false, vec![]));
         assert_eq!(face_of("Narrow Italic"), (false, true, true, vec!["narrow".to_string()]));
         // No type selected: a message, nothing changed.
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 300, "height": 200})).unwrap();
         assert!(toggle_face(&mut app, Face::Bold).is_err());
         assert!(!crate::menus::enabled(&app, "type.bold"));
@@ -1096,7 +1096,7 @@ mod tests {
     /// From one frame of the panel: a point inside each of the Small Caps, Superscript and
     /// Subscript buttons, and which of them are drawn on. The two buttons with a "1" are
     /// Superscript (the "1" up) and Subscript; Small Caps is the button before them.
-    fn script_buttons(ctx: &egui::Context, app: &mut VectorcraftApp) -> ([egui::Pos2; 3], [bool; 3]) {
+    fn script_buttons(ctx: &egui::Context, app: &mut OracleVectorApp) -> ([egui::Pos2; 3], [bool; 3]) {
         let mut out = ctx.run_ui(egui::RawInput::default(), |ui| show(app, ui));
         out.textures_delta.clear();
         fn walk(s: &egui::Shape, on: egui::Color32, ones: &mut Vec<egui::Pos2>, lit: &mut Vec<egui::Rect>) {
@@ -1121,7 +1121,7 @@ mod tests {
     }
 
     /// Each run's (small caps, position).
-    fn scripts(app: &VectorcraftApp, id: &Value) -> Vec<(Option<f64>, &'static str)> {
+    fn scripts(app: &OracleVectorApp, id: &Value) -> Vec<(Option<f64>, &'static str)> {
         match &app.session.active().unwrap().doc.node(NodeId(id.as_u64().unwrap())).unwrap().kind {
             NodeKind::Text(t) => t.runs.iter().map(|r| (r.style.small_caps, r.style.position.id())).collect(),
             _ => panic!("text"),
@@ -1133,7 +1133,7 @@ mod tests {
     /// each other off. While the Type tool edits, they set and show the selected characters.
     #[test]
     fn small_caps_superscript_and_subscript_buttons_set_and_show_the_text() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 300, "height": 200})).unwrap();
         app.session.select_tool("type", Default::default()).unwrap();
         let id = app.run("text.create", json!({"x": 20, "y": 50, "text": "E=mc2", "size": 12})).unwrap()["id"].clone();
@@ -1157,7 +1157,7 @@ mod tests {
             assert_eq!(script_buttons(&ctx, &mut app).1, shown, "button {button}");
         }
         // The Type tool's selection: "2" alone.
-        app.session.apply_actions(vec![vectorcraft_tools::Action::Notify("text.editNew".into())]).unwrap();
+        app.session.apply_actions(vec![oracle_vector_tools::Action::Notify("text.editNew".into())]).unwrap();
         app.session.set_tool_option("select", &json!({"start": 4, "end": 5}));
         assert!(text_editing(&app).is_some());
         super::super::tests_appearance::click(&ctx, &mut app, at[1], show);
@@ -1171,11 +1171,11 @@ mod tests {
     /// and position and show a check mark when on; Superscript and Subscript turn each other off.
     #[test]
     fn small_caps_superscript_and_subscript_menu_items_set_and_check_the_text() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 300, "height": 200})).unwrap();
         let id = app.run("text.create", json!({"x": 20, "y": 50, "text": "E=mc2", "size": 12})).unwrap()["id"].clone();
         let ctx = egui::Context::default();
-        let checked = |app: &mut VectorcraftApp| {
+        let checked = |app: &mut OracleVectorApp| {
             let texts = super::super::tests_appearance::frame_events(&ctx, app, vec![], menu);
             ["Small Caps", "Superscript", "Subscript"].map(|l| texts.iter().any(|(t, _)| *t == format!("✓ {l}")))
         };
@@ -1200,11 +1200,11 @@ mod tests {
     /// spacing on and back off for every text object.
     #[test]
     fn system_layout_menu_item_toggles_the_document() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 300, "height": 200})).unwrap();
         let id = app.run("text.create", json!({"x": 20, "y": 50, "text": "Hi", "size": 13})).unwrap()["id"].as_u64().unwrap();
         let ctx = egui::Context::default();
-        let on = |app: &VectorcraftApp| {
+        let on = |app: &OracleVectorApp| {
             let st = app.session.active().unwrap();
             let object = match &st.doc.node(NodeId(id)).unwrap().kind {
                 NodeKind::Text(t) => t.system_layout,
@@ -1212,7 +1212,7 @@ mod tests {
             };
             (st.doc.setup.system_layout, object)
         };
-        let row = |app: &mut VectorcraftApp| {
+        let row = |app: &mut OracleVectorApp| {
             let texts = super::super::tests_appearance::frame_events(&ctx, app, vec![], menu);
             texts.into_iter().find(|(t, _)| t.trim_start_matches(['✓', ' ']) == "System Layout")
         };
@@ -1232,15 +1232,15 @@ mod tests {
     /// back on for the whole type object.
     #[test]
     fn fractional_widths_menu_item_toggles_the_type_object() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 300, "height": 200})).unwrap();
         let id = app.run("text.create", json!({"x": 20, "y": 50, "text": "Hi", "size": 13})).unwrap()["id"].as_u64().unwrap();
         let ctx = egui::Context::default();
-        let flag = |app: &VectorcraftApp| match &app.session.active().unwrap().doc.node(NodeId(id)).unwrap().kind {
+        let flag = |app: &OracleVectorApp| match &app.session.active().unwrap().doc.node(NodeId(id)).unwrap().kind {
             NodeKind::Text(t) => t.fractional_widths,
             _ => panic!("text"),
         };
-        let row = |app: &mut VectorcraftApp| {
+        let row = |app: &mut OracleVectorApp| {
             let texts = super::super::tests_appearance::frame_events(&ctx, app, vec![], menu);
             texts.into_iter().find(|(t, _)| t.trim_start_matches(['✓', ' ']) == "Fractional Widths")
         };
@@ -1260,11 +1260,11 @@ mod tests {
     /// options only (as Mojikumi Set and Top-to-Top Leading are in the Paragraph panel).
     #[test]
     fn character_alignment_shows_with_the_east_asian_options() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 300, "height": 200})).unwrap();
         let id = app.session.execute("text.create", &json!({"x": 20, "y": 50, "text": "雅楽"})).unwrap()["id"].clone();
         app.session.execute("select.set", &json!({"ids": [id]})).unwrap();
-        let shown = |app: &mut VectorcraftApp| {
+        let shown = |app: &mut OracleVectorApp| {
             let text = crate::tests_labels::painted_text(app, menu);
             (text.contains("Character Alignment"), text.contains("Proportional Metrics"))
         };
@@ -1277,15 +1277,15 @@ mod tests {
     /// selected characters.
     #[test]
     fn tate_chu_yoko_menu_item_shows_with_east_asian_options_and_toggles() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 300, "height": 200})).unwrap();
         let id = app.session.execute("text.create", &json!({"x": 20, "y": 50, "text": "2026"})).unwrap()["id"].as_u64().unwrap();
         app.session.execute("select.set", &json!({"ids": [id]})).unwrap();
         let ctx = egui::Context::default();
-        let painted = |app: &mut VectorcraftApp| crate::tests_labels::painted_text(app, menu);
+        let painted = |app: &mut OracleVectorApp| crate::tests_labels::painted_text(app, menu);
         assert!(!painted(&mut app).contains("Tate-chu-yoko"));
         app.session.prefs.show_east_asian_options = true;
-        let on = |app: &VectorcraftApp| match &app.session.active().unwrap().doc.node(NodeId(id)).unwrap().kind {
+        let on = |app: &OracleVectorApp| match &app.session.active().unwrap().doc.node(NodeId(id)).unwrap().kind {
             NodeKind::Text(t) => t.runs.iter().all(|r| r.style.tate_chu_yoko),
             _ => panic!("text"),
         };
@@ -1305,11 +1305,11 @@ mod tests {
     /// Direction is in the Paragraph panel.
     #[test]
     fn digits_show_with_the_indic_options() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 300, "height": 200})).unwrap();
         let id = app.session.execute("text.create", &json!({"x": 20, "y": 50, "text": "صفحة 3"})).unwrap()["id"].clone();
         app.session.execute("select.set", &json!({"ids": [id]})).unwrap();
-        let shown = |app: &mut VectorcraftApp| crate::tests_labels::painted_text(app, menu).contains("Digits");
+        let shown = |app: &mut OracleVectorApp| crate::tests_labels::painted_text(app, menu).contains("Digits");
         assert!(!shown(&mut app));
         app.session.prefs.show_indic_options = true;
         assert!(shown(&mut app));
@@ -1320,15 +1320,15 @@ mod tests {
     /// selected type's, or the range the Type tool has selected. It checks no item when they differ.
     #[test]
     fn character_direction_checks_the_direction_of_the_selection() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 300, "height": 200})).unwrap();
         let id = app.run("text.create", json!({"x": 20, "y": 50, "text": "שלום 21 10 2026"})).unwrap()["id"].as_u64().unwrap();
         app.run("select.set", json!({"ids": [id]})).unwrap();
-        let shown = |app: &mut VectorcraftApp| crate::tests_labels::painted_text(app, menu).contains("Character Direction");
+        let shown = |app: &mut OracleVectorApp| crate::tests_labels::painted_text(app, menu).contains("Character Direction");
         assert!(!shown(&mut app));
         app.session.prefs.show_indic_options = true;
         assert!(shown(&mut app));
-        let checked = |app: &mut VectorcraftApp| {
+        let checked = |app: &mut OracleVectorApp| {
             let text = crate::tests_labels::painted_text(app, char_direction_items);
             text.lines().filter_map(|l| l.strip_prefix("✓ ")).map(str::to_string).collect::<Vec<_>>()
         };
@@ -1338,7 +1338,7 @@ mod tests {
         assert!(checked(&mut app).is_empty());
         // The Type tool's selection: the date, then the Hebrew word.
         app.select_tool("type");
-        app.session.apply_actions(vec![vectorcraft_tools::Action::Notify("text.editNew".into())]).unwrap();
+        app.session.apply_actions(vec![oracle_vector_tools::Action::Notify("text.editNew".into())]).unwrap();
         app.session.set_tool_option("select", &json!({"start": 9, "end": 19}));
         assert_eq!(checked(&mut app), ["Left to Right"]);
         app.session.set_tool_option("select", &json!({"start": 0, "end": 8}));
@@ -1348,15 +1348,15 @@ mod tests {
     /// No Break is in the panel menu, and choosing it marks the selected characters.
     #[test]
     fn no_break_menu_item_toggles_the_selected_characters() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 300, "height": 200})).unwrap();
         let id = app.session.execute("text.create", &json!({"x": 20, "y": 50, "text": "Hello"})).unwrap()["id"].as_u64().unwrap();
         app.session.execute("select.set", &json!({"ids": [id]})).unwrap();
         let ctx = egui::Context::default();
-        let painted = |app: &mut VectorcraftApp| crate::tests_labels::painted_text(app, menu);
+        let painted = |app: &mut OracleVectorApp| crate::tests_labels::painted_text(app, menu);
         assert!(painted(&mut app).contains("No Break"));
         assert!(!painted(&mut app).contains("✓ No Break"));
-        let on = |app: &VectorcraftApp| match &app.session.active().unwrap().doc.node(NodeId(id)).unwrap().kind {
+        let on = |app: &OracleVectorApp| match &app.session.active().unwrap().doc.node(NodeId(id)).unwrap().kind {
             NodeKind::Text(t) => t.runs.iter().all(|r| r.style.no_break),
             _ => panic!("text"),
         };
@@ -1378,10 +1378,10 @@ mod tests {
     /// type and in the text the Type tool has selected while it edits.
     #[test]
     fn reset_panel_resets_every_attribute_but_the_font() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 300, "height": 200})).unwrap();
         let id = app.run("text.create", json!({"x": 20, "y": 50, "text": "One 12"})).unwrap()["id"].as_u64().unwrap();
-        let runs = |app: &VectorcraftApp| match &app.session.active().unwrap().doc.node(NodeId(id)).unwrap().kind {
+        let runs = |app: &OracleVectorApp| match &app.session.active().unwrap().doc.node(NodeId(id)).unwrap().kind {
             NodeKind::Text(t) => t.runs.iter().map(|r| (r.text.clone(), r.style.clone())).collect::<Vec<_>>(),
             _ => panic!("text"),
         };
@@ -1407,7 +1407,7 @@ mod tests {
                 s.digits != d.digits,
             ]
         };
-        let custom = |app: &mut VectorcraftApp| {
+        let custom = |app: &mut OracleVectorApp| {
             app.run(
                 "text.setRangeStyle",
                 json!({
@@ -1430,7 +1430,7 @@ mod tests {
         // While the Type tool edits text, Reset Panel resets only its selection.
         custom(&mut app);
         app.select_tool("type");
-        app.session.apply_actions(vec![vectorcraft_tools::Action::Notify("text.editNew".into())]).unwrap();
+        app.session.apply_actions(vec![oracle_vector_tools::Action::Notify("text.editNew".into())]).unwrap();
         app.session.set_tool_option("select", &json!({"start": 4, "end": 6}));
         assert!(text_editing(&app).is_some());
         reset_panel(&mut app);

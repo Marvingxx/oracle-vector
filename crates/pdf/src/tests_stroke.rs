@@ -1,10 +1,10 @@
 //! Stroke geometry in PDF export: arrowheads and the trimmed line are written as the shared
-//! `vectorcraft_effects::stroke` outlines, and they take the stroke opacity once.
+//! `oracle_vector_effects::stroke` outlines, and they take the stroke opacity once.
 
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::{Appearance, AppearanceItem, ArrowAlign, Arrowhead, Document, Node, NodeId, NodeKind, StrokeLayer};
-use vectorcraft_effects::stroke::{OUTLINE_TOL, line_outline, stroke_pieces};
-use vectorcraft_geom::{Point, Rect, Shape, shapes};
+use oracle_vector_color::{Color, Paint};
+use oracle_vector_doc::{Appearance, AppearanceItem, ArrowAlign, Arrowhead, Document, Node, NodeId, NodeKind, StrokeLayer};
+use oracle_vector_effects::stroke::{OUTLINE_TOL, line_outline, stroke_pieces};
+use oracle_vector_geom::{Point, Rect, Shape, shapes};
 
 use crate::*;
 

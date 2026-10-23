@@ -27,9 +27,9 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 
 use serde_json::{Value, json};
-use vectorcraft_doc::hit::{hit_test, marquee, objects_at};
-use vectorcraft_doc::{NodeId, OrientedBox};
-use vectorcraft_geom::{Affine, Point, Rect, Vec2};
+use oracle_vector_doc::hit::{hit_test, marquee, objects_at};
+use oracle_vector_doc::{NodeId, OrientedBox};
+use oracle_vector_geom::{Affine, Point, Rect, Vec2};
 
 use crate::bbox::{Handle, hit_handle, in_rotate_zone, move_delta, rotate_for_drag, scale_for_drag};
 use crate::corners::{self, CornerDrag, over_widget};
@@ -253,7 +253,7 @@ impl MoveSnap {
 /// two edges is nearest a gridline, however far that is. The center does not snap (#1816).
 fn grid_pull(r: Rect, step: f64) -> Vec2 {
     let pull = |vs: [f64; 2]| {
-        vs.iter().map(|v| vectorcraft_geom::snap::snap_to_grid(*v, step, 0.0) - v).min_by(|a, b| a.abs().total_cmp(&b.abs())).unwrap_or(0.0)
+        vs.iter().map(|v| oracle_vector_geom::snap::snap_to_grid(*v, step, 0.0) - v).min_by(|a, b| a.abs().total_cmp(&b.abs())).unwrap_or(0.0)
     };
     Vec2::new(pull([r.x0, r.x1]), pull([r.y0, r.y1]))
 }
@@ -268,7 +268,7 @@ pub fn matrix_json(a: Affine) -> Value {
 /// ([`object_bounds`]). With Use Preview Bounds on, each measurement evaluates the geometry effects
 /// of the objects (Offset Path, Pathfinder, Outline Object, blends), and the canvas asks for the
 /// cursor on every hover frame. The session keeps one memo ([`ToolContext::preview_memo`]), as the
-/// UI keeps one for `VectorcraftApp::selection_box`. The memo holds the measurements for one key
+/// UI keeps one for `OracleVectorApp::selection_box`. The memo holds the measurements for one key
 /// (the document's uid and revision, the selected objects and Use Preview Bounds), and a new key
 /// replaces them.
 #[derive(Default)]
@@ -346,25 +346,25 @@ fn remembered<T: Clone>(cx: &ToolContext, slot: impl Fn(&mut Measured) -> &mut O
 }
 
 /// Selection bounds used for the bounding box: visual bounds as drawn with Use Preview Bounds
-/// ([`vectorcraft_effects::preview`]), else geometric bounds.
+/// ([`oracle_vector_effects::preview`]), else geometric bounds.
 pub fn selection_bounds(cx: &ToolContext) -> Option<Rect> {
-    remembered(cx, |m| &mut m.bounds, || vectorcraft_effects::preview::bounds_of(cx.doc, &cx.selection.objects, cx.preview_bounds))
+    remembered(cx, |m| &mut m.bounds, || oracle_vector_effects::preview::bounds_of(cx.doc, &cx.selection.objects, cx.preview_bounds))
 }
 
 /// [`selection_bounds`] square to the selection's own angle: the bounding box the Selection tool
 /// shows and drags (rotated after a rotation).
 pub fn selection_box(cx: &ToolContext) -> Option<OrientedBox> {
-    remembered(cx, |m| &mut m.oriented, || vectorcraft_effects::preview::oriented_bounds(cx.doc, &cx.selection.objects, cx.preview_bounds))
+    remembered(cx, |m| &mut m.oriented, || oracle_vector_effects::preview::oriented_bounds(cx.doc, &cx.selection.objects, cx.preview_bounds))
 }
 
 /// The bounds of object `id`, measured as [`selection_bounds`] measures the selection.
 fn object_bounds(cx: &ToolContext, id: NodeId) -> Option<Rect> {
-    remembered(cx, |m| m.by_object.entry(id).or_insert(None), || vectorcraft_effects::preview::bounds_of(cx.doc, &[id], cx.preview_bounds))
+    remembered(cx, |m| m.by_object.entry(id).or_insert(None), || oracle_vector_effects::preview::bounds_of(cx.doc, &[id], cx.preview_bounds))
 }
 
 /// The objects of `ids` that lie entirely inside marquee `r`, edges included, measured by their
 /// geometric bounds with symbol instances measured by their art
-/// ([`vectorcraft_doc::Node::geometric_bounds_with`]).
+/// ([`oracle_vector_doc::Node::geometric_bounds_with`]).
 pub(crate) fn inside(cx: &ToolContext, r: Rect, ids: Vec<NodeId>) -> Vec<NodeId> {
     let symbols = cx.doc.symbol_boxes();
     let within = |b: Rect| r.min_x() <= b.min_x() && b.max_x() <= r.max_x() && r.min_y() <= b.min_y() && b.max_y() <= r.max_y();
@@ -461,8 +461,8 @@ fn thread_params(cx: &ToolContext, from: NodeId, start: Point, end: Point) -> Va
     if r.width() > cx.tol(6.0) && r.height() > cx.tol(6.0) {
         return json!({ "from": from.0, "rect": [r.x0, r.y0, r.width(), r.height()] });
     }
-    let frame = |n: &vectorcraft_doc::Node| {
-        is_threadable(n) || matches!(&n.kind, vectorcraft_doc::NodeKind::Path { path, .. } if path.subpaths.first().is_some_and(|s| s.closed))
+    let frame = |n: &oracle_vector_doc::Node| {
+        is_threadable(n) || matches!(&n.kind, oracle_vector_doc::NodeKind::Path { path, .. } if path.subpaths.first().is_some_and(|s| s.closed))
     };
     // The art the text flows into: what is drawn, not a clipping path's outline.
     let to =
@@ -584,7 +584,7 @@ impl Tool for SelectionTool {
                 // A double-click edits what is drawn: not a clipping path's outline.
                 if let Some(h) = hit_test(cx.doc, p, cx.hit_options()) {
                     let top = h.top_object(cx.isolation);
-                    if cx.doc.node(top).is_some_and(|n| matches!(n.kind, vectorcraft_doc::NodeKind::Text(_))) {
+                    if cx.doc.node(top).is_some_and(|n| matches!(n.kind, oracle_vector_doc::NodeKind::Text(_))) {
                         return vec![Action::SwitchTool("type".into())];
                     }
                     // An object that [`isolates`], not the one already isolated.
@@ -808,7 +808,7 @@ impl Tool for SelectionTool {
 
     fn overlays(&self, cx: &ToolContext) -> Vec<Overlay> {
         let mut o = pathtype::overlays(cx);
-        if let Some(source) = cx.isolation.and_then(|id| cx.doc.node(id)).filter(|n| n.name.as_deref() == Some(vectorcraft_doc::shaper::SOURCES)) {
+        if let Some(source) = cx.isolation.and_then(|id| cx.doc.node(id)).filter(|n| n.name.as_deref() == Some(oracle_vector_doc::shaper::SOURCES)) {
             for n in source.children().into_iter().flatten() {
                 if let Some(path) = n.path_data() {
                     o.push(Overlay::Path { path: path.to_bezpath(), color: [0x80, 0x80, 0x80], width: 1.0, dashed: true });
@@ -924,21 +924,21 @@ fn can_be_key(cx: &ToolContext, id: NodeId) -> bool {
 
 /// Is `n` area type (text in a frame) whose frame the tools reshape? Type in perspective isn't:
 /// it transforms whole.
-pub(crate) fn is_area_type(n: &vectorcraft_doc::Node) -> bool {
+pub(crate) fn is_area_type(n: &oracle_vector_doc::Node) -> bool {
     n.extras().perspective.is_none()
-        && matches!(&n.kind, vectorcraft_doc::NodeKind::Text(t) if matches!(t.kind, vectorcraft_doc::TextKind::Area { .. }))
+        && matches!(&n.kind, oracle_vector_doc::NodeKind::Text(t) if matches!(t.kind, oracle_vector_doc::TextKind::Area { .. }))
 }
 
 /// Can `n` be a frame of a thread: area type or type on a path, outside perspective?
-pub(crate) fn is_threadable(n: &vectorcraft_doc::Node) -> bool {
-    n.extras().perspective.is_none() && matches!(&n.kind, vectorcraft_doc::NodeKind::Text(t) if !matches!(t.kind, vectorcraft_doc::TextKind::Point))
+pub(crate) fn is_threadable(n: &oracle_vector_doc::Node) -> bool {
+    n.extras().perspective.is_none() && matches!(&n.kind, oracle_vector_doc::NodeKind::Text(t) if !matches!(t.kind, oracle_vector_doc::TextKind::Point))
 }
 
 /// Does a double-click or the Control bar's Isolate Selected Object button isolate an object of
 /// this kind? A group, a compound path or a single path, image, mesh or placed file does. Blends,
 /// envelopes, repeats and symbol instances do not; they have editing modes of their own.
-pub fn isolates(kind: &vectorcraft_doc::NodeKind) -> bool {
-    use vectorcraft_doc::NodeKind as K;
+pub fn isolates(kind: &oracle_vector_doc::NodeKind) -> bool {
+    use oracle_vector_doc::NodeKind as K;
     matches!(kind, K::Group { .. } | K::Compound { .. } | K::Path { .. } | K::Image(_) | K::Mesh(_) | K::PlacedDocument(_))
 }
 
@@ -954,7 +954,7 @@ pub(crate) fn release_guide_at(cx: &ToolContext, p: Point, m: Mods) -> Option<Ac
         return Some(Action::Exec("view.guides.release".into(), json!({ "index": i })));
     }
     let leaf = hit_test(cx.doc, p, cx.hit_options())?.leaf;
-    let guide = cx.doc.node(leaf).is_some_and(|n| matches!(n.kind, vectorcraft_doc::NodeKind::Path { guide: true, .. }));
+    let guide = cx.doc.node(leaf).is_some_and(|n| matches!(n.kind, oracle_vector_doc::NodeKind::Path { guide: true, .. }));
     guide.then(|| Action::Exec("view.guides.release".into(), json!({ "ids": [leaf.0] })))
 }
 
@@ -976,7 +976,7 @@ fn handle_cursor(h: Handle, angle: f64) -> Cursor {
 mod tests {
     use super::*;
     use crate::testutil::*;
-    use vectorcraft_doc::Selection;
+    use oracle_vector_doc::Selection;
 
     fn ev(kind: PointerKind, x: f64, y: f64) -> PointerEvent {
         PointerEvent::new(kind, x, y)
@@ -1005,8 +1005,8 @@ mod tests {
         let l = d.layers[0].id;
         let tri = d.alloc_id();
         let pts = [Point::new(350.3, 250.0), Point::new(300.0, 320.0), Point::new(420.0, 330.0)];
-        let path = vectorcraft_geom::PathData::single(vectorcraft_geom::SubPath::polyline(&pts, true));
-        d.insert(Some(l), 1, vectorcraft_doc::Node::path(tri, path, vectorcraft_doc::Appearance::default_art())).unwrap();
+        let path = oracle_vector_geom::PathData::single(oracle_vector_geom::SubPath::polyline(&pts, true));
+        d.insert(Some(l), 1, oracle_vector_doc::Node::path(tri, path, oracle_vector_doc::Appearance::default_art())).unwrap();
         let (none, mut picked) = (Selection::default(), Selection::default());
         picked.add(id);
         let p = paint();
@@ -1025,16 +1025,16 @@ mod tests {
     /// A corner-radius drag is a transform, so the sharp selection box hides while the radius changes.
     #[test]
     fn a_corner_drag_counts_as_transforming_once_it_moves() {
-        use vectorcraft_doc::{Appearance, LiveShape, Node, NodeKind};
+        use oracle_vector_doc::{Appearance, LiveShape, Node, NodeKind};
         let live = LiveShape::Rectangle {
             w: 100.0,
             h: 100.0,
             radii: [0.0; 4],
             kinds: Default::default(),
             radii_relative: false,
-            xf: vectorcraft_geom::Affine::translate((100.0, 100.0)),
+            xf: oracle_vector_geom::Affine::translate((100.0, 100.0)),
         };
-        let mut d = vectorcraft_doc::Document::new(500.0, 500.0);
+        let mut d = oracle_vector_doc::Document::new(500.0, 500.0);
         let id = d.alloc_id();
         let mut n = Node::path(id, live.to_path(), Appearance::default_art());
         if let NodeKind::Path { live: slot, .. } = &mut n.kind {
@@ -1118,7 +1118,7 @@ mod tests {
     #[test]
     fn a_press_on_a_ruler_guide_picks_it_over_the_art() {
         let (mut d, _) = doc_with_rect();
-        d.guides.push(vectorcraft_doc::Guide::new(false, 150.0));
+        d.guides.push(oracle_vector_doc::Guide::new(false, 150.0));
         let s = Selection::default();
         let p = paint();
         let cx = cx(&d, &s, &p);
@@ -1140,8 +1140,8 @@ mod tests {
     #[test]
     fn a_cmd_shift_double_click_releases_the_guide_under_the_pointer() {
         let (mut d, id) = doc_with_rect();
-        d.guides.push(vectorcraft_doc::Guide::new(false, 300.0));
-        let Some(vectorcraft_doc::NodeKind::Path { guide, .. }) = d.node_mut(id).map(|n| &mut n.kind) else { panic!("the rectangle is a path") };
+        d.guides.push(oracle_vector_doc::Guide::new(false, 300.0));
+        let Some(oracle_vector_doc::NodeKind::Path { guide, .. }) = d.node_mut(id).map(|n| &mut n.kind) else { panic!("the rectangle is a path") };
         *guide = true;
         let s = Selection::default();
         let p = paint();
@@ -1214,7 +1214,7 @@ mod tests {
         let mut s = Selection::default();
         s.add(id);
         let p = paint();
-        d.guides.push(vectorcraft_doc::Guide::new(false, 300.0));
+        d.guides.push(oracle_vector_doc::Guide::new(false, 300.0));
         let mut c = cx(&d, &s, &p);
         c.screen = turned_view(90.0);
         assert!((c.view_angle() - 90.0).abs() < 1e-9);
@@ -1263,7 +1263,7 @@ mod tests {
     #[test]
     fn a_move_snaps_the_grabbed_point_to_a_ruler_guide_with_smart_guides_on() {
         let (mut d, id) = doc_with_rect();
-        d.guides = vec![vectorcraft_doc::Guide::new(true, 173.4)];
+        d.guides = vec![oracle_vector_doc::Guide::new(true, 173.4)];
         let mut s = Selection::default();
         s.add(id);
         let p = paint();
@@ -1285,7 +1285,7 @@ mod tests {
     /// gathered before the previews moved it); released, the move doesn't.
     #[test]
     fn an_alt_copy_snaps_to_the_original_left_behind() {
-        use vectorcraft_doc::{Appearance, Node};
+        use oracle_vector_doc::{Appearance, Node};
         let (mut d, id) = doc_with_rect();
         // An artboard whose edges and centre are out of reach.
         d.artboards[0].rect = Rect::new(0.0, 0.0, 1000.0, 1000.0);
@@ -1303,7 +1303,7 @@ mod tests {
         let mut moved = d.clone();
         let l = moved.layers[0].id;
         moved.remove(id).unwrap();
-        let r = vectorcraft_geom::shapes::rectangle(Rect::new(150.0, 100.0, 250.0, 200.0));
+        let r = oracle_vector_geom::shapes::rectangle(Rect::new(150.0, 100.0, 250.0, 200.0));
         moved.insert(Some(l), 0, Node::path(id, r, Appearance::default_art())).unwrap();
         let c = cx(&moved, &s, &p);
         let alt = Mods { alt: true, ..Mods::default() };
@@ -1317,12 +1317,12 @@ mod tests {
     /// one); Alt, which leaves a copy behind, the double arrowhead.
     #[test]
     fn a_move_shows_the_filled_arrow_hollow_on_a_snap_and_alt_the_copy_cursor() {
-        use vectorcraft_doc::{Appearance, Node};
+        use oracle_vector_doc::{Appearance, Node};
         let (mut d, _) = doc_with_rect();
         d.artboards[0].rect = Rect::new(0.0, 0.0, 1000.0, 1000.0);
         let l = d.layers[0].id;
         let b = d.alloc_id();
-        let sq = vectorcraft_geom::shapes::rectangle(Rect::new(300.0, 300.0, 400.0, 400.0));
+        let sq = oracle_vector_geom::shapes::rectangle(Rect::new(300.0, 300.0, 400.0, 400.0));
         d.insert(Some(l), 1, Node::path(b, sq, Appearance::default_art())).unwrap();
         let mut s = Selection::default();
         s.add(b);
@@ -1414,7 +1414,7 @@ mod tests {
     #[test]
     fn a_move_keeps_an_object_on_the_grid_when_its_center_is_off_it() {
         let (mut d, id) = doc_with_rect();
-        d.grid = vectorcraft_doc::GridPrefs { spacing: 100.0, subdivisions: 5 };
+        d.grid = oracle_vector_doc::GridPrefs { spacing: 100.0, subdivisions: 5 };
         let mut s = Selection::default();
         s.add(id);
         let p = paint();
@@ -1441,11 +1441,11 @@ mod tests {
     /// axis its line runs along, and on a diagonal on the axis that needs the shorter way there.
     #[test]
     fn a_shift_move_snapped_to_pixels_stays_on_its_line() {
-        let mut d = vectorcraft_doc::Document::new(500.0, 500.0);
+        let mut d = oracle_vector_doc::Document::new(500.0, 500.0);
         let l = d.layers[0].id;
         let id = d.alloc_id();
-        let square = vectorcraft_geom::shapes::rectangle(Rect::new(100.3, 100.4, 200.3, 200.4));
-        d.insert(Some(l), 0, vectorcraft_doc::Node::path(id, square, vectorcraft_doc::Appearance::default_art())).unwrap();
+        let square = oracle_vector_geom::shapes::rectangle(Rect::new(100.3, 100.4, 200.3, 200.4));
+        d.insert(Some(l), 0, oracle_vector_doc::Node::path(id, square, oracle_vector_doc::Appearance::default_art())).unwrap();
         let mut s = Selection::default();
         s.add(id);
         let p = paint();
@@ -1473,7 +1473,7 @@ mod tests {
             d.insert(
                 Some(l),
                 1,
-                vectorcraft_doc::Node::path(other, vectorcraft_geom::shapes::rectangle(r), vectorcraft_doc::Appearance::default_art()),
+                oracle_vector_doc::Node::path(other, oracle_vector_geom::shapes::rectangle(r), oracle_vector_doc::Appearance::default_art()),
             )
             .unwrap();
             (d, id)
@@ -1513,8 +1513,8 @@ mod tests {
         let l = d.layers[0].id;
         for x in [330.0, 440.0] {
             let other = d.alloc_id();
-            let sq = vectorcraft_geom::shapes::rectangle(Rect::new(x, 102.0, x + 50.0, 202.0));
-            d.insert(Some(l), 1, vectorcraft_doc::Node::path(other, sq, vectorcraft_doc::Appearance::default_art())).unwrap();
+            let sq = oracle_vector_geom::shapes::rectangle(Rect::new(x, 102.0, x + 50.0, 202.0));
+            d.insert(Some(l), 1, oracle_vector_doc::Node::path(other, sq, oracle_vector_doc::Appearance::default_art())).unwrap();
         }
         let mut s = Selection::default();
         s.add(id);
@@ -1533,9 +1533,9 @@ mod tests {
         let (mut d, id) = doc_with_rect();
         let l = d.layers[0].id;
         let other = d.alloc_id();
-        let sq = vectorcraft_geom::shapes::rectangle(Rect::new(300.0, 151.5, 350.0, 201.5));
-        d.insert(Some(l), 1, vectorcraft_doc::Node::path(other, sq, vectorcraft_doc::Appearance::default_art())).unwrap();
-        d.guides = vec![vectorcraft_doc::Guide::new(true, 420.5)];
+        let sq = oracle_vector_geom::shapes::rectangle(Rect::new(300.0, 151.5, 350.0, 201.5));
+        d.insert(Some(l), 1, oracle_vector_doc::Node::path(other, sq, oracle_vector_doc::Appearance::default_art())).unwrap();
+        d.guides = vec![oracle_vector_doc::Guide::new(true, 420.5)];
         let mut s = Selection::default();
         s.add(id);
         let p = paint();
@@ -1549,7 +1549,7 @@ mod tests {
         assert!(moved_by(m, (270.5, 270.5)), "{m:?}");
         // Smart Guides on, the selection alone with a ruler guide 1.5 below the grabbed point.
         let (mut d, id) = doc_with_rect();
-        d.guides = vec![vectorcraft_doc::Guide::new(false, 330.5)];
+        d.guides = vec![oracle_vector_doc::Guide::new(false, 330.5)];
         let mut s = Selection::default();
         s.add(id);
         let (m, _) = shift_moved(&cx(&d, &s, &p), (329.0, 329.0));
@@ -1639,8 +1639,8 @@ mod tests {
     /// click inside an isolated compound path picks a member.
     #[test]
     fn a_click_makes_only_a_selected_top_level_object_the_key() {
-        use vectorcraft_doc::{Appearance, Document, LayerColor, Node, NodeKind};
-        use vectorcraft_geom::shapes;
+        use oracle_vector_doc::{Appearance, Document, LayerColor, Node, NodeKind};
+        use oracle_vector_geom::shapes;
         let p = paint();
         let click = |d: &Document, s: &Selection, isolation: NodeId| {
             let c = ToolContext { isolation: Some(isolation), ..cx(d, s, &p) };
@@ -1731,10 +1731,10 @@ mod tests {
     /// (a group whole), and E pressed again makes it take what it touches. Only a marquee takes E.
     #[test]
     fn e_during_a_marquee_takes_only_the_objects_inside() {
-        use vectorcraft_doc::{Appearance, Node};
+        use oracle_vector_doc::{Appearance, Node};
         let (mut d, inside) = doc_with_rect();
         let l = d.layers[0].id;
-        let rect = |id, r| Node::path(id, vectorcraft_geom::shapes::rectangle(r), Appearance::default_art());
+        let rect = |id, r| Node::path(id, oracle_vector_geom::shapes::rectangle(r), Appearance::default_art());
         let (touched, g, a, b) = (d.alloc_id(), d.alloc_id(), d.alloc_id(), d.alloc_id());
         d.insert(Some(l), 1, rect(touched, Rect::new(250.0, 100.0, 350.0, 200.0))).unwrap();
         // A group with one member inside the marquee and one outside it.
@@ -1784,8 +1784,8 @@ mod tests {
     fn e_during_a_marquee_takes_only_the_guides_inside() {
         let (mut d, id) = doc_with_rect();
         let board = d.artboards[0].id;
-        d.guides.push(vectorcraft_doc::Guide::new(true, 150.0));
-        d.guides.push(vectorcraft_doc::Guide { artboard: Some(board), ..vectorcraft_doc::Guide::new(false, 150.0) });
+        d.guides.push(oracle_vector_doc::Guide::new(true, 150.0));
+        d.guides.push(oracle_vector_doc::Guide { artboard: Some(board), ..oracle_vector_doc::Guide::new(false, 150.0) });
         let s = Selection::default();
         let p = paint();
         let cx = cx(&d, &s, &p);
@@ -1808,7 +1808,7 @@ mod tests {
     #[test]
     fn marquee_selects_ruler_guides() {
         let (mut d, id) = doc_with_rect();
-        d.guides.push(vectorcraft_doc::Guide::new(false, 80.0));
+        d.guides.push(oracle_vector_doc::Guide::new(false, 80.0));
         let s = Selection::default();
         let p = paint();
         let cx = cx(&d, &s, &p);
@@ -1828,7 +1828,7 @@ mod tests {
     #[test]
     fn marquee_selects_only_guide() {
         let (mut d, _) = doc_with_rect();
-        d.guides.push(vectorcraft_doc::Guide::new(true, 20.0));
+        d.guides.push(oracle_vector_doc::Guide::new(true, 20.0));
         let s = Selection::default();
         let p = paint();
         let cx = cx(&d, &s, &p);
@@ -1845,7 +1845,7 @@ mod tests {
     #[test]
     fn marquee_ignores_locked_guides() {
         let (mut d, id) = doc_with_rect();
-        d.guides.push(vectorcraft_doc::Guide::new(false, 80.0));
+        d.guides.push(oracle_vector_doc::Guide::new(false, 80.0));
         let s = Selection::default();
         let p = paint();
         let mut cx_locked = cx(&d, &s, &p);
@@ -1865,9 +1865,9 @@ mod tests {
         let l = d.layers[0].id;
         let g = d.alloc_id();
         let pts = [Point::new(20.0, 20.0), Point::new(400.0, 20.0), Point::new(400.0, 400.0), Point::new(20.0, 400.0)];
-        let path = vectorcraft_geom::PathData::single(vectorcraft_geom::SubPath::polyline(&pts, true));
-        let mut guide = vectorcraft_doc::Node::path(g, path, vectorcraft_doc::Appearance::default_art());
-        let vectorcraft_doc::NodeKind::Path { guide: flag, .. } = &mut guide.kind else { panic!("a path") };
+        let path = oracle_vector_geom::PathData::single(oracle_vector_geom::SubPath::polyline(&pts, true));
+        let mut guide = oracle_vector_doc::Node::path(g, path, oracle_vector_doc::Appearance::default_art());
+        let oracle_vector_doc::NodeKind::Path { guide: flag, .. } = &mut guide.kind else { panic!("a path") };
         *flag = true;
         d.insert(Some(l), 1, guide).unwrap();
         let s = Selection::default();
@@ -1906,12 +1906,12 @@ mod tests {
 
     #[test]
     fn handle_drag_snaps_to_the_other_objects_with_smart_guides() {
-        use vectorcraft_doc::{Appearance, Node};
+        use oracle_vector_doc::{Appearance, Node};
         let (mut d, _) = doc_with_rect();
         let l = d.layers[0].id;
         let id = d.alloc_id();
         let r = Rect::new(250.0, 100.0, 300.0, 150.0);
-        d.insert(Some(l), 1, Node::path(id, vectorcraft_geom::shapes::rectangle(r), Appearance::default_art())).unwrap();
+        d.insert(Some(l), 1, Node::path(id, oracle_vector_geom::shapes::rectangle(r), Appearance::default_art())).unwrap();
         let mut s = Selection::default();
         s.add(id);
         let p = paint();
@@ -1995,13 +1995,13 @@ mod tests {
     /// ruler guides still pull it within the Snapping Tolerance (4 px), as a move does (#1534).
     #[test]
     fn handle_drag_snaps_to_anchors_and_ruler_guides_with_snap_to_point() {
-        use vectorcraft_doc::{Appearance, Node};
+        use oracle_vector_doc::{Appearance, Node};
         let (mut d, id) = doc_with_rect();
         let l = d.layers[0].id;
         let other = d.alloc_id();
-        let sq = vectorcraft_geom::shapes::rectangle(Rect::new(250.0, 250.0, 300.0, 300.0));
+        let sq = oracle_vector_geom::shapes::rectangle(Rect::new(250.0, 250.0, 300.0, 300.0));
         d.insert(Some(l), 1, Node::path(other, sq, Appearance::default_art())).unwrap();
-        d.guides = vec![vectorcraft_doc::Guide::new(true, 230.5)];
+        d.guides = vec![oracle_vector_doc::Guide::new(true, 230.5)];
         let mut s = Selection::default();
         s.add(id);
         let p = paint();
@@ -2031,11 +2031,11 @@ mod tests {
     /// far a dragged handle is pulled.
     #[test]
     fn smart_guide_display_preferences_drive_the_readouts_and_the_pull() {
-        use vectorcraft_doc::{Appearance, Node};
+        use oracle_vector_doc::{Appearance, Node};
         let (mut d, _) = doc_with_rect();
         let l = d.layers[0].id;
         let id = d.alloc_id();
-        d.insert(Some(l), 1, Node::path(id, vectorcraft_geom::shapes::rectangle(Rect::new(250.0, 100.0, 300.0, 150.0)), Appearance::default_art()))
+        d.insert(Some(l), 1, Node::path(id, oracle_vector_geom::shapes::rectangle(Rect::new(250.0, 100.0, 300.0, 150.0)), Appearance::default_art()))
             .unwrap();
         let mut s = Selection::default();
         s.add(id);
@@ -2076,7 +2076,7 @@ mod tests {
 
     #[test]
     fn handle_drag_of_a_turned_box_snaps_on_the_page() {
-        use vectorcraft_doc::{Appearance, Node};
+        use oracle_vector_doc::{Appearance, Node};
         let matrix = |a: &[Action]| {
             let Action::Preview(_, v) = &a[0] else { panic!("{a:?}") };
             let m: Vec<f64> = v["matrix"].as_array().unwrap().iter().map(|x| x.as_f64().unwrap()).collect();
@@ -2088,7 +2088,7 @@ mod tests {
             let l = d.layers[0].id;
             let id = d.alloc_id();
             let r = Rect::new(250.0, 100.0, 300.0, 150.0);
-            d.insert(Some(l), 1, Node::path(id, vectorcraft_geom::shapes::rectangle(r), Appearance::default_art())).unwrap();
+            d.insert(Some(l), 1, Node::path(id, oracle_vector_geom::shapes::rectangle(r), Appearance::default_art())).unwrap();
             let c = Point::new(275.0, 125.0);
             d.node_mut(id)
                 .unwrap()
@@ -2184,12 +2184,12 @@ mod tests {
 
     /// [`doc_with_area_type`] with more text than its frame holds, selected; the rectangle's id and
     /// where the frame's out port is.
-    fn overflowing_area_type() -> (vectorcraft_doc::Document, NodeId, NodeId, Point) {
+    fn overflowing_area_type() -> (oracle_vector_doc::Document, NodeId, NodeId, Point) {
         let (mut d, id) = doc_with_area_type();
         let rect = d.children(Some(d.layers[0].id)).unwrap()[0].id;
-        let Some(vectorcraft_doc::NodeKind::Text(t)) = d.node_mut(id).map(|n| &mut n.kind) else { panic!("not text") };
-        let style = vectorcraft_doc::CharStyle { size: 20.0, ..Default::default() };
-        t.runs = vec![vectorcraft_doc::TextRun::new("Words that fill more than the frame holds. ".repeat(20), style)];
+        let Some(oracle_vector_doc::NodeKind::Text(t)) = d.node_mut(id).map(|n| &mut n.kind) else { panic!("not text") };
+        let style = oracle_vector_doc::CharStyle { size: 20.0, ..Default::default() };
+        t.runs = vec![oracle_vector_doc::TextRun::new("Words that fill more than the frame holds. ".repeat(20), style)];
         // On the frame's right side, above its bottom-right corner (120 × 40 at 100%).
         let port = t.xf * Point::new(120.0, 40.0 - crate::text::PORT_RISE_PX);
         (d, id, rect, port)
@@ -2200,15 +2200,15 @@ mod tests {
     #[test]
     fn the_out_port_of_type_on_a_path_loads_its_text() {
         let (mut d, id) = doc_with_area_type();
-        let Some(vectorcraft_doc::NodeKind::Text(t)) = d.node_mut(id).map(|n| &mut n.kind) else { panic!("not text") };
-        let line = vectorcraft_geom::kurbo::Line::new((0.0, 200.0), (100.0, 200.0));
-        t.kind = vectorcraft_doc::TextKind::OnPath {
-            path: vectorcraft_geom::PathData::from_bezpath(&vectorcraft_geom::kurbo::Shape::to_path(&line, 0.1)),
+        let Some(oracle_vector_doc::NodeKind::Text(t)) = d.node_mut(id).map(|n| &mut n.kind) else { panic!("not text") };
+        let line = oracle_vector_geom::kurbo::Line::new((0.0, 200.0), (100.0, 200.0));
+        t.kind = oracle_vector_doc::TextKind::OnPath {
+            path: oracle_vector_geom::PathData::from_bezpath(&oracle_vector_geom::kurbo::Shape::to_path(&line, 0.1)),
             start: 0.0,
             end: Some(0.8),
         };
-        t.xf = vectorcraft_geom::Affine::IDENTITY;
-        t.runs = vec![vectorcraft_doc::TextRun::new("Words that run past the end of the path. ".repeat(5), vectorcraft_doc::CharStyle::default())];
+        t.xf = oracle_vector_geom::Affine::IDENTITY;
+        t.runs = vec![oracle_vector_doc::TextRun::new("Words that run past the end of the path. ".repeat(5), oracle_vector_doc::CharStyle::default())];
         let mut s = Selection::default();
         s.set([id]);
         let p = paint();
@@ -2267,10 +2267,10 @@ mod tests {
     fn loaded_text_threads_into_the_art_on_a_layer_masks_edge() {
         let (mut d, id, _, port) = overflowing_area_type();
         let art = d.alloc_id();
-        let picture = vectorcraft_doc::Node::path(
+        let picture = oracle_vector_doc::Node::path(
             art,
-            vectorcraft_geom::shapes::rectangle(Rect::new(350.0, 350.0, 550.0, 550.0)),
-            vectorcraft_doc::Appearance::default_art(),
+            oracle_vector_geom::shapes::rectangle(Rect::new(350.0, 350.0, 550.0, 550.0)),
+            oracle_vector_doc::Appearance::default_art(),
         );
         add_masked_layer(&mut d, Rect::new(400.0, 400.0, 500.0, 500.0), picture);
         let mut s = Selection::default();
@@ -2306,8 +2306,8 @@ mod tests {
         let (mut d, _) = doc_with_rect();
         let id = d.alloc_id();
         let mut guide_path =
-            vectorcraft_doc::Node::path(id, vectorcraft_geom::shapes::rectangle(Rect::new(450.0, 350.0, 550.0, 550.0)), Default::default());
-        let vectorcraft_doc::NodeKind::Path { guide, .. } = &mut guide_path.kind else { panic!("a path") };
+            oracle_vector_doc::Node::path(id, oracle_vector_geom::shapes::rectangle(Rect::new(450.0, 350.0, 550.0, 550.0)), Default::default());
+        let oracle_vector_doc::NodeKind::Path { guide, .. } = &mut guide_path.kind else { panic!("a path") };
         *guide = true;
         add_masked_layer(&mut d, Rect::new(400.0, 400.0, 500.0, 500.0), guide_path);
         let (s, p) = (Selection::default(), paint());

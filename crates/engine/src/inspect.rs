@@ -1,12 +1,12 @@
 //! Agent-friendly document summaries and view-models for panels.
 
 use serde_json::{Value, json};
-use vectorcraft_color::BlendMode;
-use vectorcraft_doc::{ArrowAlign, Document, LineCap, LineJoin, Node, NodeKind, StrokeAlign, StrokeLayer, SymbolBoxes, WidthProfile};
+use oracle_vector_color::BlendMode;
+use oracle_vector_doc::{ArrowAlign, Document, LineCap, LineJoin, Node, NodeKind, StrokeAlign, StrokeLayer, SymbolBoxes, WidthProfile};
 
 use crate::Session;
 
-pub(crate) fn rect_json(r: Option<vectorcraft_geom::Rect>) -> Value {
+pub(crate) fn rect_json(r: Option<oracle_vector_geom::Rect>) -> Value {
     match r {
         Some(r) => json!({ "x": r.x0, "y": r.y0, "width": r.width(), "height": r.height() }),
         None => Value::Null,
@@ -56,7 +56,7 @@ pub fn node_summary_opts(n: &Node, opts: SummaryOpts, symbols: &SymbolBoxes) -> 
         // Type shows its characters' paint: the first run's, as paint.proxies and the Stroke
         // options read it. Fills and strokes of the type object itself, above or below its
         // characters, come separately so the two stay apart.
-        let default = vectorcraft_doc::CharStyle::default();
+        let default = oracle_vector_doc::CharStyle::default();
         let style = t.runs.first().map_or(&default, |r| &r.style);
         v["fill"] = json!(style.fill.label());
         v["stroke"] = json!(style.stroke.label());
@@ -95,10 +95,10 @@ pub fn node_summary_opts(n: &Node, opts: SummaryOpts, symbols: &SymbolBoxes) -> 
             v["text"] = json!(t.plain_text());
             // Area type and type on a path: does the text fit (the red overflow "+")? Area type
             // also reports its fit and Shrink Text's factor (1 unshrunk).
-            if !matches!(t.kind, vectorcraft_doc::TextKind::Point) {
-                let lay = vectorcraft_text::layout(vectorcraft_text::FontDb::global(), t);
+            if !matches!(t.kind, oracle_vector_doc::TextKind::Point) {
+                let lay = oracle_vector_text::layout(oracle_vector_text::FontDb::global(), t);
                 v["overflow"] = json!(lay.overflow);
-                if matches!(t.kind, vectorcraft_doc::TextKind::Area { .. }) {
+                if matches!(t.kind, oracle_vector_doc::TextKind::Area { .. }) {
                     v["fit"] = json!(t.area.fit.id());
                     v["fitScale"] = json!(lay.fit_scale);
                 }
@@ -130,7 +130,7 @@ pub fn document(s: &Session) -> Value {
 
 /// An artboard's name and rectangle, its background color (`#rrggbb`) when it has one, and
 /// `locked: true` when it is locked.
-fn artboard_summary(a: &vectorcraft_doc::Artboard) -> Value {
+fn artboard_summary(a: &oracle_vector_doc::Artboard) -> Value {
     let mut v = json!({"name": a.name, "x": a.rect.x0, "y": a.rect.y0, "width": a.rect.width(), "height": a.rect.height()});
     if let Some(c) = a.color {
         v["color"] = json!(c.to_hex());
@@ -151,7 +151,7 @@ pub fn document_opts(s: &Session, opts: SummaryOpts) -> Value {
 #[derive(Clone, Debug, Default)]
 pub struct Scope {
     /// Only these nodes (any level, already checked to exist), in the order given.
-    pub ids: Option<Vec<vectorcraft_doc::NodeId>>,
+    pub ids: Option<Vec<oracle_vector_doc::NodeId>>,
     /// Only nodes of this panel label (case-insensitive), searched in the subtrees of `ids`
     /// or else of every layer.
     pub kind: Option<String>,
@@ -170,7 +170,7 @@ impl Scope {
 /// A node with the ids of its ancestors (layer first).
 type Hit<'a> = (&'a Node, Vec<u64>);
 
-fn ancestors(d: &Document, id: vectorcraft_doc::NodeId) -> Vec<u64> {
+fn ancestors(d: &Document, id: oracle_vector_doc::NodeId) -> Vec<u64> {
     let mut out = Vec::new();
     let mut cur = d.parent_of(id);
     // The bound keeps a malformed tree from looping.
@@ -362,9 +362,9 @@ fn name_of<T: PartialEq>(table: &[(T, &'static str)], v: T) -> &'static str {
 pub fn node_stroke(n: &Node) -> Option<StrokeLayer> {
     match &n.kind {
         NodeKind::Text(t) => {
-            let mut st = t.runs.first().map_or_else(|| vectorcraft_doc::CharStyle::default().stroke_layer(), |r| r.style.stroke_layer());
+            let mut st = t.runs.first().map_or_else(|| oracle_vector_doc::CharStyle::default().stroke_layer(), |r| r.style.stroke_layer());
             // Character strokes are drawn in text space: report the document-space weight.
-            if let Some(k) = vectorcraft_doc::Scaling::factor(t.xf).filter(|k| k.is_finite()) {
+            if let Some(k) = oracle_vector_doc::Scaling::factor(t.xf).filter(|k| k.is_finite()) {
                 scale_layer(&mut st, k);
             }
             Some(st)

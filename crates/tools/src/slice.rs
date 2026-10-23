@@ -10,8 +10,8 @@
 //! deletes the selected slices with Delete. Hidden or locked slices (View menu) can't be picked.
 
 use serde_json::{Value, json};
-use vectorcraft_doc::{NodeId, OrientedBox, SliceSource};
-use vectorcraft_geom::{Affine, Point, Rect, Vec2};
+use oracle_vector_doc::{NodeId, OrientedBox, SliceSource};
+use oracle_vector_geom::{Affine, Point, Rect, Vec2};
 
 use crate::bbox::{Handle, hit_handle, move_delta, scale_for_drag};
 use crate::guides::{PointSnap, Targets};
@@ -371,7 +371,7 @@ impl Tool for SliceSelectionTool {
 mod tests {
     use super::*;
     use crate::testutil::*;
-    use vectorcraft_doc::{Document, Guide, Selection, Slice};
+    use oracle_vector_doc::{Document, Guide, Selection, Slice};
 
     fn ev(kind: PointerKind, x: f64, y: f64) -> PointerEvent {
         PointerEvent::new(kind, x, y)

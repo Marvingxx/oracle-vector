@@ -1,6 +1,6 @@
 //! Brushes (Brushes panel, Paintbrush, Expand) and Symbols (Symbols panel, symbolism tools).
 //!
-//! Brush definitions live in `vectorcraft-brush` and are stored in `Document::unknown["brushes"]`.
+//! Brush definitions live in `oracle-vector-brush` and are stored in `Document::unknown["brushes"]`.
 //! Symbol definitions are `Document::symbols`; symbols made here are *normalised*: the art is
 //! centred on the origin and scaled (non-uniformly, strokes untouched) into the ±10 pt box that
 //! `Node::geometric_bounds` assumes for instances, and each instance's `xf` scales it back. The
@@ -10,10 +10,10 @@ use std::collections::BTreeSet;
 use std::sync::Arc;
 
 use serde_json::{Value, json};
-use vectorcraft_brush::{self as brush, Bristle, Brush, BrushKind};
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::{AppearanceItem, Document, FillLayer, Node, NodeId, NodeKind, Symbol, SymbolExportType, SymbolNineSlice, SymbolRegistration};
-use vectorcraft_geom::{Affine, Point, Vec2};
+use oracle_vector_brush::{self as brush, Bristle, Brush, BrushKind};
+use oracle_vector_color::{Color, Paint};
+use oracle_vector_doc::{AppearanceItem, Document, FillLayer, Node, NodeId, NodeKind, Symbol, SymbolExportType, SymbolNineSlice, SymbolRegistration};
+use oracle_vector_geom::{Affine, Point, Vec2};
 
 use super::edit::{outermost, selected_roots};
 use super::pathops::{remove_each, separate};
@@ -21,10 +21,10 @@ use super::swatch::{anchor, names_param};
 use super::*;
 use crate::EngineError;
 
-const SIZES_KEY: &str = vectorcraft_doc::SYMBOL_SIZES;
+const SIZES_KEY: &str = oracle_vector_doc::SYMBOL_SIZES;
 const CURRENT_SYMBOL: &str = "currentSymbol";
 /// Half the instance box `Node::geometric_bounds` uses for symbol instances.
-const HALF: f64 = vectorcraft_doc::SYMBOL_HALF;
+const HALF: f64 = oracle_vector_doc::SYMBOL_HALF;
 
 pub fn specs() -> Vec<CommandSpec> {
     vec![
@@ -418,7 +418,7 @@ fn set_stroke_brush(items: &mut [AppearanceItem], from: &str, to: Option<&str>) 
 /// Whether a stroke in `n` (its opacity masks included) paints with brush `name`.
 fn paints_with(n: &Node, name: &str) -> bool {
     let mut hit = false;
-    vectorcraft_doc::swatches::walk_with_masks(n, &mut |m| {
+    oracle_vector_doc::swatches::walk_with_masks(n, &mut |m| {
         hit |= m.appearance.items.iter().any(|i| matches!(i, AppearanceItem::Stroke(st) if st.brush.as_deref() == Some(name)));
     });
     hit
@@ -442,7 +442,7 @@ fn set_brush_in(n: &mut Node, from: &str, to: Option<&str>) {
 
 /// Returns the art a brush is made of ([`Brush::art`]) for editing.
 fn brush_art_mut(b: &mut Brush) -> Vec<&mut Node> {
-    use vectorcraft_brush::BrushKind;
+    use oracle_vector_brush::BrushKind;
     match &mut b.kind {
         BrushKind::Scatter(s) => vec![&mut s.art],
         BrushKind::Art(a) => vec![&mut a.art],
@@ -633,7 +633,7 @@ fn stroke_brushes(items: &[AppearanceItem], out: &mut Vec<String>) {
 /// Adds the names of the brushes the strokes in `n` (its opacity masks included) paint with to
 /// `out`.
 fn art_brushes(n: &Node, out: &mut Vec<String>) {
-    vectorcraft_doc::swatches::walk_with_masks(n, &mut |m| stroke_brushes(&m.appearance.items, out));
+    oracle_vector_doc::swatches::walk_with_masks(n, &mut |m| stroke_brushes(&m.appearance.items, out));
 }
 
 /// The brushes no stroke paints with. Strokes in the art (opacity masks included), symbols, graph
@@ -995,7 +995,7 @@ fn expanded_instance(d: &mut Document, inst: &Node) -> Option<Node> {
     }
     art.transform(*xf, false);
     let mut art = d.reid(&art);
-    if inst.opacity < 1.0 || inst.blend != vectorcraft_color::BlendMode::Normal {
+    if inst.opacity < 1.0 || inst.blend != oracle_vector_color::BlendMode::Normal {
         if !matches!(art.kind, NodeKind::Group { .. }) {
             let id = d.alloc_id();
             art = Node::group(id, vec![Arc::new(art)]);

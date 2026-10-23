@@ -1,7 +1,7 @@
 use kurbo::{BezPath, Point, Shape, Vec2};
-use vectorcraft_color::{Color, Gradient, GradientPaint, GradientStop, Paint};
-use vectorcraft_doc::{ArrowAlign, Arrowhead, Dash, LineCap, LineJoin, StrokeAlign, StrokeGradientMode, StrokeLayer, WidthProfile};
-use vectorcraft_geom::FillRule;
+use oracle_vector_color::{Color, Gradient, GradientPaint, GradientStop, Paint};
+use oracle_vector_doc::{ArrowAlign, Arrowhead, Dash, LineCap, LineJoin, StrokeAlign, StrokeGradientMode, StrokeLayer, WidthProfile};
+use oracle_vector_geom::FillRule;
 
 use super::*;
 

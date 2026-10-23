@@ -4,10 +4,10 @@
 
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
-use vectorcraft_color::Color;
-use vectorcraft_color::harmony::{Harmony, THEME_SIZE};
-use vectorcraft_color::recolor::ColorKey;
-use vectorcraft_tools::params::color_json;
+use oracle_vector_color::Color;
+use oracle_vector_color::harmony::{Harmony, THEME_SIZE};
+use oracle_vector_color::recolor::ColorKey;
+use oracle_vector_tools::params::color_json;
 
 use super::*;
 

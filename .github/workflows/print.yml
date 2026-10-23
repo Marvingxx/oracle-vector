@@ -4,9 +4,9 @@ on:
     paths:
       - "Cargo.toml"
       - "Cargo.lock"
-      - "apps/vectorcraft/Cargo.toml"
-      - "apps/vectorcraft/src/printing.rs"
-      - "apps/vectorcraft/src/printing/**"
+      - "apps/oracle-vector/Cargo.toml"
+      - "apps/oracle-vector/src/printing.rs"
+      - "apps/oracle-vector/src/printing/**"
       - "crates/ui-egui/src/print.rs"
       - "crates/ui-egui/src/tests_printps.rs"
       - ".github/workflows/print.yml"
@@ -29,7 +29,7 @@ jobs:
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
         with:
           key: desktop-print
-      - run: cargo clippy --locked -p vectorcraft --all-targets -- -D warnings
-      - run: cargo test --locked -p vectorcraft
+      - run: cargo clippy --locked -p oracle-vector --all-targets -- -D warnings
+      - run: cargo test --locked -p oracle-vector
       - name: Check pending submission and queue refusal feedback
-        run: cargo test --locked -p vectorcraft-ui-egui tests_printps
+        run: cargo test --locked -p oracle-vector-ui-egui tests_printps

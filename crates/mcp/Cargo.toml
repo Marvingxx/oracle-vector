@@ -1,33 +1,33 @@
 [package]
-name = "vectorcraft-mcp"
+name = "oracle-vector-mcp"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "VectorCraft MCP server: JSON-RPC 2.0 over stdio, driving a running app or a headless session"
+description = "Oracle Vector MCP server: JSON-RPC 2.0 over stdio, driving a running app or a headless session"
 
 [lints]
 workspace = true
 
 [features]
 default = ["bundled-fonts"]
-# The fonts vectorcraft-text bundles for documents, through the engine's `bundled-fonts`, as
-# vectorcraft-ui-egui's. Off, for an embedder that supplies every document font at run time.
-bundled-fonts = ["vectorcraft-engine/bundled-fonts"]
+# The fonts oracle-vector-text bundles for documents, through the engine's `bundled-fonts`, as
+# oracle-vector-ui-egui's. Off, for an embedder that supplies every document font at run time.
+bundled-fonts = ["oracle-vector-engine/bundled-fonts"]
 
 [dependencies]
-vectorcraft-engine = { workspace = true }
-vectorcraft-render = { workspace = true }
-vectorcraft-svg = { workspace = true }
-vectorcraft-format = { workspace = true }
-vectorcraft-tools = { workspace = true }
-vectorcraft-geom = { workspace = true }
-vectorcraft-doc = { workspace = true }
+oracle-vector-engine = { workspace = true }
+oracle-vector-render = { workspace = true }
+oracle-vector-svg = { workspace = true }
+oracle-vector-format = { workspace = true }
+oracle-vector-tools = { workspace = true }
+oracle-vector-geom = { workspace = true }
+oracle-vector-doc = { workspace = true }
 serde_json = { workspace = true }
 log = { workspace = true }
 
 image = { workspace = true }
 
 [dev-dependencies]
-vectorcraft-testkit = { workspace = true }
+oracle-vector-testkit = { workspace = true }
 proptest = { workspace = true }
 socket2 = { workspace = true }

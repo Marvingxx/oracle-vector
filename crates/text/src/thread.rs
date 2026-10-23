@@ -4,7 +4,7 @@
 //! testing need nothing special; after an edit the engine joins the slices and re-distributes them
 //! with [`distribute`].
 
-use vectorcraft_doc::{ParaStyle, TextObject, TextRun};
+use oracle_vector_doc::{ParaStyle, TextObject, TextRun};
 
 use crate::edit::{normalize, runs_len, slice_runs, style_at};
 use crate::{FontDb, layout};
@@ -115,11 +115,11 @@ pub fn distribute(db: &FontDb, frames: &[&TextObject], runs: &[TextRun], paras: 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vectorcraft_doc::{CharStyle, Justify, TextKind};
-    use vectorcraft_geom::{Affine, PathData, Rect, shapes};
+    use oracle_vector_doc::{CharStyle, Justify, TextKind};
+    use oracle_vector_geom::{Affine, PathData, Rect, shapes};
 
     fn frame(x: f64) -> TextObject {
-        let mut t = TextObject::point(vectorcraft_geom::Point::ZERO, "", CharStyle::default());
+        let mut t = TextObject::point(oracle_vector_geom::Point::ZERO, "", CharStyle::default());
         t.kind = TextKind::Area { frame: shapes::rectangle(Rect::new(x, 0.0, x + 120.0, 60.0)) };
         t.xf = Affine::IDENTITY;
         t
@@ -127,7 +127,7 @@ mod tests {
 
     /// Type on a straight path `length` long.
     fn path_frame(length: f64) -> TextObject {
-        let mut t = TextObject::point(vectorcraft_geom::Point::ZERO, "", CharStyle::default());
+        let mut t = TextObject::point(oracle_vector_geom::Point::ZERO, "", CharStyle::default());
         let line = kurbo::Line::new((0.0, 0.0), (length, 0.0));
         t.kind = TextKind::OnPath { path: PathData::from_bezpath(&kurbo::Shape::to_path(&line, 0.1)), start: 0.0, end: None };
         t.xf = Affine::IDENTITY;
@@ -237,7 +237,7 @@ mod tests {
         let text = "The quick brown fox jumps over the lazy dog. ".repeat(4) + "\nSecond paragraph.\nThird.";
         let story = vec![TextRun { text, style: CharStyle::default(), inline: None }];
         let style = |j| ParaStyle { justify: j, ..Default::default() };
-        use vectorcraft_doc::Justify::*;
+        use oracle_vector_doc::Justify::*;
         let paras = vec![style(Left), style(Center), style(Right)];
         let parts = distribute(db, &[&a, &b], &story, &paras);
         assert!(!parts[0].runs.is_empty() && !parts[1].runs.is_empty());

@@ -6,14 +6,14 @@ use std::io::Write as _;
 use std::sync::Arc;
 
 use serde_json::{Value, json};
-use vectorcraft_doc::{Node, NodeKind};
-use vectorcraft_testkit::ai;
-use vectorcraft_testkit::pdf::{PdfPage, first_extra, pdf_with};
+use oracle_vector_doc::{Node, NodeKind};
+use oracle_vector_testkit::ai;
+use oracle_vector_testkit::pdf::{PdfPage, first_extra, pdf_with};
 
 use super::*;
 
 fn open(s: &mut Session, name: &str, bytes: &[u8], params: Value) -> Result<Value> {
-    let mut p = json!({"name": name, "dataBase64": vectorcraft_format::base64_encode(bytes)});
+    let mut p = json!({"name": name, "dataBase64": oracle_vector_format::base64_encode(bytes)});
     if let (Some(p), Some(extra)) = (p.as_object_mut(), params.as_object()) {
         p.extend(extra.clone());
     }
@@ -36,7 +36,7 @@ fn check_sample(s: &Session) {
     let doc = &s.doc().unwrap().doc;
     assert_eq!(names(&doc.layers), ["Art", "Hidden"]);
     assert_eq!(doc.artboards.len(), 1);
-    assert_eq!(doc.artboards[0].rect, vectorcraft_geom::Rect::new(0.0, 0.0, 200.0, 100.0));
+    assert_eq!(doc.artboards[0].rect, oracle_vector_geom::Rect::new(0.0, 0.0, 200.0, 100.0));
     let art = doc.layers[0].children().unwrap();
     assert_eq!(names(art), ["Pair", "Ring", "Window"]);
     let pair = art[0].children().unwrap();
@@ -48,8 +48,8 @@ fn check_sample(s: &Session) {
     assert!(!hidden.visible);
     let kids = hidden.children().unwrap();
     assert_eq!(names(kids), ["Shaded", "", "Sub", ""]);
-    assert!(matches!(kids[0].appearance.fill().map(|f| &f.paint), Some(vectorcraft_color::Paint::Gradient(_))));
-    assert_eq!((kids[1].opacity, kids[1].blend), (0.5, vectorcraft_color::BlendMode::Screen));
+    assert!(matches!(kids[0].appearance.fill().map(|f| &f.paint), Some(oracle_vector_color::Paint::Gradient(_))));
+    assert_eq!((kids[1].opacity, kids[1].blend), (0.5, oracle_vector_color::BlendMode::Screen));
     assert!(kids[2].locked && matches!(kids[2].kind, NodeKind::Layer { .. }));
     let NodeKind::Image(im) = &kids[3].kind else { panic!("an image") };
     assert_eq!((im.width, im.height), (2, 1));
@@ -63,7 +63,7 @@ fn an_illustrator_eps_opens_with_its_layers() {
     check_sample(&s);
     // Saved as EPS and opened again, it comes back the same.
     let eps = s.execute("document.exportEps", &json!({})).unwrap();
-    let bytes = vectorcraft_format::base64_decode(eps["dataBase64"].as_str().unwrap()).unwrap();
+    let bytes = oracle_vector_format::base64_decode(eps["dataBase64"].as_str().unwrap()).unwrap();
     let r = open(&mut s, "again.eps", &bytes, json!({})).unwrap();
     assert_eq!(r["restored"], json!(true), "{r}");
     check_sample(&s);
@@ -109,7 +109,7 @@ const SQUARE_AND_TYPE: &str = "0 g 10 10 40 40 re f BT /F1 12 Tf 100 50 Td (Hi) 
 /// `file` loaded with `clipboard.importPdf` (`editingData` as given) and pasted → the command's
 /// reply and the objects the paste selected, in stacking order.
 fn paste(s: &mut Session, file: &[u8], editing_data: bool) -> (Value, Vec<Node>) {
-    let p = json!({"dataBase64": vectorcraft_format::base64_encode(file), "editingData": editing_data});
+    let p = json!({"dataBase64": oracle_vector_format::base64_encode(file), "editingData": editing_data});
     let r = s.execute("clipboard.importPdf", &p).unwrap();
     s.execute("edit.paste", &json!({})).unwrap();
     let st = s.doc().unwrap();
@@ -145,7 +145,7 @@ fn a_copied_ai_file_pastes_from_its_editing_data() {
     assert!(pasted.iter().all(|n| layers[0].children().unwrap().iter().any(|c| c.id == n.id)), "into the active layer");
     // The same editing data in an EPS: the same objects, the hidden layer's objects hidden.
     let eps = ai::eps(&ai::sample_data(), ai::page_ps());
-    s.execute("clipboard.importEps", &json!({"dataBase64": vectorcraft_format::base64_encode(&eps)})).unwrap();
+    s.execute("clipboard.importEps", &json!({"dataBase64": oracle_vector_format::base64_encode(&eps)})).unwrap();
     s.execute("edit.paste", &json!({})).unwrap();
     let st = s.doc().unwrap();
     let shown = |nodes: Vec<&Node>| nodes.iter().map(|n| (n.name.clone().unwrap_or_default(), n.visible)).collect::<Vec<_>>();
@@ -169,7 +169,7 @@ fn a_copied_ai_file_pastes_from_its_editing_data() {
     // (The page's type comes in as type too now that PDF import keeps it, so only this side is told apart.)
     let (r, pasted) = paste(&mut s, &typed, true);
     assert!(has_type(&pasted), "{r}: {pasted:?}");
-    // A `.ai` VectorCraft wrote: the document it carries, its hidden square too.
+    // A `.ai` Oracle Vector wrote: the document it carries, its hidden square too.
     let mut other = Session::new();
     other.execute("file.new", &json!({"width": 200, "height": 100})).unwrap();
     for x in [10, 100] {
@@ -177,7 +177,7 @@ fn a_copied_ai_file_pastes_from_its_editing_data() {
     }
     other.execute("object.hide", &json!({})).unwrap();
     let saved = other.execute("document.export", &json!({"format": "ai"})).unwrap();
-    let saved = vectorcraft_format::base64_decode(saved["dataBase64"].as_str().unwrap()).unwrap();
+    let saved = oracle_vector_format::base64_decode(saved["dataBase64"].as_str().unwrap()).unwrap();
     let (r, pasted) = paste(&mut s, &saved, true);
     assert_eq!(pasted.iter().map(|n| n.visible).collect::<Vec<_>>(), [true, false], "{r}");
     let (r, page) = paste(&mut s, &saved, false);
@@ -212,7 +212,7 @@ fn a_pdfs_art_past_the_page_opens_whole_from_its_editing_data() {
     assert_eq!(names(&doc.layers), ["Art"]);
     assert!(doc.art_bounds().is_some_and(|b| b.x1 > 200.5), "{:?}", doc.art_bounds());
     let r = open(&mut s, "past.pdf", &file, json!({"editingData": false})).unwrap();
-    assert_eq!(r["warnings"], json!([vectorcraft_pdf::PAST_PAGE_NOTE]), "{r}");
+    assert_eq!(r["warnings"], json!([oracle_vector_pdf::PAST_PAGE_NOTE]), "{r}");
     assert!(s.doc().unwrap().doc.art_bounds().is_some_and(|b| b.x1 < 200.5));
 }
 
@@ -249,9 +249,9 @@ fn editing_data_that_cant_be_read_keeps_the_pdf_parts_notes() {
     let unread = "the file's layers weren't read from its editing data (its zlib compression is damaged): they come from its PDF part";
     let mut s = Session::new();
     let r = open(&mut s, "damaged.ai", &ai::ai(damaged, ai::page_pdf()), json!({})).unwrap();
-    assert_eq!(r["warnings"], json!([vectorcraft_pdf::OFF_ARTBOARD_NOTE, unread]), "{r}");
+    assert_eq!(r["warnings"], json!([oracle_vector_pdf::OFF_ARTBOARD_NOTE, unread]), "{r}");
     let r = open(&mut s, "damaged.pdf", &ai::pdf(damaged, "0 g 150 20 100 60 re f"), json!({})).unwrap();
-    assert_eq!(r["warnings"], json!([vectorcraft_pdf::PAST_PAGE_NOTE, unread]), "{r}");
+    assert_eq!(r["warnings"], json!([oracle_vector_pdf::PAST_PAGE_NOTE, unread]), "{r}");
 }
 
 /// A copied `.ai` whose editing data can't be read, or isn't there, pastes its page as a PDF
@@ -350,7 +350,7 @@ fn an_ai_file_saved_without_its_pdf_part_opens_with_pages_naming_every_page() {
 /// and none.
 fn placeholder_files() -> [String; 3] {
     [compressed(&ai::sample_data()), b"%AI12_CompressedData not zlib".to_vec(), vec![]]
-        .map(|private| vectorcraft_format::base64_encode(&ai::ai(&private, PLACEHOLDER)))
+        .map(|private| oracle_vector_format::base64_encode(&ai::ai(&private, PLACEHOLDER)))
 }
 
 #[test]
@@ -391,7 +391,7 @@ fn an_ai_file_saved_without_its_pdf_part_places_from_its_editing_data() {
     // The place takes the art of both layers that show.
     let square = |x: f64| format!("0 g\n{}f\n", ai::rect(x, 10.0, x + 40.0, 50.0));
     let two = ai::editing_data(200.0, 100.0, &[ai::layer("Back", &square(10.0)), ai::layer("Front", &square(110.0))].concat());
-    let two = vectorcraft_format::base64_encode(&ai::ai(&compressed(two.as_bytes()), PLACEHOLDER));
+    let two = oracle_vector_format::base64_encode(&ai::ai(&compressed(two.as_bytes()), PLACEHOLDER));
     let r = s.execute("file.place.info", &json!({"name": "two.ai", "dataBase64": two, "crop": "bounding"})).unwrap();
     assert_eq!((r["width"].as_f64(), r["height"].as_f64()), (Some(140.0), Some(40.0)), "{r}");
     // The file has two 100-point artboards and one placeholder page. The second artboard lies 50
@@ -402,7 +402,7 @@ fn an_ai_file_saved_without_its_pdf_part_places_from_its_editing_data() {
         %_; (ArtboardArray) ,\n%_; /NotRecorded ,\n%_;\n";
     let art = format!("0 g\n{}f\n{}f\n", ai::rect(10.0, 10.0, 50.0, 50.0), ai::rect(10.0, -140.0, 70.0, -100.0));
     let paged = ai::editing_data(100.0, 100.0, &(boards.to_string() + &ai::layer("Art", &art)));
-    let paged = vectorcraft_format::base64_encode(&ai::ai(&compressed(paged.as_bytes()), PLACEHOLDER));
+    let paged = oracle_vector_format::base64_encode(&ai::ai(&compressed(paged.as_bytes()), PLACEHOLDER));
     let mut size = |page: u64| {
         let r = s.execute("file.place.info", &json!({"name": "boards.ai", "dataBase64": paged, "page": page, "crop": "bounding"}));
         r.map(|r| (r["width"].as_f64(), r["height"].as_f64())).map_err(|e| e.to_string())
@@ -436,7 +436,7 @@ fn an_ai_file_whose_pdf_part_is_only_text_opens_from_it_when_its_editing_data_ca
         let mut s = Session::new();
         let r = open(&mut s, "text.ai", &ai::ai_with(unreadable, TEXT_ART, boxed), json!({})).unwrap();
         // Then a note on the font, where the machine lacks it.
-        assert_eq!(r["warnings"][0], json!(vectorcraft_pdf::OFF_ARTBOARD_NOTE), "{boxed}: {r}");
+        assert_eq!(r["warnings"][0], json!(oracle_vector_pdf::OFF_ARTBOARD_NOTE), "{boxed}: {r}");
         assert_eq!(text_and_others(&s), (1, 0), "{boxed}");
         // The PDF part alone, as asked.
         open(&mut s, "text.ai", &ai::ai_with(unreadable, TEXT_ART, boxed), json!({"editingData": false})).unwrap();
@@ -450,7 +450,7 @@ fn an_ai_file_whose_pdf_part_is_only_text_opens_from_it_when_its_editing_data_ca
     assert!(e.contains("placeholder"), "{e}");
     // Placed, it is read as its page too.
     let r = s.execute("file.new", &json!({})).and_then(|_| {
-        let data = vectorcraft_format::base64_encode(&ai::ai_with(unreadable, TEXT_ART, "/ArtBox [0 0 200 100]"));
+        let data = oracle_vector_format::base64_encode(&ai::ai_with(unreadable, TEXT_ART, "/ArtBox [0 0 200 100]"));
         s.execute("file.place", &json!({"name": "text.ai", "dataBase64": data, "link": false}))
     });
     assert!(r.is_ok(), "{r:?}");
@@ -527,7 +527,7 @@ fn fit_to_artwork_bounds_leaves_out_the_hidden_art_and_guides_the_editing_data_h
     assert!(!kids[1].visible && matches!(kids[2].kind, NodeKind::Path { guide: true, .. }));
     s.execute("artboard.fitToArt", &json!({})).unwrap();
     // The square, 50 to 90 down the 100-point page.
-    assert_eq!(s.doc().unwrap().doc.artboards[0].rect, vectorcraft_geom::Rect::new(10.0, 50.0, 50.0, 90.0));
+    assert_eq!(s.doc().unwrap().doc.artboards[0].rect, oracle_vector_geom::Rect::new(10.0, 50.0, 50.0, 90.0));
 }
 
 #[test]
@@ -600,7 +600,7 @@ fn half_outlined_ai(story: Option<&str>, more: usize, type_content: &str) -> Vec
     let page = PdfPage {
         resources: format!(
             "/Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >> \
-             /F2 << /Type /Font /Subtype /Type1 /BaseFont /VectorCraftTestUnnamed /ToUnicode {} 0 R >> >>",
+             /F2 << /Type /Font /Subtype /Type1 /BaseFont /OracleVectorTestUnnamed /ToUnicode {} 0 R >> >>",
             first_extra(1) + 1
         ),
         entries: format!("/PieceInfo << /Illustrator << /Private << /AIPrivateData1 {} 0 R /NumBlock 1 >> >> >>", first_extra(1)),
@@ -616,12 +616,12 @@ fn half_outlined_ai(story: Option<&str>, more: usize, type_content: &str) -> Vec
 
 fn outlines_notes(r: &Value) -> Vec<String> {
     let notes = r["warnings"].as_array().unwrap().iter().filter_map(Value::as_str);
-    notes.filter(|w| vectorcraft_pdf::is_outlines_note(w)).map(String::from).collect()
+    notes.filter(|w| oracle_vector_pdf::is_outlines_note(w)).map(String::from).collect()
 }
 
 /// The notes the PDF part of [`half_outlined_ai`] reads with: its glyph of U+FFFD, kept as outlines.
 fn pdf_part_outlines_notes() -> [String; 2] {
-    [format!("text in Vector Craft Test Unnamed {}", vectorcraft_pdf::UNNAMED_CHARACTERS_NOTE), vectorcraft_pdf::OUTLINED_TEXT_NOTE.into()]
+    [format!("text in Oracle Vector Test Unnamed {}", oracle_vector_pdf::UNNAMED_CHARACTERS_NOTE), oracle_vector_pdf::OUTLINED_TEXT_NOTE.into()]
 }
 
 /// The note on text objects that hold the page's type without some of its characters, for `n` of
@@ -666,13 +666,13 @@ fn type_from_the_page_opens_with_a_note_on_the_characters_it_has_only_as_outline
     let r = open(&mut s, "draft.ai", &half_outlined_ai(None, 0, &half_outlined_line(65.0, "rst draft", 0)), json!({})).unwrap();
     assert_eq!(names(&s.doc().unwrap().doc.layers), ["Art"], "{r}");
     assert_eq!(texts(&s), ["rst draft"], "{r}");
-    assert!(!vectorcraft_pdf::holds_outlines(&s.doc().unwrap().doc), "{r}");
+    assert!(!oracle_vector_pdf::holds_outlines(&s.doc().unwrap().doc), "{r}");
     assert_eq!(outlines_notes(&r), Vec::<String>::new(), "{r}");
     assert!(r["warnings"].as_array().unwrap().contains(&without_outlines_note(1)), "{r}");
     // Stroked: the glyph comes in with the type.
     let r = open(&mut s, "draft.ai", &half_outlined_ai(None, 0, &half_outlined_line(65.0, "rst draft", 1)), json!({})).unwrap();
     assert_eq!(names(&s.doc().unwrap().doc.layers), ["Art"], "{r}");
-    assert!(vectorcraft_pdf::holds_outlines(&s.doc().unwrap().doc), "{r}");
+    assert!(oracle_vector_pdf::holds_outlines(&s.doc().unwrap().doc), "{r}");
     assert_eq!(outlines_notes(&r), pdf_part_outlines_notes(), "{r}");
     assert!(!r["warnings"].to_string().contains("without the characters"), "{r}");
     // A stroked line whose glyph comes in, and a filled one whose glyph doesn't.
@@ -691,7 +691,7 @@ fn type_from_the_page_opens_with_a_note_on_the_characters_it_has_only_as_outline
 fn an_ai_file_with_a_user_unit_opens_at_its_size_in_points() {
     let data = ai::editing_data(200.0, 100.0, &ai::layer("Art", &format!("0 1 1 0 1 0 0 Xa\n{}f\n", ai::rect(20.0, 20.0, 60.0, 50.0))));
     let file = ai::ai_with(&compressed(data.as_bytes()), "1 0 0 rg 20 20 40 30 re f", "/UserUnit 10");
-    let near = |r: vectorcraft_geom::Rect, want: [f64; 4]| [r.x0, r.y0, r.x1, r.y1].iter().zip(want).all(|(a, b)| (a - b).abs() < 0.01);
+    let near = |r: oracle_vector_geom::Rect, want: [f64; 4]| [r.x0, r.y0, r.x1, r.y1].iter().zip(want).all(|(a, b)| (a - b).abs() < 0.01);
     let mut s = Session::new();
     for (params, layers) in [(json!({}), ["Art"]), (json!({"editingData": false}), ["Page 1"])] {
         let r = open(&mut s, "large.ai", &file, params.clone()).unwrap();
@@ -701,7 +701,7 @@ fn an_ai_file_with_a_user_unit_opens_at_its_size_in_points() {
         let art = doc.art_bounds().unwrap();
         assert!(near(art, [200.0, 500.0, 600.0, 800.0]), "{params}: {art:?}");
     }
-    let v = s.execute("document.pdfInfo", &json!({"dataBase64": vectorcraft_format::base64_encode(&file)})).unwrap();
+    let v = s.execute("document.pdfInfo", &json!({"dataBase64": oracle_vector_format::base64_encode(&file)})).unwrap();
     let page = &v["pageInfo"][0];
     assert_eq!((page["width"].as_f64(), page["height"].as_f64()), (Some(2000.0), Some(1000.0)), "{v}");
     assert_eq!(page["boxes"]["media"], json!([0.0, 0.0, 2000.0, 1000.0]), "{v}");
@@ -771,8 +771,8 @@ fn open_rows(s: &Session) -> (Vec<String>, Vec<String>) {
     (rows, open)
 }
 
-/// #1475: a `.ai` another app wrote keeps no open rows VectorCraft reads, so it opens with every
-/// row closed, its top-level layers as its groups; a `.ai` VectorCraft wrote, and other formats,
+/// #1475: a `.ai` another app wrote keeps no open rows Oracle Vector reads, so it opens with every
+/// row closed, its top-level layers as its groups; a `.ai` Oracle Vector wrote, and other formats,
 /// open as before (with their top-level layers open unless the file says otherwise).
 #[test]
 fn an_illustrator_ai_file_opens_with_its_layers_closed() {
@@ -787,9 +787,9 @@ fn an_illustrator_ai_file_opens_with_its_layers_closed() {
     // The same art as an EPS: its top-level layers open.
     open(&mut s, "art.eps", &ai::eps(&ai::sample_data(), ai::page_ps()), json!({})).unwrap();
     assert_eq!(open_rows(&s).1, ["Art", "Hidden"]);
-    // Saved as .ai by VectorCraft, it opens with the rows it was saved with.
+    // Saved as .ai by Oracle Vector, it opens with the rows it was saved with.
     let saved = s.execute("document.save", &json!({"format": "ai"})).unwrap();
-    let bytes = vectorcraft_format::base64_decode(saved["dataBase64"].as_str().unwrap()).unwrap();
+    let bytes = oracle_vector_format::base64_decode(saved["dataBase64"].as_str().unwrap()).unwrap();
     let r = open(&mut s, "again.ai", &bytes, json!({})).unwrap();
     assert_eq!(r["restored"], json!(true), "{r}");
     assert_eq!(open_rows(&s).1, ["Art", "Hidden"]);

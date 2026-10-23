@@ -5,11 +5,11 @@
 
 use egui::{Ui, vec2};
 use serde_json::{Value, json};
-use vectorcraft_doc::{Composer, HyphenationOptions, Justify, Kinsoku, Mojikumi, NodeKind, ParaDirection, ParaStyle};
+use oracle_vector_doc::{Composer, HyphenationOptions, Justify, Kinsoku, Mojikumi, NodeKind, ParaDirection, ParaStyle};
 
 use super::character::{Metric, Shared, text_style};
 use super::{pstate, set_pstate};
-use crate::VectorcraftApp;
+use crate::OracleVectorApp;
 use crate::theme::Tokens;
 use crate::widgets::{self, menu_item};
 
@@ -25,7 +25,7 @@ pub const ALIGNMENTS: [(Justify, &str, &str, &str); 7] = [
 
 /// Paragraph attributes apply to the selected text objects' paragraphs or, while the Type tool
 /// edits text, to the paragraphs its selection (or caret) touches (ending its typing session).
-fn format(app: &mut VectorcraftApp, p: Value) {
+fn format(app: &mut OracleVectorApp, p: Value) {
     para_cmd(app, "text.setFormat", p);
 }
 
@@ -41,18 +41,18 @@ pub const ALIGN_COMMANDS: [(&str, &str); 5] = [
 
 /// Align the paragraphs of the selected type, or those the Type tool's selection touches, as
 /// `justify` (an [`ALIGN_COMMANDS`] alignment, #1111).
-pub(crate) fn align(app: &mut VectorcraftApp, justify: &str) -> Result<Value, String> {
+pub(crate) fn align(app: &mut OracleVectorApp, justify: &str) -> Result<Value, String> {
     text_style(app).ok_or("select some type first")?;
     para_cmd(app, "text.setStyle", json!({ "justify": justify }));
     Ok(Value::Null)
 }
 
-fn para_cmd(app: &mut VectorcraftApp, cmd: &str, p: Value) {
+fn para_cmd(app: &mut OracleVectorApp, cmd: &str, p: Value) {
     run_on_paragraphs(app, cmd, p).ok();
 }
 
 /// Run `cmd` on the paragraphs the Paragraph panel acts on ([`format`]) and return its result.
-pub(crate) fn run_on_paragraphs(app: &mut VectorcraftApp, cmd: &str, mut p: Value) -> Result<Value, String> {
+pub(crate) fn run_on_paragraphs(app: &mut OracleVectorApp, cmd: &str, mut p: Value) -> Result<Value, String> {
     if let Some((id, a, b)) = super::character::text_editing(app) {
         super::character::end_typing(app);
         p["ids"] = json!([id.0]);
@@ -64,7 +64,7 @@ pub(crate) fn run_on_paragraphs(app: &mut VectorcraftApp, cmd: &str, mut p: Valu
 
 /// Does the paragraph being edited (at the caret), else the selected text's first paragraph, run
 /// right to left: its Paragraph Direction, else from its first strong character?
-fn resolved_rtl(app: &VectorcraftApp, para: &ParaStyle) -> bool {
+fn resolved_rtl(app: &OracleVectorApp, para: &ParaStyle) -> bool {
     let editing = super::character::text_editing(app);
     let text = editing.and_then(|(id, _, _)| match app.session.active().and_then(|d| d.doc.node(id)).map(|n| &n.kind) {
         Some(NodeKind::Text(t)) => Some(t.as_ref()),
@@ -72,8 +72,8 @@ fn resolved_rtl(app: &VectorcraftApp, para: &ParaStyle) -> bool {
     });
     let Some(t) = text.or_else(|| super::character::first_selected_text(app)) else { return para.direction == Some(ParaDirection::RightToLeft) };
     let plain = t.plain_text();
-    let paragraph = vectorcraft_text::edit::paragraph_at(&plain, editing.map_or(0, |(_, a, _)| a));
-    vectorcraft_text::paragraph_is_rtl(plain.get(paragraph).unwrap_or_default(), para.direction)
+    let paragraph = oracle_vector_text::edit::paragraph_at(&plain, editing.map_or(0, |(_, a, _)| a));
+    oracle_vector_text::paragraph_is_rtl(plain.get(paragraph).unwrap_or_default(), para.direction)
 }
 
 /// The alignment button that shows `justify` in a paragraph running right to left (`rtl`) or not:
@@ -89,7 +89,7 @@ fn shown_alignment(justify: Justify, rtl: bool) -> Justify {
 /// Add the displayed alignments touched by the byte range (all paragraphs without a range).
 /// Walk forward through run fragments so paragraph lookup never rescans an earlier prefix.
 /// Only Auto needs paragraph text; borrow a fragment until style runs split it.
-fn collect_text_alignment(text: &vectorcraft_doc::TextObject, range: Option<(usize, usize)>, shared: &mut Option<Justify>) -> bool {
+fn collect_text_alignment(text: &oracle_vector_doc::TextObject, range: Option<(usize, usize)>, shared: &mut Option<Justify>) -> bool {
     use std::borrow::Cow;
     let (a, b) = range.map_or((0, usize::MAX), |(a, b)| (a.min(b), a.max(b)));
     let mut record = |index, plain: &str, start, end| {
@@ -97,7 +97,7 @@ fn collect_text_alignment(text: &vectorcraft_doc::TextObject, range: Option<(usi
             return true;
         }
         let para = text.para_at(index);
-        let rtl = para.justify == Justify::Auto && vectorcraft_text::paragraph_is_rtl(plain, para.direction);
+        let rtl = para.justify == Justify::Auto && oracle_vector_text::paragraph_is_rtl(plain, para.direction);
         let value = shown_alignment(para.justify, rtl);
         if shared.is_some_and(|old| old != value) {
             return false;
@@ -110,7 +110,7 @@ fn collect_text_alignment(text: &vectorcraft_doc::TextObject, range: Option<(usi
     for run in &text.runs {
         let mut rest = run.text.as_str();
         while !rest.is_empty() {
-            let span = vectorcraft_text::edit::paragraph_at(rest, 0);
+            let span = oracle_vector_text::edit::paragraph_at(rest, 0);
             let part = rest.get(span.clone()).unwrap_or_default();
             let para = text.para_at(index);
             if para.justify == Justify::Auto && !part.is_empty() {
@@ -143,7 +143,7 @@ fn collect_text_alignment(text: &vectorcraft_doc::TextObject, range: Option<(usi
 }
 
 /// Visit every paragraph the Paragraph panel acts on.
-fn visit_paragraphs(app: &VectorcraftApp, mut f: impl FnMut(&ParaStyle)) {
+fn visit_paragraphs(app: &OracleVectorApp, mut f: impl FnMut(&ParaStyle)) {
     let Some(st) = app.session.active() else { return };
     if let Some((id, a, b)) = super::character::text_editing(app)
         && let Some(NodeKind::Text(text)) = st.doc.node(id).map(|n| &n.kind)
@@ -166,7 +166,7 @@ fn visit_paragraphs(app: &VectorcraftApp, mut f: impl FnMut(&ParaStyle)) {
 }
 
 /// A distance shared by every paragraph in scope, or `None` when they differ (blank spin field).
-fn shared_para_field(app: &VectorcraftApp, field: impl Fn(&ParaStyle) -> f64) -> Option<f64> {
+fn shared_para_field(app: &OracleVectorApp, field: impl Fn(&ParaStyle) -> f64) -> Option<f64> {
     let mut acc = Shared::None;
     let mut any = false;
     visit_paragraphs(app, |p| {
@@ -180,7 +180,7 @@ fn shared_para_field(app: &VectorcraftApp, field: impl Fn(&ParaStyle) -> f64) ->
 }
 
 /// A paragraph attribute shared by every paragraph in scope, or `None` when they differ.
-fn shared_para<T: PartialEq + Copy>(app: &VectorcraftApp, field: impl Fn(&ParaStyle) -> T) -> Option<T> {
+fn shared_para<T: PartialEq + Copy>(app: &OracleVectorApp, field: impl Fn(&ParaStyle) -> T) -> Option<T> {
     let mut acc = Shared::None;
     let mut any = false;
     visit_paragraphs(app, |p| {
@@ -194,17 +194,17 @@ fn shared_para<T: PartialEq + Copy>(app: &VectorcraftApp, field: impl Fn(&ParaSt
 }
 
 /// The composer every paragraph in scope shares, or `None` when they differ (neither menu item checked).
-fn shared_composer(app: &VectorcraftApp) -> Option<Composer> {
+fn shared_composer(app: &OracleVectorApp) -> Option<Composer> {
     shared_para(app, |p| p.composer)
 }
 
 /// Hyphenation shared by every paragraph in scope, or `None` when they differ (checkbox off).
-fn shared_hyphenate(app: &VectorcraftApp) -> Option<bool> {
+fn shared_hyphenate(app: &OracleVectorApp) -> Option<bool> {
     shared_para(app, |p| p.hyphenate)
 }
 
 /// None means differing displayed alignments, following the other mixed-value controls.
-fn selected_alignment(app: &VectorcraftApp, fallback: &ParaStyle) -> Option<Justify> {
+fn selected_alignment(app: &OracleVectorApp, fallback: &ParaStyle) -> Option<Justify> {
     let default = Some(shown_alignment(fallback.justify, fallback.direction == Some(ParaDirection::RightToLeft)));
     let Some(st) = app.session.active() else { return default };
     let mut shared = None;
@@ -213,7 +213,7 @@ fn selected_alignment(app: &VectorcraftApp, fallback: &ParaStyle) -> Option<Just
     {
         return if collect_text_alignment(text, Some((a, b)), &mut shared) { shared.or(default) } else { None };
     }
-    fn collect(node: &vectorcraft_doc::Node, shared: &mut Option<Justify>) -> bool {
+    fn collect(node: &oracle_vector_doc::Node, shared: &mut Option<Justify>) -> bool {
         if let NodeKind::Text(text) = &node.kind {
             return collect_text_alignment(text, None, shared);
         }
@@ -229,7 +229,7 @@ fn selected_alignment(app: &VectorcraftApp, fallback: &ParaStyle) -> Option<Just
 
 /// The seven alignment buttons shared by Paragraph and Properties; no button is selected
 /// when the paragraphs they act on have differing displayed alignments.
-pub fn alignment_buttons(app: &mut VectorcraftApp, ui: &mut Ui, para: &ParaStyle, size: f32) {
+pub fn alignment_buttons(app: &mut OracleVectorApp, ui: &mut Ui, para: &ParaStyle, size: f32) {
     let shown = selected_alignment(app, para);
     for (j, icon, tip, id) in ALIGNMENTS {
         if widgets::icon_button(ui, icon, tip, shown == Some(j), size).clicked() {
@@ -239,14 +239,14 @@ pub fn alignment_buttons(app: &mut VectorcraftApp, ui: &mut Ui, para: &ParaStyle
 }
 
 /// The Hyphenate checkbox for the paragraphs the panel acts on.
-pub fn hyphenate_check(app: &mut VectorcraftApp, ui: &mut Ui, _para: &ParaStyle) {
+pub fn hyphenate_check(app: &mut OracleVectorApp, ui: &mut Ui, _para: &ParaStyle) {
     let hyphenate = shared_hyphenate(app);
     if widgets::check(ui, tl!("Hyphenate"), hyphenate == Some(true), true) {
         format(app, json!({"hyphenate": hyphenate != Some(true)}));
     }
 }
 
-pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn show(app: &mut OracleVectorApp, ui: &mut Ui) {
     let t = Tokens::get(ui.ctx());
     let Some((_, para)) = text_style(app) else {
         super::empty_state(ui, "pilcrow", tl!("No text selected"), tl!("Select a text object to edit its paragraph attributes."));
@@ -312,7 +312,7 @@ pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
     // How long the kashidas are that justify Arabic lines, with the Middle Eastern (Indic) options.
     if app.session.prefs.show_indic_options {
         ui.horizontal(|ui| {
-            use vectorcraft_doc::text::Kashida;
+            use oracle_vector_doc::text::Kashida;
             widgets::dim_label(ui, tl!("Insert Kashidas"));
             let kinds = [
                 (tl!("None"), Kashida::None, "none"),
@@ -362,7 +362,7 @@ pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
     }
 }
 
-pub fn menu(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn menu(app: &mut OracleVectorApp, ui: &mut Ui) {
     let style = text_style(app);
     let has = style.is_some();
     let hidden: bool = pstate(ui.ctx(), "pa-hide-options");
@@ -389,7 +389,7 @@ pub fn menu(app: &mut VectorcraftApp, ui: &mut Ui) {
     // the East Asian options.
     if app.session.prefs.show_east_asian_options {
         ui.separator();
-        let top_to_top = style.as_ref().is_some_and(|(_, p)| p.leading_model == vectorcraft_doc::LeadingModel::EmBoxTop);
+        let top_to_top = style.as_ref().is_some_and(|(_, p)| p.leading_model == oracle_vector_doc::LeadingModel::EmBoxTop);
         if menu_item(ui, tl!("Top-to-Top Leading"), has, top_to_top) {
             format(app, json!({"leadingModel": "emBoxTop"}));
         }
@@ -401,7 +401,7 @@ pub fn menu(app: &mut VectorcraftApp, ui: &mut Ui) {
         ui.add_enabled_ui(has, |ui| {
             // Indented like the items beside it (their check column).
             ui.menu_button(format!("   {}", tl!("Burasagari")), |ui| {
-                use vectorcraft_doc::Burasagari;
+                use oracle_vector_doc::Burasagari;
                 for (label, b, key) in [
                     (tl!("None"), Burasagari::None, "none"),
                     (tl!("Regular"), Burasagari::Standard, "standard"),
@@ -433,9 +433,9 @@ pub fn menu(app: &mut VectorcraftApp, ui: &mut Ui) {
 /// paragraph spacing, Hyphenate off with the default Hyphenation and Justification options, Auto
 /// direction, Bottom-to-Bottom Leading, Regular burasagari, the Hard kinsoku set, the Every-line
 /// Composer, Roman Hanging Punctuation off and no kashidas.
-fn reset_panel(app: &mut VectorcraftApp) {
+fn reset_panel(app: &mut OracleVectorApp) {
     let h = HyphenationOptions::default();
-    let j = vectorcraft_doc::JustificationOptions::default();
+    let j = oracle_vector_doc::JustificationOptions::default();
     para_cmd(app, "text.setStyle", json!({"justify": "auto"}));
     format(
         app,
@@ -454,9 +454,9 @@ fn reset_panel(app: &mut VectorcraftApp) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vectorcraft_engine::Session;
+    use oracle_vector_engine::Session;
 
-    fn alignment_row(app: &mut VectorcraftApp, ui: &mut Ui, size: f32) -> egui::Rect {
+    fn alignment_row(app: &mut OracleVectorApp, ui: &mut Ui, size: f32) -> egui::Rect {
         let para = text_style(app).map_or_else(ParaStyle::default, |(_, p)| p);
         ui.horizontal(|ui| {
             ui.spacing_mut().item_spacing.x = 3.0;
@@ -467,7 +467,7 @@ mod tests {
     }
 
     // Inspect the actual selected wells, including the shared Properties-size buttons.
-    fn alignment_frame(ctx: &egui::Context, app: &mut VectorcraftApp, size: f32) -> (Vec<Justify>, egui::Pos2) {
+    fn alignment_frame(ctx: &egui::Context, app: &mut OracleVectorApp, size: f32) -> (Vec<Justify>, egui::Pos2) {
         let mut row = egui::Rect::NOTHING;
         let mut frame = ctx.run_ui(egui::RawInput::default(), |ui| row = alignment_row(app, ui, size));
         frame.textures_delta.clear();
@@ -493,17 +493,17 @@ mod tests {
         (selected, centers[1])
     }
 
-    fn editing_text(text: &str) -> (VectorcraftApp, Value) {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    fn editing_text(text: &str) -> (OracleVectorApp, Value) {
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 400, "height": 200})).unwrap();
         app.session.select_tool("type", Default::default()).unwrap();
         let id = app.run("text.create", json!({"x": 20, "y": 50, "text": text})).unwrap()["id"].clone();
-        app.session.apply_actions(vec![vectorcraft_tools::Action::Notify("text.editNew".into())]).unwrap();
+        app.session.apply_actions(vec![oracle_vector_tools::Action::Notify("text.editNew".into())]).unwrap();
         assert!(super::super::character::text_editing(&app).is_some());
         (app, id)
     }
 
-    fn select_range(app: &mut VectorcraftApp, start: usize, end: usize) {
+    fn select_range(app: &mut OracleVectorApp, start: usize, end: usize) {
         app.session.set_tool_option("select", &json!({"start": start, "end": end}));
     }
 
@@ -577,7 +577,7 @@ mod tests {
             alignment_row(app, ui, 28.0);
         });
         assert_eq!(alignment_frame(&ctx, &mut app, 28.0).0, [Justify::Center]);
-        let node = app.session.active().unwrap().doc.node(vectorcraft_doc::NodeId(id.as_u64().unwrap())).unwrap();
+        let node = app.session.active().unwrap().doc.node(oracle_vector_doc::NodeId(id.as_u64().unwrap())).unwrap();
         let NodeKind::Text(text) = &node.kind else { panic!("text") };
         assert_eq!(
             (text.para_at(0).justify, text.para_at(1).justify, text.para_at(2).justify),
@@ -699,10 +699,10 @@ mod tests {
     /// direction: Auto then follows it.
     #[test]
     fn alignment_buttons_show_the_resolved_alignment_and_direction_sets_it() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.session.execute("file.new", &json!({"width": 400, "height": 200})).unwrap();
         app.session.execute("text.create", &json!({"x": 200, "y": 50, "text": "שלום"})).unwrap();
-        let shown = |app: &VectorcraftApp| {
+        let shown = |app: &OracleVectorApp| {
             let para = text_style(app).unwrap().1;
             shown_alignment(para.justify, resolved_rtl(app, &para))
         };
@@ -716,7 +716,7 @@ mod tests {
         assert_eq!(shown(&app), Justify::Left);
         // The direction buttons show with the Indic options only.
         crate::i18n::set_current(crate::i18n::Lang::EN);
-        let tips = |app: &mut VectorcraftApp| {
+        let tips = |app: &mut OracleVectorApp| {
             let ctx = egui::Context::default();
             let mut frame = ctx.run_ui(egui::RawInput::default(), |ui| show(app, ui));
             frame.textures_delta.clear();
@@ -731,26 +731,26 @@ mod tests {
     /// paragraph's setting, and Reset Panel sets it back to None.
     #[test]
     fn insert_kashidas_shows_with_the_indic_options_and_reset_panel_turns_it_off() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 400, "height": 200})).unwrap();
         let id = app.run("text.create", json!({"x": 20, "y": 50, "text": "كتب محمد"})).unwrap()["id"].clone();
         app.run("select.set", json!({"ids": [id]})).unwrap();
         crate::i18n::set_current(crate::i18n::Lang::EN);
-        let painted = |app: &mut VectorcraftApp| crate::tests_labels::painted_text(app, show);
+        let painted = |app: &mut OracleVectorApp| crate::tests_labels::painted_text(app, show);
         assert!(!painted(&mut app).contains("Insert Kashidas"));
         app.session.prefs.show_indic_options = true;
         let text = painted(&mut app);
         assert!(text.contains("Insert Kashidas") && text.contains("None"), "{text}");
         app.run("text.setFormat", json!({"kashida": "medium"})).unwrap();
         assert!(painted(&mut app).contains("Medium"));
-        let kashida = |app: &VectorcraftApp| {
-            let node = app.session.active().unwrap().doc.node(vectorcraft_doc::NodeId(id.as_u64().unwrap())).unwrap();
+        let kashida = |app: &OracleVectorApp| {
+            let node = app.session.active().unwrap().doc.node(oracle_vector_doc::NodeId(id.as_u64().unwrap())).unwrap();
             let NodeKind::Text(text) = &node.kind else { panic!("text") };
             text.para_at(0).kashida
         };
-        assert_eq!(kashida(&app), vectorcraft_doc::text::Kashida::Medium);
+        assert_eq!(kashida(&app), oracle_vector_doc::text::Kashida::Medium);
         reset_panel(&mut app);
-        assert_eq!(kashida(&app), vectorcraft_doc::text::Kashida::None);
+        assert_eq!(kashida(&app), oracle_vector_doc::text::Kashida::None);
     }
 
     /// Reset Panel turns Hyphenate and Roman Hanging Punctuation off and sets the Hyphenation and
@@ -758,7 +758,7 @@ mod tests {
     /// save neither.
     #[test]
     fn reset_panel_resets_the_hyphenation_options() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 400, "height": 200})).unwrap();
         let id = app.run("text.create", json!({"x": 20, "y": 50, "text": "First\nSecond"})).unwrap()["id"].clone();
         app.run(
@@ -769,8 +769,8 @@ mod tests {
             }),
         )
         .unwrap();
-        let paras = |app: &VectorcraftApp| {
-            let node = app.session.active().unwrap().doc.node(vectorcraft_doc::NodeId(id.as_u64().unwrap())).unwrap();
+        let paras = |app: &OracleVectorApp| {
+            let node = app.session.active().unwrap().doc.node(oracle_vector_doc::NodeId(id.as_u64().unwrap())).unwrap();
             let NodeKind::Text(text) = &node.kind else { panic!("text") };
             [text.para_at(0).clone(), text.para_at(1).clone()]
         };
@@ -778,7 +778,7 @@ mod tests {
             assert!(para.hyphenate);
             assert_ne!(para.hyphenation, HyphenationOptions::default());
             assert!(para.roman_hanging);
-            assert_ne!(para.justification, vectorcraft_doc::JustificationOptions::default());
+            assert_ne!(para.justification, oracle_vector_doc::JustificationOptions::default());
         }
         reset_panel(&mut app);
         for para in paras(&app) {

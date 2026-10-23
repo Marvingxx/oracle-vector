@@ -2,19 +2,19 @@
 //! (Object → Create Gradient Mesh, Mesh tool edits).
 //!
 //! The objects are live document nodes (`NodeKind::Blend`, `NodeKind::Envelope`,
-//! `NodeKind::Mesh`); evaluation lives in `vectorcraft_doc::live` and the renderer. **Expand**
-//! replaces a live object by its evaluated geometry (`vectorcraft_render::expand_live`).
+//! `NodeKind::Mesh`); evaluation lives in `oracle_vector_doc::live` and the renderer. **Expand**
+//! replaces a live object by its evaluated geometry (`oracle_vector_render::expand_live`).
 
 use std::sync::Arc;
 
 use serde_json::{Value, json};
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::live::{
+use oracle_vector_color::{Color, Paint};
+use oracle_vector_doc::live::{
     self, BlendDefaults, BlendEase, BlendEaseType, BlendOrientation, BlendSpacing, BlendSpec, EnvelopeKind, EnvelopeMap, EnvelopeOptions,
     GradientMesh, MeshAppearance, PreserveShape, Spine,
 };
-use vectorcraft_doc::{Appearance, Document, Node, NodeId, NodeKind, Selection};
-use vectorcraft_geom::{Affine, Anchor, PathData, Point, Vec2};
+use oracle_vector_doc::{Appearance, Document, Node, NodeId, NodeKind, Selection};
+use oracle_vector_geom::{Affine, Anchor, PathData, Point, Vec2};
 
 use super::edit::selected_roots;
 use super::expand::gradient_sampler;
@@ -531,7 +531,7 @@ fn extend_spine(spec: &mut BlendSpec, old: &[Arc<Node>], old_spec: &BlendSpec, k
     let Some((mut path, anchors)) = live::pin_spine(old, old_spec) else { return };
     let Some(first) = old.first().and_then(|f| keys.iter().position(|k| k.id == f.id)) else { return };
     let Some(sp) = path.subpaths.first_mut().filter(|sp| !sp.closed) else { return };
-    let center = |k: &Arc<Node>| vectorcraft_geom::Anchor::corner(k.geometric_bounds().map(|b| b.center()).unwrap_or_default());
+    let center = |k: &Arc<Node>| oracle_vector_geom::Anchor::corner(k.geometric_bounds().map(|b| b.center()).unwrap_or_default());
     let before: Vec<_> = keys.iter().take(first).map(center).collect();
     let after: Vec<_> = keys.iter().skip(first + old.len()).map(center).collect();
     let shift = before.len();
@@ -572,7 +572,7 @@ fn blend_make(s: &mut Session, p: &Value) -> Result<Value> {
             // knockout group, so translucent steps don't show through each other.
             let mut n = base.unwrap_or_else(|| {
                 let mut n = Node::new(id, NodeKind::Group { children: vec![], clip: false });
-                n.knockout = vectorcraft_doc::Knockout::On;
+                n.knockout = oracle_vector_doc::Knockout::On;
                 n
             });
             let mut spec = BlendSpec { spacing, orientation, ease, color_shift, starts, ..Default::default() };
@@ -607,7 +607,7 @@ fn blend_release(s: &mut Session, _: &Value) -> Result<Value> {
             // What the blend itself carries stays on a group around what it gave back.
             if n.name.is_some()
                 || n.opacity < 1.0
-                || n.blend != vectorcraft_color::BlendMode::Normal
+                || n.blend != oracle_vector_color::BlendMode::Normal
                 || n.isolate
                 || n.extras().mask.is_some()
                 || !n.appearance.items.is_empty()
@@ -642,7 +642,7 @@ fn edit_spine<T>(
     p: &Value,
     cmd: &str,
     label: &str,
-    f: impl FnOnce(&mut vectorcraft_geom::SubPath, &mut Vec<usize>, &mut [Arc<Node>]) -> Result<T>,
+    f: impl FnOnce(&mut oracle_vector_geom::SubPath, &mut Vec<usize>, &mut [Arc<Node>]) -> Result<T>,
 ) -> Result<T> {
     let id = match id_param(p, "id") {
         Some(id) => id,
@@ -714,7 +714,7 @@ fn spine_convert_anchor(s: &mut Session, p: &Value) -> Result<Value> {
             if index >= sp.anchors.len() {
                 return Err(bad(C, "no such spine point"));
             }
-            vectorcraft_tools::draw2::curvature_smooth(sp, index);
+            oracle_vector_tools::draw2::curvature_smooth(sp, index);
             return Ok(());
         }
         let a = sp.anchors.get_mut(index).ok_or_else(|| bad(C, "no such spine point"))?;
@@ -885,7 +885,7 @@ fn blend_expand(s: &mut Session, _: &Value) -> Result<Value> {
 fn expand_blend(d: &mut Document, id: NodeId) -> Result<()> {
     let Some(n) = d.node(id).filter(|n| is_blend(n)).cloned() else { return Ok(()) };
     let mut g = n.clone();
-    g.kind = NodeKind::Group { children: vectorcraft_render::expand_live(&n).into_iter().map(Arc::new).collect(), clip: false };
+    g.kind = NodeKind::Group { children: oracle_vector_render::expand_live(&n).into_iter().map(Arc::new).collect(), clip: false };
     fix_ids(d, &mut g);
     *d.node_mut(id).ok_or(EngineError::NoNode(id))? = g;
     Ok(())
@@ -1332,10 +1332,10 @@ fn env_options(s: &mut Session, p: &Value) -> Result<Value> {
 /// transparency and opacity mask; the generated pieces get ids of their own.
 fn expand_envelope(d: &mut Document, id: NodeId) -> Result<()> {
     let n = d.node(id).cloned().ok_or(EngineError::NoNode(id))?;
-    let mut g = vectorcraft_render::effects::expanded_live_group(Some(d), &n);
+    let mut g = oracle_vector_render::effects::expanded_live_group(Some(d), &n);
     fix_ids(d, &mut g);
     // Outlined type repeats its object's id on its pieces.
-    vectorcraft_render::effects::fresh_ids(d, &mut g, &mut Default::default());
+    oracle_vector_render::effects::fresh_ids(d, &mut g, &mut Default::default());
     *d.node_mut(id).ok_or(EngineError::NoNode(id))? = g;
     Ok(())
 }
@@ -1509,7 +1509,7 @@ fn mesh_create(s: &mut Session, p: &Value) -> Result<Value> {
 /// Create Gradient Mesh on an embedded image: a `rows` × `cols` mesh over the picture's rectangle
 /// (placed with the image's transform), each point taking the average colour and opacity of the
 /// area around it. Linked images are refused: the documentation allows embedded ones only.
-fn image_mesh(d: &Document, im: &vectorcraft_doc::ImageObject, rows: u32, cols: u32) -> std::result::Result<GradientMesh, &'static str> {
+fn image_mesh(d: &Document, im: &oracle_vector_doc::ImageObject, rows: u32, cols: u32) -> std::result::Result<GradientMesh, &'static str> {
     if im.link.is_some() {
         return Err("a linked image can't become a gradient mesh: embed it first");
     }

@@ -1,8 +1,8 @@
 //! Sketch › Bas Relief, Charcoal, Photocopy and Stamp.
 
 use serde_json::json;
-use vectorcraft_doc::Effect;
-use vectorcraft_geom::{Affine, Point, Rect};
+use oracle_vector_doc::Effect;
+use oracle_vector_geom::{Affine, Point, Rect};
 
 use super::*;
 use crate::{RasterFx, raster_effects};

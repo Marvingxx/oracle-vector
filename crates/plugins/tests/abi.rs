@@ -6,7 +6,7 @@
 use std::time::{Duration, Instant};
 
 use serde_json::{Value, json};
-use vectorcraft_plugins::{Error, Kind, Limits, Plugin, registry, wat as tpl};
+use oracle_vector_plugins::{Error, Kind, Limits, Plugin, registry, wat as tpl};
 
 /// The example Desaturate plug-in, built from `crates/plugins/example`.
 const DESATURATE: &[u8] = include_bytes!("fixtures/desaturate.wasm");
@@ -39,7 +39,7 @@ fn run_err(bytes: &[u8], limits: Limits) -> (Error, Duration) {
 fn example_desaturate_loads_and_reports_its_manifest() {
     let p = Plugin::load(DESATURATE, Limits::default()).unwrap();
     let m = p.manifest();
-    assert_eq!(m.id, "org.vectorcraft.example.desaturate");
+    assert_eq!(m.id, "org.oracle-vector.example.desaturate");
     assert_eq!(m.name, "Desaturate");
     assert_eq!(m.kind, Kind::Filter);
     assert_eq!(m.params_doc(), "{amount: 0..100 (100)}");
@@ -68,7 +68,7 @@ fn example_desaturate_moves_every_colour_model_to_grey() {
     assert!((half["objects"][0]["fills"][0]["color"]["r"].as_f64().unwrap() - 0.6063).abs() < 1e-9);
     // Nothing to work on: the plug-in's own message.
     let none = p.run(INPUT.as_bytes(), b"{}").unwrap();
-    assert!(matches!(vectorcraft_plugins::objects::decode(&none), Err(Error::Failed(m)) if m.contains("Select some paths")));
+    assert!(matches!(oracle_vector_plugins::objects::decode(&none), Err(Error::Failed(m)) if m.contains("Select some paths")));
 }
 
 #[test]
@@ -168,10 +168,10 @@ fn wall_clock_budget_stops_runaway_plugins() {
 fn cancelling_stops_a_run_between_two_slices_of_its_budget() {
     let spin = ok_module("(loop $l (br $l)) (i64.const 0)");
     let p = Plugin::load(&spin, Limits { fuel_base: u64::MAX / 4, ..Limits::default() }).unwrap();
-    let token = vectorcraft_doc::cancel::CancelToken::new();
+    let token = oracle_vector_doc::cancel::CancelToken::new();
     token.cancel();
     let t = Instant::now();
-    let r = vectorcraft_doc::cancel::scope(&token, None, || p.run(INPUT.as_bytes(), b"{}"));
+    let r = oracle_vector_doc::cancel::scope(&token, None, || p.run(INPUT.as_bytes(), b"{}"));
     assert_eq!(r, Err(Error::Cancelled));
     assert!(t.elapsed() < Duration::from_secs(3), "{:?}", t.elapsed());
     // Outside a cancelled scope the same module still runs to its budget.
@@ -181,12 +181,12 @@ fn cancelling_stops_a_run_between_two_slices_of_its_budget() {
 
 #[test]
 fn an_exporter_returns_its_file_with_an_export_s_budget() {
-    use vectorcraft_plugins::export::{self, Target};
+    use oracle_vector_plugins::export::{self, Target};
     let target = Target { extension: "tst", name: "Poster" };
     let manifest = tpl::exporter("test.exporter", r#"["tst"]"#, r#"{"level":{"type":"int","min":1,"max":3,"default":2}}"#);
     let p = Plugin::load(&build(&tpl::returning(&manifest, r#"{"dataBase64":"SGk=","warnings":["note"]}"#)), Limits::default()).unwrap();
     assert_eq!((p.manifest().kind, p.manifest().extensions.clone()), (Kind::Exporter, vec!["tst".to_string()]));
-    let out = export::run(&p, br#"{"format":"vectorcraft"}"#, &json!({"level": 9}), target).unwrap();
+    let out = export::run(&p, br#"{"format":"oracle-vector"}"#, &json!({"level": 9}), target).unwrap();
     assert_eq!((out.data_base64.as_str(), out.warnings), ("SGk=", vec!["note".to_string()]));
     let limits = export::limits(&p);
     assert_eq!((limits.fuel_base, limits.wall_time_ms), (export::FUEL, export::WALL_TIME_MS));
@@ -200,13 +200,13 @@ fn an_exporter_returns_its_file_with_an_export_s_budget() {
 /// its input, or its parameters, byte for byte, whatever their length modulo three.
 #[test]
 fn the_echo_exporter_writes_what_it_is_given() {
-    use vectorcraft_plugins::export::{self, Target};
+    use oracle_vector_plugins::export::{self, Target};
     let manifest = tpl::exporter("test.echo", r#"["txt"]"#, "{}");
     let input = Plugin::load(&build(&tpl::echo_exporter(&manifest, tpl::Echo::Input)), Limits::default()).unwrap();
     let params = Plugin::load(&build(&tpl::echo_exporter(&manifest, tpl::Echo::Params)), Limits::default()).unwrap();
     let target = Target { extension: "txt", name: "a" };
     let decoded = |out: export::Exported| String::from_utf8(base64_decode(&out.data_base64)).unwrap();
-    for doc in ["{}", r#"{"a":1}"#, r#"{"ab":12}"#, r#"{"format":"vectorcraft","é":"\u0000"}"#] {
+    for doc in ["{}", r#"{"a":1}"#, r#"{"ab":12}"#, r#"{"format":"oracle-vector","é":"\u0000"}"#] {
         assert_eq!(decoded(export::run(&input, doc.as_bytes(), &Value::Null, target).unwrap()), doc);
     }
     let sent: Value = serde_json::from_str(&decoded(export::run(&params, b"{}", &Value::Null, target).unwrap())).unwrap();
@@ -254,13 +254,13 @@ fn registry_install_list_remove() {
 
 #[test]
 fn folder_loading_skips_bad_files() {
-    let dir = std::env::temp_dir().join(format!("vectorcraft-plugins-test-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("oracle-vector-plugins-test-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     std::fs::write(dir.join("a-desaturate.wasm"), DESATURATE).unwrap();
     std::fs::write(dir.join("b-broken.wasm"), b"\0asm junk").unwrap();
     std::fs::write(dir.join("notes.txt"), b"ignored").unwrap();
     let r = registry::load_folder(&dir).unwrap();
-    assert_eq!(r.loaded, ["org.vectorcraft.example.desaturate"]);
+    assert_eq!(r.loaded, ["org.oracle-vector.example.desaturate"]);
     assert_eq!(r.failed.len(), 1);
     assert!(r.failed[0].0.ends_with("b-broken.wasm"));
     assert!(registry::load_folder(&dir.join("missing")).is_err());

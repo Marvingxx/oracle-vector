@@ -30,7 +30,7 @@ mod texture;
 mod video;
 
 use serde_json::Value;
-use vectorcraft_geom::{Affine, Point, Rect};
+use oracle_vector_geom::{Affine, Point, Rect};
 
 use crate::util::{flag, num, text};
 
@@ -243,7 +243,7 @@ pub enum PixelFx {
     TornEdges { image_balance: f64, smoothness: f64, contrast: f64 },
     /// Sketch › Water Paper: colours flow on damp fibrous paper; `fiber_length` (3..50) sets the
     /// fibers and daubs, `brightness` and `contrast` (0..100) adjust the wash. Ranges and defaults
-    /// are unverified VectorCraft choices (helpx documents the controls only).
+    /// are unverified Oracle Vector choices (helpx documents the controls only).
     WaterPaper { fiber_length: f64, brightness: f64, contrast: f64 },
     /// Stylize › Glowing Edges: bright coloured Sobel outlines on black.
     GlowingEdges { width: f64, brightness: f64, smoothness: f64 },
@@ -343,7 +343,7 @@ pub(crate) fn parse(id: &str, p: &Value) -> Option<PixelFx> {
         "artistic.neonGlow" => PixelFx::NeonGlow {
             size: num(p, "glowSize", 5.0).clamp(-24.0, 24.0),
             brightness: num(p, "glowBrightness", 15.0).clamp(0.0, 50.0),
-            colour: crate::raster::color_param(p, vectorcraft_doc::color::Color::rgb(0.3, 0.65, 1.0)).to_rgb(),
+            colour: crate::raster::color_param(p, oracle_vector_doc::color::Color::rgb(0.3, 0.65, 1.0)).to_rgb(),
         },
         "artistic.paletteKnife" => PixelFx::PaletteKnife {
             stroke_size: num(p, "strokeSize", 10.0).clamp(1.0, 50.0),

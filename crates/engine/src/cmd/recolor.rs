@@ -6,10 +6,10 @@
 use std::collections::HashMap;
 
 use serde_json::{Value, json};
-use vectorcraft_color::recolor::{ColorKey, Method, Preserve, Rng, RowMap, cluster};
-use vectorcraft_color::{Color, Paint, Swatch};
-use vectorcraft_doc::swatches::node_colors;
-use vectorcraft_doc::{AppearanceItem, Document, NodeId, NodeKind};
+use oracle_vector_color::recolor::{ColorKey, Method, Preserve, Rng, RowMap, cluster};
+use oracle_vector_color::{Color, Paint, Swatch};
+use oracle_vector_doc::swatches::node_colors;
+use oracle_vector_doc::{AppearanceItem, Document, NodeId, NodeKind};
 
 use super::colorcmds::{Recolor, Scope};
 use super::*;

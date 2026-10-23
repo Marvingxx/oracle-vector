@@ -7,7 +7,7 @@ use serde::Serialize;
 use serde_json::{Value, json};
 
 use super::{pstate, selection_len, set_pstate};
-use crate::VectorcraftApp;
+use crate::OracleVectorApp;
 use crate::widgets::{self, menu_item};
 
 /// What Align aligns to. The Align To choice kept with the UI state ([`crate::UiState::align_to`])
@@ -55,19 +55,19 @@ pub fn align_params(base: Value, to: AlignTo, n_selected: usize) -> Value {
 /// bar and the Properties panel send: the key while there is one (a key object, or a key guide:
 /// #2143), else the artboard for a single selected object, else the Align To choice. Object → Align
 /// sends it too while every selected object is selected whole ([`crate::menus::invoke`]).
-pub fn with_align_to(app: &VectorcraftApp, base: Value) -> Value {
+pub fn with_align_to(app: &OracleVectorApp, base: Value) -> Value {
     align_params(base, align_to(app), objects_aligned(app))
 }
 
 /// The selected objects that Align aligns as objects: none while anchor points are selected
 /// (Direct Selection), since the points align and a single path's points must not go to the
 /// artboard as a single object does (#1636).
-fn objects_aligned(app: &VectorcraftApp) -> usize {
+fn objects_aligned(app: &OracleVectorApp) -> usize {
     if has_anchors(app) { 0 } else { selection_len(app) }
 }
 
 /// Whether anchor points are selected (Direct Selection): Align and Distribute then act on the points.
-fn has_anchors(app: &VectorcraftApp) -> bool {
+fn has_anchors(app: &OracleVectorApp) -> bool {
     app.session.active().is_some_and(|st| !st.selection.anchors.is_empty())
 }
 
@@ -144,7 +144,7 @@ pub(crate) fn button(id: &str) -> Option<Button> {
 /// Runs what a click on button `b` runs. An Align Objects button sends the `to` of
 /// [`with_align_to`]. A Distribute Objects or Distribute Spacing button sends the key while there
 /// is one, else the Align To choice, and the Distribute Spacing value while there is a key.
-pub fn run_button(app: &mut VectorcraftApp, b: Button) -> Result<Value, String> {
+pub fn run_button(app: &mut OracleVectorApp, b: Button) -> Result<Value, String> {
     let to = align_to(app).param();
     let p = match b {
         Button::Align(axis, v) => with_align_to(app, json!({axis: v})),
@@ -164,14 +164,14 @@ pub fn run_button(app: &mut VectorcraftApp, b: Button) -> Result<Value, String> 
 /// The Distribute Spacing value ([`crate::UiState::align_spacing`]) while there is a key object
 /// or a key guide (#2143), which the Distribute Objects and Distribute Spacing buttons then send;
 /// else none.
-fn spacing_sent(app: &VectorcraftApp) -> Option<f64> {
+fn spacing_sent(app: &OracleVectorApp) -> Option<f64> {
     (align_to(app) == AlignTo::Key).then_some(app.ui.align_spacing)
 }
 
 /// The six align buttons of the Control bar and the Properties panel, `size` points square.
 /// They align to what the Align panel's Align To says (the key object while there is one), as
 /// its own buttons do (#789).
-pub fn align_buttons(app: &mut VectorcraftApp, ui: &mut Ui, size: f32) {
+pub fn align_buttons(app: &mut OracleVectorApp, ui: &mut Ui, size: f32) {
     for (i, (icon, tip, axis, v)) in [
         ("align-start-vertical", "Horizontal Align Left", "horizontal", "left"),
         ("align-center-vertical", "Horizontal Align Center", "horizontal", "center"),
@@ -193,23 +193,23 @@ pub fn align_buttons(app: &mut VectorcraftApp, ui: &mut Ui, size: f32) {
 }
 
 /// Whether the selection has a key object or a key guide.
-fn has_key(app: &VectorcraftApp) -> bool {
+fn has_key(app: &OracleVectorApp) -> bool {
     app.session.active().is_some_and(|st| st.selection.has_key())
 }
 
 /// The first selected ruler guide while objects are selected too: the one Align to Key Object
 /// makes the key when there is no other object to be it.
-fn guide_for_key(app: &VectorcraftApp) -> Option<usize> {
+fn guide_for_key(app: &OracleVectorApp) -> Option<usize> {
     app.session.active().filter(|st| !st.selection.is_empty()).and_then(|st| st.selection.guides.first().copied())
 }
 
 /// The number of selected ruler guides, which Distribute spaces with the objects (#1597).
-fn selected_guides(app: &VectorcraftApp) -> usize {
+fn selected_guides(app: &OracleVectorApp) -> usize {
     app.session.active().map_or(0, |st| st.selection.guides.len())
 }
 
 /// The topmost selected object, the last in paint order.
-fn topmost(app: &VectorcraftApp) -> Option<vectorcraft_doc::NodeId> {
+fn topmost(app: &OracleVectorApp) -> Option<oracle_vector_doc::NodeId> {
     app.session.active().and_then(|st| st.selection.in_paint_order(&st.doc).last().copied())
 }
 
@@ -217,11 +217,11 @@ fn topmost(app: &VectorcraftApp) -> Option<vectorcraft_doc::NodeId> {
 /// an object of the selection makes it the key, and Align to Key Object makes the topmost one the
 /// key, or a guide selected with a single object), else the stored Align To choice, Selection or
 /// Artboard. The Distribute Objects and Distribute Spacing buttons send it as their `to`.
-fn align_to(app: &VectorcraftApp) -> AlignTo {
+fn align_to(app: &OracleVectorApp) -> AlignTo {
     if has_key(app) { AlignTo::Key } else { app.ui.align_to }
 }
 
-pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn show(app: &mut OracleVectorApp, ui: &mut Ui) {
     let n = selection_len(app);
     let guides = selected_guides(app);
     let can_align = n + guides >= 1;
@@ -324,7 +324,7 @@ pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
     });
 }
 
-pub fn menu(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn menu(app: &mut OracleVectorApp, ui: &mut Ui) {
     let hidden: bool = pstate(ui.ctx(), "align-hide-options");
     if menu_item(ui, if hidden { tl!("Show Options") } else { tl!("Hide Options") }, true, false) {
         set_pstate(ui.ctx(), "align-hide-options", !hidden);
@@ -363,7 +363,7 @@ mod tests {
     /// the key; Align then lines the object up on it rather than on the artboard.
     #[test]
     fn align_to_key_object_makes_a_selected_guide_the_key() {
-        let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(oracle_vector_engine::Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 200})).unwrap();
         let a = app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 10, "height": 10})).unwrap()["id"].clone();
         app.run("guide.add", json!({"vertical": true, "pos": 120})).unwrap();
@@ -384,7 +384,7 @@ mod tests {
     /// object to the artboard.
     #[test]
     fn a_lone_object_aligns_to_the_artboard() {
-        let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(oracle_vector_engine::Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 200})).unwrap();
         let a = app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 10, "height": 10})).unwrap()["id"].clone();
         let b = app.run("shape.rectangle", json!({"x": 80, "y": 50, "width": 30, "height": 30})).unwrap()["id"].clone();
@@ -392,12 +392,12 @@ mod tests {
         app.run("select.set", json!({"ids": [a, b]})).unwrap();
         app.run("select.key", json!({"id": b})).unwrap();
         app.run("select.toggle", json!({"id": a})).unwrap();
-        let id = vectorcraft_doc::NodeId(b.as_u64().unwrap());
-        let bounds = |app: &VectorcraftApp| app.session.active().unwrap().doc.node(id).unwrap().geometric_bounds().unwrap();
+        let id = oracle_vector_doc::NodeId(b.as_u64().unwrap());
+        let bounds = |app: &OracleVectorApp| app.session.active().unwrap().doc.node(id).unwrap().geometric_bounds().unwrap();
         // `align_buttons` (the Control bar and the Properties panel): one frame finds the first
         // button, and the next clicks Horizontal Align Right, the third.
         let at = std::cell::Cell::new(egui::Pos2::ZERO);
-        let frame = |app: &mut VectorcraftApp, events: Vec<egui::Event>| {
+        let frame = |app: &mut OracleVectorApp, events: Vec<egui::Event>| {
             let mut out = ctx.run_ui(egui::RawInput { events, ..Default::default() }, |ui| {
                 ui.horizontal(|ui| {
                     at.set(ui.cursor().min);
@@ -430,7 +430,7 @@ mod tests {
     /// choosing Align to Selection lets the key go.
     #[test]
     fn a_key_object_makes_align_align_to_it() {
-        let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(oracle_vector_engine::Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 200})).unwrap();
         let a = app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 10, "height": 10})).unwrap()["id"].clone();
         let b = app.run("shape.rectangle", json!({"x": 80, "y": 50, "width": 30, "height": 30})).unwrap()["id"].clone();
@@ -444,8 +444,8 @@ mod tests {
 
     /// Two rectangles, the back one at x 10 and the front one at x 80, selected front first →
     /// (the app, the back one's id, the front one's id).
-    fn back_and_front() -> (VectorcraftApp, Value, Value) {
-        let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+    fn back_and_front() -> (OracleVectorApp, Value, Value) {
+        let mut app = OracleVectorApp::new(oracle_vector_engine::Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 200})).unwrap();
         let back = app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 10, "height": 10})).unwrap()["id"].clone();
         let front = app.run("shape.rectangle", json!({"x": 80, "y": 50, "width": 30, "height": 30})).unwrap()["id"].clone();
@@ -455,7 +455,7 @@ mod tests {
 
     /// One frame of the Align panel → its Align To buttons (Selection, Key Object, Artboard) and
     /// its Horizontal Align Left button.
-    fn panel_buttons(app: &mut VectorcraftApp, ctx: &egui::Context) -> ([egui::Rect; 3], egui::Rect) {
+    fn panel_buttons(app: &mut OracleVectorApp, ctx: &egui::Context) -> ([egui::Rect; 3], egui::Rect) {
         frame_events(ctx, app, vec![], show);
         // The 28-point buttons are Distribute Spacing's two and then Align To's three.
         let mut small = widget_rects(ctx, egui::vec2(28.0, 28.0));
@@ -467,8 +467,8 @@ mod tests {
     }
 
     /// The left edge of object `id`.
-    fn left_edge(app: &VectorcraftApp, id: &Value) -> f64 {
-        let id = vectorcraft_doc::NodeId(id.as_u64().unwrap());
+    fn left_edge(app: &OracleVectorApp, id: &Value) -> f64 {
+        let id = oracle_vector_doc::NodeId(id.as_u64().unwrap());
         app.session.active().unwrap().doc.node(id).unwrap().geometric_bounds().unwrap().x0
     }
 
@@ -481,7 +481,7 @@ mod tests {
         let ctx = egui::Context::default();
         let ([_, key, _], left) = panel_buttons(&mut app, &ctx);
         click(&ctx, &mut app, key.center(), show);
-        let key_object = |app: &VectorcraftApp| app.session.active().unwrap().selection.key.map(|k| k.0);
+        let key_object = |app: &OracleVectorApp| app.session.active().unwrap().selection.key.map(|k| k.0);
         assert_eq!(key_object(&app), front.as_u64(), "the front rectangle, selected first");
         app.run("select.set", json!({"ids": [back, front]})).unwrap();
         click(&ctx, &mut app, key.center(), show);
@@ -558,7 +558,7 @@ mod tests {
     }
 
     /// One frame of the Align panel → the rects of the Align To buttons drawn as chosen.
-    fn chosen_align_to(app: &mut VectorcraftApp, ctx: &egui::Context) -> Vec<egui::Rect> {
+    fn chosen_align_to(app: &mut OracleVectorApp, ctx: &egui::Context) -> Vec<egui::Rect> {
         let mut out = ctx.run_ui(egui::RawInput::default(), |ui| show(app, ui));
         out.textures_delta.clear();
         let fill = crate::theme::Tokens::get(ctx).tool_active;
@@ -599,7 +599,7 @@ mod tests {
     /// #789: the Control bar's and the Properties panel's align buttons follow Align To too.
     #[test]
     fn the_other_align_buttons_align_to_the_align_to_choice() {
-        let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(oracle_vector_engine::Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 200})).unwrap();
         let a = app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 10, "height": 10})).unwrap()["id"].clone();
         let b = app.run("shape.rectangle", json!({"x": 80, "y": 50, "width": 30, "height": 30})).unwrap()["id"].clone();
@@ -608,7 +608,7 @@ mod tests {
         app.ui.align_to = AlignTo::Artboard;
         // One frame finds the first button (Horizontal Align Right is third); the next clicks it.
         let at = std::cell::Cell::new(egui::Pos2::ZERO);
-        let frame = |app: &mut VectorcraftApp, events: Vec<egui::Event>| {
+        let frame = |app: &mut OracleVectorApp, events: Vec<egui::Event>| {
             let mut out = ctx.run_ui(egui::RawInput { events, ..Default::default() }, |ui| {
                 ui.horizontal(|ui| {
                     at.set(ui.cursor().min);
@@ -623,7 +623,7 @@ mod tests {
         frame(&mut app, vec![egui::Event::PointerMoved(right), press(true)]);
         frame(&mut app, vec![press(false)]);
         let st = app.session.active().unwrap();
-        let x1 = |id: &serde_json::Value| st.doc.bounds_of(&[vectorcraft_doc::NodeId(id.as_u64().unwrap())], false).unwrap().x1;
+        let x1 = |id: &serde_json::Value| st.doc.bounds_of(&[oracle_vector_doc::NodeId(id.as_u64().unwrap())], false).unwrap().x1;
         assert_eq!((x1(&a), x1(&b)), (200.0, 200.0), "both to the artboard's right edge");
     }
 
@@ -650,7 +650,7 @@ mod tests {
     const CHORD: &str = "Cmd+Alt+Shift+F2";
 
     /// One frame pressing [`CHORD`] through the shortcut handler.
-    fn press_chord(app: &mut VectorcraftApp) {
+    fn press_chord(app: &mut OracleVectorApp) {
         let ctx = egui::Context::default();
         let modifiers = egui::Modifiers::COMMAND | egui::Modifiers::ALT | egui::Modifiers::SHIFT;
         let ev = egui::Event::Key { key: egui::Key::F2, physical_key: None, pressed: true, repeat: false, modifiers };
@@ -663,7 +663,7 @@ mod tests {
     /// and each can be given one.
     #[test]
     fn keyboard_shortcuts_lists_each_align_panel_button() {
-        let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(oracle_vector_engine::Session::new(), Default::default());
         let panel = {
             let (mut app, _, _) = back_and_front();
             tree(|ui| show(&mut app, ui))
@@ -688,23 +688,23 @@ mod tests {
     /// Distribute Spacing value, and Horizontal Distribute Space makes the gaps equal.
     #[test]
     fn a_shortcut_runs_its_align_panel_button() {
-        let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(oracle_vector_engine::Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 200})).unwrap();
         let ids: Vec<Value> = [(10, 20), (50, 40), (120, 20)]
             .into_iter()
             .map(|(x, w)| app.run("shape.rectangle", json!({"x": x, "y": 10, "width": w, "height": 10})).unwrap()["id"].clone())
             .collect();
         app.run("select.set", json!({"ids": ids})).unwrap();
-        let edges = |app: &VectorcraftApp, right: bool| {
+        let edges = |app: &OracleVectorApp, right: bool| {
             let st = app.session.active().unwrap();
             ids.iter()
                 .map(|id| {
-                    let b = st.doc.node(vectorcraft_doc::NodeId(id.as_u64().unwrap())).unwrap().geometric_bounds().unwrap();
+                    let b = st.doc.node(oracle_vector_doc::NodeId(id.as_u64().unwrap())).unwrap().geometric_bounds().unwrap();
                     if right { b.x1 } else { b.x0 }
                 })
                 .collect::<Vec<_>>()
         };
-        let sent = |app: &VectorcraftApp| {
+        let sent = |app: &OracleVectorApp| {
             let (id, p) = app.session.journal.last().unwrap();
             (id.clone(), p["to"].clone(), p.get("spacing").cloned())
         };
@@ -747,8 +747,8 @@ mod tests {
             *w.borrow_mut() = b.to_vec();
             Ok(())
         }));
-        let top = |app: &VectorcraftApp, id: &Value| {
-            app.session.active().unwrap().doc.node(vectorcraft_doc::NodeId(id.as_u64().unwrap())).unwrap().geometric_bounds().unwrap().y0
+        let top = |app: &OracleVectorApp, id: &Value| {
+            app.session.active().unwrap().doc.node(oracle_vector_doc::NodeId(id.as_u64().unwrap())).unwrap().geometric_bounds().unwrap().y0
         };
         app.run("shortcuts.set", json!({"id": "align.verticalTop", "shortcut": CHORD})).unwrap();
         app.run("shortcuts.export", json!({"path": "/sets/Align.json"})).unwrap();
@@ -767,7 +767,7 @@ mod tests {
 
     /// One frame of the Align panel → its Horizontal Distribute Left and Horizontal Distribute
     /// Space buttons.
-    fn distribute_buttons(app: &mut VectorcraftApp, ctx: &egui::Context) -> (egui::Rect, egui::Rect) {
+    fn distribute_buttons(app: &mut OracleVectorApp, ctx: &egui::Context) -> (egui::Rect, egui::Rect) {
         frame_events(ctx, app, vec![], show);
         // The lower row of 32-point buttons is Distribute Objects': Vertical Distribute Top, Center
         // and Bottom, then Horizontal Distribute Left, Center and Right.
@@ -788,7 +788,7 @@ mod tests {
     /// between them equal. With Align to Selection chosen, the outermost objects stay put.
     #[test]
     fn the_distribute_buttons_follow_align_to_artboard() {
-        let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(oracle_vector_engine::Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 200, "artboards": 2})).unwrap();
         let boards: Vec<_> = app.session.active().unwrap().doc.artboards.iter().map(|a| a.rect).collect();
         let ids: Vec<Value> = [(10, 20), (50, 40), (120, 20)]
@@ -796,7 +796,7 @@ mod tests {
             .map(|(x, w)| app.run("shape.rectangle", json!({"x": x, "y": 10, "width": w, "height": 10})).unwrap()["id"].clone())
             .collect();
         app.run("select.set", json!({"ids": ids})).unwrap();
-        let lefts = |app: &VectorcraftApp| ids.iter().map(|id| left_edge(app, id)).collect::<Vec<_>>();
+        let lefts = |app: &OracleVectorApp| ids.iter().map(|id| left_edge(app, id)).collect::<Vec<_>>();
         let ctx = egui::Context::default();
         let (left, space) = distribute_buttons(&mut app, &ctx);
         click(&ctx, &mut app, left.center(), show);
@@ -819,16 +819,16 @@ mod tests {
     /// they send no spacing.
     #[test]
     fn the_distribute_objects_buttons_send_the_spacing_with_a_key_object() {
-        let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(oracle_vector_engine::Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 200})).unwrap();
         let ids: Vec<Value> = [(10, 20), (50, 40), (120, 20)]
             .into_iter()
             .map(|(x, w)| app.run("shape.rectangle", json!({"x": x, "y": 10, "width": w, "height": 10})).unwrap()["id"].clone())
             .collect();
         app.run("select.set", json!({"ids": ids})).unwrap();
-        let lefts = |app: &VectorcraftApp| ids.iter().map(|id| left_edge(app, id)).collect::<Vec<_>>();
+        let lefts = |app: &OracleVectorApp| ids.iter().map(|id| left_edge(app, id)).collect::<Vec<_>>();
         // The command and its `to` and `spacing` params (the app adds the active artboard).
-        let sent = |app: &VectorcraftApp| {
+        let sent = |app: &OracleVectorApp| {
             let (id, p) = app.session.journal.last().unwrap();
             (id.clone(), p["to"].clone(), p.get("spacing").cloned())
         };
@@ -852,7 +852,7 @@ mod tests {
     /// Distribute Spacing value too, and the objects are spaced from the guide, which stays put.
     #[test]
     fn the_distribute_buttons_send_the_spacing_with_a_key_guide() {
-        let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(oracle_vector_engine::Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 200})).unwrap();
         let ids: Vec<Value> = [(10, 20), (50, 40), (120, 20)]
             .into_iter()
@@ -862,8 +862,8 @@ mod tests {
         app.run("select.set", json!({"ids": ids})).unwrap();
         app.run("guide.select", json!({"indexes": [0], "toggle": true})).unwrap();
         app.run("select.key", json!({"guide": 0})).unwrap();
-        let lefts = |app: &VectorcraftApp| ids.iter().map(|id| left_edge(app, id)).collect::<Vec<_>>();
-        let sent = |app: &VectorcraftApp| {
+        let lefts = |app: &OracleVectorApp| ids.iter().map(|id| left_edge(app, id)).collect::<Vec<_>>();
+        let sent = |app: &OracleVectorApp| {
             let (id, p) = app.session.journal.last().unwrap();
             (id.clone(), p["to"].clone(), p.get("spacing").cloned())
         };
@@ -889,7 +889,7 @@ mod tests {
     /// Horizontal Align Left puts every guide on the artboard's left edge (#3463).
     #[test]
     fn the_align_buttons_align_guides_selected_alone_to_artboard() {
-        let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(oracle_vector_engine::Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 200})).unwrap();
         for pos in [20, 50, 180] {
             app.run("guide.add", json!({"vertical": true, "pos": pos})).unwrap();
@@ -904,7 +904,7 @@ mod tests {
         row.sort_by(|a, b| a.left().total_cmp(&b.left()));
         assert!(row[0].width() > 0.0, "Horizontal Align Left is enabled");
         click(&ctx, &mut app, row[0].center(), show);
-        let pos = |app: &VectorcraftApp| app.session.active().unwrap().doc.guides.iter().map(|g| g.pos).collect::<Vec<_>>();
+        let pos = |app: &OracleVectorApp| app.session.active().unwrap().doc.guides.iter().map(|g| g.pos).collect::<Vec<_>>();
         assert_eq!(pos(&app), [0.0, 0.0, 0.0], "{}", app.ui.status);
     }
 
@@ -914,7 +914,7 @@ mod tests {
     /// describes for equal columns (https://community.adobe.com/questions-652/illustrator-equal-guides-822924).
     #[test]
     fn the_distribute_buttons_space_guides_selected_alone() {
-        let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(oracle_vector_engine::Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 200})).unwrap();
         for pos in [20, 50, 180] {
             app.run("guide.add", json!({"vertical": true, "pos": pos})).unwrap();
@@ -929,7 +929,7 @@ mod tests {
         assert_eq!(row.len(), 6, "the Distribute row");
         // Its fifth button is Horizontal Distribute Center.
         click(&ctx, &mut app, row[4].center(), show);
-        let pos = |app: &VectorcraftApp| app.session.active().unwrap().doc.guides.iter().map(|g| g.pos).collect::<Vec<_>>();
+        let pos = |app: &OracleVectorApp| app.session.active().unwrap().doc.guides.iter().map(|g| g.pos).collect::<Vec<_>>();
         assert_eq!(pos(&app), [20.0, 100.0, 180.0], "{}", app.ui.status);
         app.run("edit.undo", json!({})).unwrap();
         assert_eq!(pos(&app), [20.0, 50.0, 180.0], "one undo step");
@@ -940,7 +940,7 @@ mod tests {
     }
 
     /// Runs the Object → Align item `label` as a click on it does.
-    fn object_align(app: &mut VectorcraftApp, label: &str) {
+    fn object_align(app: &mut OracleVectorApp, label: &str) {
         let entry = crate::menus::menu_entries(app).into_iter().find(|e| e.path == ["Object", "Align"] && e.label == label).expect("menu item");
         let (id, p) = crate::menus::click_target(&entry.label, entry.command.as_deref().unwrap(), &entry.params);
         crate::menus::invoke(app, &id, p);
@@ -951,13 +951,13 @@ mod tests {
     /// artboard too.
     #[test]
     fn object_align_follows_align_to() {
-        let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(oracle_vector_engine::Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 200, "artboards": 2})).unwrap();
         let boards: Vec<_> = app.session.active().unwrap().doc.artboards.iter().map(|a| a.rect).collect();
         let a = app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 10, "height": 10})).unwrap()["id"].clone();
         let b = app.run("shape.rectangle", json!({"x": 80, "y": 50, "width": 30, "height": 30})).unwrap()["id"].clone();
-        let bounds = |app: &VectorcraftApp, id: &Value| {
-            app.session.active().unwrap().doc.node(vectorcraft_doc::NodeId(id.as_u64().unwrap())).unwrap().geometric_bounds().unwrap()
+        let bounds = |app: &OracleVectorApp, id: &Value| {
+            app.session.active().unwrap().doc.node(oracle_vector_doc::NodeId(id.as_u64().unwrap())).unwrap().geometric_bounds().unwrap()
         };
         app.run("select.set", json!({"ids": [b]})).unwrap();
         object_align(&mut app, "Horizontal Align Left");
@@ -973,11 +973,11 @@ mod tests {
     /// one path align to their own bounds with Align to Selection and with Align to Artboard chosen.
     #[test]
     fn object_align_aligns_anchor_points_to_each_other() {
-        let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(oracle_vector_engine::Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 200})).unwrap();
         let id = app.run("path.create", json!({"d": "M100 40 L200 60 L150 160 Z"})).unwrap()["id"].as_u64().unwrap();
-        let anchors = |app: &VectorcraftApp| -> Vec<(f64, f64)> {
-            let node = app.session.active().unwrap().doc.node(vectorcraft_doc::NodeId(id)).unwrap();
+        let anchors = |app: &OracleVectorApp| -> Vec<(f64, f64)> {
+            let node = app.session.active().unwrap().doc.node(oracle_vector_doc::NodeId(id)).unwrap();
             node.path_data().unwrap().anchors().map(|(_, _, a)| (a.p.x, a.p.y)).collect()
         };
         for to in [AlignTo::Selection, AlignTo::Artboard] {
@@ -995,11 +995,11 @@ mod tests {
     /// the stored choice. With Align to Artboard chosen the points go to the artboard.
     #[test]
     fn anchor_points_of_one_path_align_to_each_other() {
-        let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(oracle_vector_engine::Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 200})).unwrap();
         let id = app.run("path.create", json!({"d": "M100 40 L200 60 L150 160 Z"})).unwrap()["id"].as_u64().unwrap();
-        let xs = |app: &VectorcraftApp| -> Vec<f64> {
-            let node = app.session.active().unwrap().doc.node(vectorcraft_doc::NodeId(id)).unwrap();
+        let xs = |app: &OracleVectorApp| -> Vec<f64> {
+            let node = app.session.active().unwrap().doc.node(oracle_vector_doc::NodeId(id)).unwrap();
             node.path_data().unwrap().anchors().map(|(_, _, a)| a.p.x).collect()
         };
         app.run("select.anchors", json!({"id": id, "anchors": [[0, 0], [0, 1]], "mode": "set"})).unwrap();
@@ -1017,7 +1017,7 @@ mod tests {
     /// #1636: the Distribute buttons work on the anchor points of one path (one object selected).
     #[test]
     fn distribute_buttons_space_the_anchor_points_of_one_path() {
-        let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(oracle_vector_engine::Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 200})).unwrap();
         let id = app.run("path.create", json!({"d": "M10 10 L20 50 L100 30"})).unwrap()["id"].as_u64().unwrap();
         app.run("select.anchors", json!({"id": id, "anchors": [[0, 0], [0, 1], [0, 2]], "mode": "set"})).unwrap();
@@ -1032,7 +1032,7 @@ mod tests {
         assert_eq!(row.len(), 6, "the Distribute row");
         let hit = row[4].center();
         click(&ctx, &mut app, hit, show);
-        let node = app.session.active().unwrap().doc.node(vectorcraft_doc::NodeId(id)).unwrap();
+        let node = app.session.active().unwrap().doc.node(oracle_vector_doc::NodeId(id)).unwrap();
         let xs: Vec<f64> = node.path_data().unwrap().anchors().map(|(_, _, a)| a.p.x).collect();
         assert_eq!(xs, [10.0, 55.0, 100.0], "{}", app.ui.status);
     }

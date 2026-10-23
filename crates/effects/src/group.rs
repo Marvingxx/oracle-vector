@@ -14,10 +14,10 @@
 use std::sync::Arc;
 
 use serde_json::Value;
-use vectorcraft_doc::color::{Color, Paint};
-use vectorcraft_doc::{Appearance, AppearanceItem, Node, NodeId, NodeKind, StrokeLayer};
-use vectorcraft_geom::{FillRule, PathData, Rect};
-use vectorcraft_pathops::{self as po, PathfinderOp};
+use oracle_vector_doc::color::{Color, Paint};
+use oracle_vector_doc::{Appearance, AppearanceItem, Node, NodeId, NodeKind, StrokeLayer};
+use oracle_vector_geom::{FillRule, PathData, Rect};
+use oracle_vector_pathops::{self as po, PathfinderOp};
 
 /// Effect ids of the Pathfinder submenu with their operation, in Illustrator's menu order.
 pub const PATHFINDER_EFFECTS: [(&str, &str, PathfinderOp); 12] = [
@@ -267,7 +267,7 @@ pub fn member_shapes(n: &Node) -> Vec<(PathData, FillRule)> {
                 }
             }
             NodeKind::Group { .. } | NodeKind::Layer { .. } => members(n, out),
-            _ if vectorcraft_doc::live::is_live(n) => members(&crate::reshape::outlined_members(n), out),
+            _ if oracle_vector_doc::live::is_live(n) => members(&crate::reshape::outlined_members(n), out),
             _ => {}
         }
     }
@@ -366,13 +366,13 @@ pub fn evaluate_container(n: &Node) -> Option<Node> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vectorcraft_color::{BlendMode, Color, Paint};
-    use vectorcraft_doc::{CharStyle, Effect, NodeId, TextObject};
-    use vectorcraft_geom::{Point, Rect, shapes};
+    use oracle_vector_color::{BlendMode, Color, Paint};
+    use oracle_vector_doc::{CharStyle, Effect, NodeId, TextObject};
+    use oracle_vector_geom::{Point, Rect, shapes};
 
     /// Type tests need glyph outlines, which only the optional craft-fonts build input provides.
     fn skip_without_craft_fonts() -> bool {
-        let skip = vectorcraft_text::CRAFT_FONTS.is_empty();
+        let skip = oracle_vector_text::CRAFT_FONTS.is_empty();
         if skip {
             eprintln!("skipped: built without craft-fonts (set CRAFT_FONTS_DIR to a craft-fonts checkout to run it)");
         }
@@ -540,8 +540,8 @@ mod tests {
     /// What [`evaluate_container`] makes of black 40 pt type "IIII" (id 3), changed by `style`,
     /// in a group with a square and Offset Path 0, which leaves every path as it is.
     fn type_in_group(style: impl FnOnce(&mut Node)) -> Node {
-        let ts = vectorcraft_doc::CharStyle { size: 40.0, fill: Paint::solid(Color::BLACK), ..Default::default() };
-        let text = vectorcraft_doc::TextObject::point(vectorcraft_geom::Point::new(5.0, 60.0), "IIII", ts);
+        let ts = oracle_vector_doc::CharStyle { size: 40.0, fill: Paint::solid(Color::BLACK), ..Default::default() };
+        let text = oracle_vector_doc::TextObject::point(oracle_vector_geom::Point::new(5.0, 60.0), "IIII", ts);
         let mut t = Node::new(NodeId(3), NodeKind::Text(Box::new(text)));
         style(&mut t);
         let mut g = Node::group(NodeId(10), vec![sq(1, 0.0, Color::BLACK), Arc::new(t)]);
@@ -555,13 +555,13 @@ mod tests {
         if skip_without_craft_fonts() {
             return;
         }
-        use vectorcraft_color::BlendMode;
+        use oracle_vector_color::BlendMode;
         let art = type_in_group(|t| (t.opacity, t.blend) = (0.5, BlendMode::Multiply));
         assert!(art.id == NodeId(3) && !matches!(art.kind, NodeKind::Text(_)), "{art:?}");
         assert_eq!((art.opacity, art.blend), (0.5, BlendMode::Multiply));
         // Its opacity mask, its own shadow, its knockout shape option and its visibility stay.
         let mask_art = Node::path(NodeId(4), shapes::rectangle(Rect::new(0.0, 0.0, 50.0, 50.0)), Appearance::default());
-        let mask = vectorcraft_doc::OpacityMask::new(mask_art, true);
+        let mask = oracle_vector_doc::OpacityMask::new(mask_art, true);
         assert_eq!(type_in_group(|t| t.extras_mut().mask = Some(Box::new(mask.clone()))).extras().mask.as_deref(), Some(&mask));
         let shadow = Effect { id: "stylize.dropShadow".into(), params: serde_json::json!({}), visible: true };
         assert_eq!(type_in_group(|t| t.appearance.effects.push(shadow.clone())).appearance.effects, vec![shadow]);
@@ -587,12 +587,12 @@ mod tests {
         if skip_without_craft_fonts() {
             return;
         }
-        use vectorcraft_color::{Gradient, GradientGeom, GradientKind, GradientPaint, GradientStop};
+        use oracle_vector_color::{Gradient, GradientGeom, GradientKind, GradientPaint, GradientStop};
         let stops = vec![GradientStop::new(0.0, Color::rgb(1.0, 0.0, 0.0)), GradientStop::new(1.0, Color::rgb(0.0, 0.0, 1.0))];
         let ramp = GradientPaint::new(Gradient { kind: GradientKind::Linear, stops });
         // The type's characters fit the gradient to its layout; the square has it placed across itself.
-        let style = vectorcraft_doc::CharStyle { size: 40.0, fill: Paint::Gradient(Box::new(ramp.clone())), ..Default::default() };
-        let text = vectorcraft_doc::TextObject::point(vectorcraft_geom::Point::new(5.0, 60.0), "IIII", style);
+        let style = oracle_vector_doc::CharStyle { size: 40.0, fill: Paint::Gradient(Box::new(ramp.clone())), ..Default::default() };
+        let text = oracle_vector_doc::TextObject::point(oracle_vector_geom::Point::new(5.0, 60.0), "IIII", style);
         let t = Arc::new(Node::new(NodeId(3), NodeKind::Text(Box::new(text))));
         let geom = GradientGeom { start: (0.0, 5.0).into(), end: (10.0, 5.0).into(), aspect: 1.0, focal: None };
         let placed = Paint::Gradient(Box::new(GradientPaint { geom: Some(geom), ..ramp }));
@@ -613,7 +613,7 @@ mod tests {
 
     #[test]
     fn a_transform_on_a_group_paints_each_copy_with_its_own_gradient() {
-        use vectorcraft_color::{Gradient, GradientGeom, GradientKind, GradientPaint, GradientStop};
+        use oracle_vector_color::{Gradient, GradientGeom, GradientKind, GradientPaint, GradientStop};
         let stops = vec![GradientStop::new(0.0, Color::rgb(1.0, 0.0, 0.0)), GradientStop::new(1.0, Color::rgb(0.0, 0.0, 1.0))];
         let ramp = GradientPaint::new(Gradient { kind: GradientKind::Linear, stops });
         let geom = GradientGeom { start: (0.0, 5.0).into(), end: (10.0, 5.0).into(), aspect: 1.0, focal: None };

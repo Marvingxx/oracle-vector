@@ -1,8 +1,8 @@
-//! Text objects (model only; layout and glyph outlines live in `vectorcraft-text`).
+//! Text objects (model only; layout and glyph outlines live in `oracle-vector-text`).
 
 use serde::{Deserialize, Serialize};
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_geom::{Affine, PathData, Point, Rect, Vec2};
+use oracle_vector_color::{Color, Paint};
+use oracle_vector_geom::{Affine, PathData, Point, Rect, Vec2};
 
 use crate::appearance::{Appearance, AppearanceItem, Dash, FillLayer, LineCap, LineJoin, StrokeAlign, StrokeLayer};
 
@@ -1575,7 +1575,7 @@ impl TextObject {
     /// Keep the ruby spans over the text after replacing plain-text bytes `start..end` with
     /// `inserted` bytes of text: spans after the edit move with the text, ones the edit runs into
     /// keep their start and end up where the replaced part ended. Call it after every edit of the
-    /// runs (`vectorcraft_text::edit`), then [`Self::normalize_ruby`] has the last word.
+    /// runs (`oracle_vector_text::edit`), then [`Self::normalize_ruby`] has the last word.
     pub fn ruby_after_replace(&mut self, start: usize, end: usize, inserted: usize) {
         let (start, end) = (start.min(end), start.max(end));
         let delta = inserted as i64 - (end.saturating_sub(start)) as i64;
@@ -2096,7 +2096,7 @@ mod tests {
     /// 120 × 40 area type at (40, 40), its text drawn at twice its size.
     fn area_type() -> TextObject {
         let mut t = TextObject::point(Point::ZERO, "Some text", CharStyle::default());
-        t.kind = TextKind::Area { frame: vectorcraft_geom::shapes::rectangle(Rect::new(0.0, 0.0, 60.0, 20.0)) };
+        t.kind = TextKind::Area { frame: oracle_vector_geom::shapes::rectangle(Rect::new(0.0, 0.0, 60.0, 20.0)) };
         t.xf = Affine::translate((40.0, 40.0)) * Affine::scale(2.0);
         t
     }

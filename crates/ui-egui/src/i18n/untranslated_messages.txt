@@ -4,7 +4,7 @@
 # don't fail when they merge. `complete_languages_translate_every_message` lets these through; every
 # other message needs a row in each complete catalog. A pull request that adds a message's rows
 # removes its line here. The test ignores a line whose message no source contains.
-# `VECTORCRAFT_I18N_DUMP_UNTRANSLATED=<file>` writes this header and the messages in the sources
+# `ORACLE_VECTOR_I18N_DUMP_UNTRANSLATED=<file>` writes this header and the messages in the sources
 # that lack a row.
 A profile supports one Revolve effect. Edit the existing effect's options instead.
 CSS options: {e}
@@ -24,7 +24,7 @@ Draw Inside needs exactly one selected path, compound path or text
 EPS flattener: {e}
 EPS options: {e}
 EPS {field} `{s}`: {allowed}
-Export for Screens writes png, png8, jpg, webp, gif, tiff, bmp, tga, psd, svg, svgz, pdf, eps, ai or vectorcraft
+Export for Screens writes png, png8, jpg, webp, gif, tiff, bmp, tga, psd, svg, svgz, pdf, eps, ai or oracle-vector
 HTML Text applies to object slices of type only
 Identify Objects By is XML ID: the name must be a valid XML ID (start with a letter, underscore or colon; no spaces)
 Invalid dimension mode
@@ -166,8 +166,8 @@ Text options: {e}
 `{_1}` would be overwritten by the package: choose a different folder or name
 `{file}` has no art to place
 `{file}` is over {_1} MB
-`{file}` isn't a VectorCraft document
-`{f}` belongs to a VectorCraft that is running
+`{file}` isn't a Oracle Vector document
+`{f}` belongs to a Oracle Vector that is running
 `{f}` is the copy of a document open now
 `{id}` is no writable format (see document.formats)
 `{id}` isn't a loaded library
@@ -353,8 +353,8 @@ can't encrypt the PDF: {why}
 can't linearise the PDF: {why}
 can't open `{_1}`: {_2}
 can't open `{_1}`: {e}
-can't open `{name}`: not a format VectorCraft reads (see document.formats)
-can't place `{name}`: not a format VectorCraft reads (see document.formats)
+can't open `{name}`: not a format Oracle Vector reads (see document.formats)
+can't place `{name}`: not a format Oracle Vector reads (see document.formats)
 can't read back the written PDF: {e}
 can't write .{e} images: use .png, .jpg, .gif, .webp, .tif or .bmp
 can't write PDF layers or overprint: {why}
@@ -795,7 +795,7 @@ not a print presets file (format `{_1}`)
 not a print presets file: {e}
 not a valid SVGZ file: {e}
 not an RTF file: it doesn't start with not an RTF file: it doesn't start with {\rtf
-not an image VectorCraft reads (see document.formats)
+not an image Oracle Vector reads (see document.formats)
 not area type (text in a frame) outside perspective
 not editing an opacity mask
 nothing prints

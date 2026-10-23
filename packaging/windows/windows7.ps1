@@ -20,13 +20,13 @@ function Get-LockWithoutWindowsLinkSource([string] $Text) {
 Push-Location $Root
 $FlagName = 'CARGO_TARGET_X86_64_WIN7_WINDOWS_MSVC_RUSTFLAGS'
 $OldFlags = [Environment]::GetEnvironmentVariable($FlagName)
-$OldWinres = $env:VECTORCRAFT_REQUIRE_WINRES
+$OldWinres = $env:ORACLE_VECTOR_REQUIRE_WINRES
 $Lock = Join-Path $Root 'Cargo.lock'
 $LockBytes = [IO.File]::ReadAllBytes($Lock)
 try {
   Invoke-Checked { rustup toolchain install $Toolchain --profile minimal --component rust-src }
   # windows-sys imports CoTaskMemFree from combase.dll, which Windows 7 lacks. Only this build uses
-  # the patched copy in vendor/windows-link (see its VECTORCRAFT-PATCH.md); every other build keeps
+  # the patched copy in vendor/windows-link (see its ORACLE_VECTOR-PATCH.md); every other build keeps
   # the crates.io crate. Cargo records the patch in Cargo.lock, so resolve once, check that nothing
   # but windows-link's source moved, then build --locked. The finally block restores Cargo.lock.
   $Patch = @('--config', "patch.crates-io.windows-link.path='vendor/windows-link'")
@@ -34,19 +34,19 @@ try {
   $Before = Get-LockWithoutWindowsLinkSource ([Text.Encoding]::UTF8.GetString($LockBytes))
   $After = Get-LockWithoutWindowsLinkSource ([IO.File]::ReadAllText($Lock))
   if ($Before -cne $After) { throw 'Cargo.lock is out of date: applying the windows-link patch changed other entries' }
-  $CargoArgs = @('--locked') + $Patch + @('--target', $Target, '--no-default-features', '--features', 'vectorcraft/windows7')
-  $Tree = cargo "+$Toolchain" tree @CargoArgs -p vectorcraft -e normal --prefix none
+  $CargoArgs = @('--locked') + $Patch + @('--target', $Target, '--no-default-features', '--features', 'oracle-vector/windows7')
+  $Tree = cargo "+$Toolchain" tree @CargoArgs -p oracle-vector -e normal --prefix none
   if ($LASTEXITCODE -ne 0) { throw 'dependency inspection failed' }
   if ($Tree -match '^(wgpu|wgpu-core|wgpu-hal|accesskit_windows|craft-print) v') { throw 'unsupported Windows backend in compatibility build' }
   if (-not ($Tree -match '^windows-link v[^ ]+ \(.*vendor[\\/]windows-link\)')) { throw 'the patched windows-link is not in use' }
   # The ordinary pc-windows-msvc standard library requires Windows 10. Rebuild std for win7.
   [Environment]::SetEnvironmentVariable($FlagName, '-C target-feature=+crt-static')
-  $env:VECTORCRAFT_REQUIRE_WINRES = '1'
-  $CargoArgs += @('-p', 'vectorcraft', '-p', 'vectorcraft-cli')
+  $env:ORACLE_VECTOR_REQUIRE_WINRES = '1'
+  $CargoArgs += @('-p', 'oracle-vector', '-p', 'oracle-vector-cli')
   Invoke-Checked { cargo "+$Toolchain" build -Z build-std=std,panic_unwind @CargoArgs --release }
   $TargetDir = if ($env:CARGO_TARGET_DIR) { $env:CARGO_TARGET_DIR } else { 'target' }
   $Bin = Join-Path $TargetDir "$Target\release"
-  foreach ($Name in 'vectorcraft.exe', 'vectorcraft-cli.exe') {
+  foreach ($Name in 'oracle-vector.exe', 'oracle-vector-cli.exe') {
     $Exe = Join-Path $Bin $Name
     $Bytes = [IO.File]::ReadAllBytes($Exe)
     $Pe = [BitConverter]::ToInt32($Bytes, 0x3c)
@@ -61,10 +61,10 @@ try {
       throw "$Name directly imports a known post-Windows-7 API"
     }
   }
-  Invoke-Checked { & (Join-Path $Bin 'vectorcraft-cli.exe') --version }
+  Invoke-Checked { & (Join-Path $Bin 'oracle-vector-cli.exe') --version }
   $Stage = Join-Path $TargetDir ('windows7-portable-' + [Guid]::NewGuid().ToString('N'))
   New-Item -ItemType Directory -Force $Stage | Out-Null
-  Copy-Item (Join-Path $Bin 'vectorcraft.exe'), (Join-Path $Bin 'vectorcraft-cli.exe') $Stage
+  Copy-Item (Join-Path $Bin 'oracle-vector.exe'), (Join-Path $Bin 'oracle-vector-cli.exe') $Stage
   Copy-Item LICENSE-MIT, LICENSE-APACHE, NOTICE, ASSETS.md $Stage
   Copy-Item -Recurse licenses $Stage
   Copy-Item vendor/windows-link/license-mit (Join-Path $Stage 'LICENSE-windows-link-MIT')
@@ -78,7 +78,7 @@ try {
     }
   }
   New-Item -ItemType Directory -Force dist/release | Out-Null
-  $Zip = Join-Path $Root 'dist/release/vectorcraft-windows7-x64-portable.zip'
+  $Zip = Join-Path $Root 'dist/release/oracle-vector-windows7-x64-portable.zip'
   Compress-Archive -Path (Join-Path $Stage '*') -DestinationPath $Zip -Force
   Remove-Item -Recurse -Force $Stage
   Get-Item $Zip
@@ -89,6 +89,6 @@ try {
 } finally {
   [IO.File]::WriteAllBytes($Lock, $LockBytes)
   [Environment]::SetEnvironmentVariable($FlagName, $OldFlags)
-  $env:VECTORCRAFT_REQUIRE_WINRES = $OldWinres
+  $env:ORACLE_VECTOR_REQUIRE_WINRES = $OldWinres
   Pop-Location
 }

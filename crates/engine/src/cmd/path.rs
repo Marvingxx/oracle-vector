@@ -3,8 +3,8 @@
 use std::collections::BTreeSet;
 
 use serde_json::{Value, json};
-use vectorcraft_doc::{NodeId, NodeKind, Scaling};
-use vectorcraft_geom::{Anchor, AnchorKind, PathData, Point, SubPath, Vec2};
+use oracle_vector_doc::{NodeId, NodeKind, Scaling};
+use oracle_vector_geom::{Anchor, AnchorKind, PathData, Point, SubPath, Vec2};
 
 use super::create::anchor_from_json;
 use super::draw2::usize_opt;
@@ -127,7 +127,7 @@ pub fn specs() -> Vec<CommandSpec> {
     ]
 }
 
-pub(super) fn path_mut(d: &mut vectorcraft_doc::Document, id: NodeId) -> Result<&mut PathData> {
+pub(super) fn path_mut(d: &mut oracle_vector_doc::Document, id: NodeId) -> Result<&mut PathData> {
     let n = d.node_mut(id).ok_or(EngineError::NoNode(id))?;
     match &mut n.kind {
         NodeKind::Path { path, live, .. } => {
@@ -187,17 +187,17 @@ pub(crate) fn move_anchors(s: &mut Session, p: &Value) -> Result<Value> {
     // `patterns` (default: General › Transform Pattern Tiles) is on.
     let whole = s.doc()?.selection.whole();
     let sc = Scaling { patterns: super::object::transform_patterns(s, p, &whole)?, ..Scaling::default() };
-    transform_anchors(s, "Move", vectorcraft_geom::Affine::translate(d), sc)?;
+    transform_anchors(s, "Move", oracle_vector_geom::Affine::translate(d), sc)?;
     ok()
 }
 
 /// Apply `xf` to the direct-selected anchors, their handles with them, and (with `sc`) to the
 /// objects selected whole (those with no entry in the selection's `anchors`).
-pub(crate) fn transform_anchors(s: &mut Session, label: &str, xf: vectorcraft_geom::Affine, sc: Scaling) -> Result<()> {
+pub(crate) fn transform_anchors(s: &mut Session, label: &str, xf: oracle_vector_geom::Affine, sc: Scaling) -> Result<()> {
     let sel = s.doc()?.selection.clone();
     let c = xf.as_coeffs();
     let is_translation = (c[0] - 1.0).abs() < 1e-9 && c[1].abs() < 1e-9 && c[2].abs() < 1e-9 && (c[3] - 1.0).abs() < 1e-9;
-    let delta = vectorcraft_geom::Vec2::new(c[4], c[5]);
+    let delta = oracle_vector_geom::Vec2::new(c[4], c[5]);
     s.edit(label, |doc, _| {
         for id in &sel.objects {
             match sel.anchors.get(id) {
@@ -253,7 +253,7 @@ fn move_anchor(s: &mut Session, p: &Value) -> Result<Value> {
     s.edit("Move", |d, _| {
         let path = path_mut(d, id)?;
         let a = path.anchor_mut(si, ai).ok_or_else(|| EngineError::Other("no such anchor".into()))?;
-        *a = a.transform(vectorcraft_geom::Affine::translate(pos - a.p));
+        *a = a.transform(oracle_vector_geom::Affine::translate(pos - a.p));
         Ok(())
     })?;
     ok()
@@ -294,7 +294,7 @@ fn selected_paths(s: &Session) -> Result<Vec<NodeId>> {
 }
 
 /// The paths in the subtrees of `ids` (in groups and compound paths too), each once.
-pub(super) fn paths_in(d: &vectorcraft_doc::Document, ids: &[NodeId]) -> Vec<NodeId> {
+pub(super) fn paths_in(d: &oracle_vector_doc::Document, ids: &[NodeId]) -> Vec<NodeId> {
     let mut out = BTreeSet::new();
     for n in ids.iter().filter_map(|id| d.node(*id)) {
         n.walk(&mut |c| {
@@ -712,7 +712,7 @@ fn without_segments(sp: SubPath, removed: &BTreeSet<usize>) -> Vec<SubPath> {
     result
 }
 
-fn open_run(mut anchors: Vec<vectorcraft_geom::Anchor>) -> Option<SubPath> {
+fn open_run(mut anchors: Vec<oracle_vector_geom::Anchor>) -> Option<SubPath> {
     if anchors.len() < 2 {
         return None;
     }
@@ -747,9 +747,9 @@ fn reshape(s: &mut Session, p: &Value) -> Result<Value> {
         let total = pos.last().copied().unwrap_or(0.0);
         // The default reach is the subpath's size, as before, now measured along it.
         let r = radius.unwrap_or_else(|| {
-            let mut bp = vectorcraft_geom::BezPath::new();
+            let mut bp = oracle_vector_geom::BezPath::new();
             sp.to_bezpath_into(&mut bp);
-            let b = vectorcraft_geom::Shape::bounding_box(&bp);
+            let b = oracle_vector_geom::Shape::bounding_box(&bp);
             (b.width().hypot(b.height()) / 2.0).max(1.0)
         });
         let from = pos.get(grabbed).copied().unwrap_or(0.0);

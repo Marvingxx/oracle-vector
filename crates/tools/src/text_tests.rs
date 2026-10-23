@@ -1,10 +1,10 @@
-//! Type tool state-machine tests (the engine side is covered in vectorcraft-engine's
+//! Type tool state-machine tests (the engine side is covered in oracle-vector-engine's
 //! `tests_textedit`).
 
 use super::*;
 use crate::testutil::{cx, paint};
-use vectorcraft_doc::{CharStyle, Document, Node, NodeKind, Selection, TextObject};
-use vectorcraft_text::FontDb;
+use oracle_vector_doc::{CharStyle, Document, Node, NodeKind, Selection, TextObject};
+use oracle_vector_text::FontDb;
 
 fn doc_with_text(text: &str) -> (Document, NodeId) {
     let mut d = Document::new(500.0, 500.0);
@@ -73,7 +73,7 @@ fn type_arrows_keep_devanagari_clusters_with_an_rtl_suffix() {
         }
         assert_eq!(t.plain_text(), text);
         assert_eq!(&text[..hindi.len()], hindi);
-        let lay = vectorcraft_text::layout(db, t);
+        let lay = oracle_vector_text::layout(db, t);
         assert_eq!(lay.lines.len(), 1, "{case}: one ordinary horizontal line");
         assert!(!lay.vertical, "{case}: horizontal Type");
         let mut hindi_spans: Vec<_> = lay.glyphs.iter().filter(|g| g.byte < hindi.len()).map(|g| (g.byte, g.len)).collect();
@@ -108,8 +108,8 @@ fn type_arrows_keep_devanagari_clusters_with_an_rtl_suffix() {
 
 #[test]
 fn type_arrows_keep_devanagari_clusters_across_wrapped_lines() {
-    use vectorcraft_doc::{Composer, Justify};
-    use vectorcraft_geom::{Affine, PathData};
+    use oracle_vector_doc::{Composer, Justify};
+    use oracle_vector_geom::{Affine, PathData};
 
     // Use the installed-family order and unchanged Hindi input from the single-line test.
     // Shaping and wrapping capabilities vary by face; an eligibility skip is not arrow coverage.
@@ -140,7 +140,7 @@ fn type_arrows_keep_devanagari_clusters_across_wrapped_lines() {
     assert_eq!(&text[..hindi.len()], hindi);
 
     // Measure once on the selected face. No width sweep or invented line endpoints.
-    let natural = vectorcraft_text::layout(db, t);
+    let natural = oracle_vector_text::layout(db, t);
     assert_eq!(natural.lines.len(), 1, "setup: natural point text is a single line");
     assert!(!natural.vertical, "setup: horizontal text");
     let hindi_glyphs: Vec<_> = natural.glyphs.iter().filter(|g| g.byte < hindi.len()).collect();
@@ -174,7 +174,7 @@ fn type_arrows_keep_devanagari_clusters_across_wrapped_lines() {
     t.xf = Affine::IDENTITY;
     assert_eq!((t.area.rows, t.area.columns, t.area.inset), (1, 1, 0.0));
     assert_eq!((t.para.left_indent, t.para.first_line_indent, t.para.right_indent), (0.0, 0.0, 0.0));
-    let lay = vectorcraft_text::layout(db, t);
+    let lay = oracle_vector_text::layout(db, t);
     assert!(!lay.overflow, "setup: the full RTL suffix fits the tall frame");
     assert!(!lay.vertical, "setup: horizontal area text");
     assert!(lay.glyphs.iter().any(|g| g.rtl && g.byte > hindi.len()), "setup: actual RTL suffix selects Type's visual-arrow route");
@@ -310,8 +310,8 @@ fn double_and_triple_click_select_word_and_paragraph() {
     let (d, id, mut tool) = editing("Alpha beta\ngamma");
     let (sel, p) = (Selection::default(), paint());
     let t = TypeTool::text(&cx(&d, &sel, &p), id).unwrap().clone();
-    let lay = vectorcraft_text::layout(FontDb::global(), &t);
-    let (top, bot) = vectorcraft_text::caret_position(&lay, 7);
+    let lay = oracle_vector_text::layout(FontDb::global(), &t);
+    let (top, bot) = oracle_vector_text::caret_position(&lay, 7);
     let at = t.xf * top.midpoint(bot);
     let c = cx(&d, &sel, &p);
     for k in [PointerKind::Down, PointerKind::Up, PointerKind::Down, PointerKind::Up, PointerKind::DoubleClick] {
@@ -329,9 +329,9 @@ fn drag_selects_and_overlay_highlights() {
     let (sel, p) = (Selection::default(), paint());
     let c = cx(&d, &sel, &p);
     let t = TypeTool::text(&c, id).unwrap().clone();
-    let lay = vectorcraft_text::layout(FontDb::global(), &t);
+    let lay = oracle_vector_text::layout(FontDb::global(), &t);
     let pt = |b: usize| {
-        let (a, bb) = vectorcraft_text::caret_position(&lay, b);
+        let (a, bb) = oracle_vector_text::caret_position(&lay, b);
         t.xf * a.midpoint(bb)
     };
     let (a, b) = (pt(7), pt(9));
@@ -353,9 +353,9 @@ fn a_drag_across_type_not_being_edited_selects_its_text() {
     let (sel, p) = (Selection::default(), paint());
     let c = cx(&d, &sel, &p);
     let t = TypeTool::text(&c, id).unwrap().clone();
-    let lay = vectorcraft_text::layout(FontDb::global(), &t);
+    let lay = oracle_vector_text::layout(FontDb::global(), &t);
     let pt = |b: usize| {
-        let (a, bb) = vectorcraft_text::caret_position(&lay, b);
+        let (a, bb) = oracle_vector_text::caret_position(&lay, b);
         t.xf * a.midpoint(bb)
     };
     let (a, b) = (pt(7), pt(9));
@@ -425,7 +425,7 @@ fn area_and_path_tools_convert_clicked_paths() {
 fn area_and_path_tools_hit_path_outline_not_fill_interior() {
     let (mut d, rect) = crate::testutil::doc_with_rect();
     if let Some(n) = d.node_mut(rect) {
-        n.appearance.set_stroke(vectorcraft_color::Paint::None);
+        n.appearance.set_stroke(oracle_vector_color::Paint::None);
     }
     let (sel, p) = (Selection::default(), paint());
     let c = cx(&d, &sel, &p);
@@ -492,8 +492,8 @@ fn marked_text_is_underlined_with_the_converting_clause_thick() {
     assert_eq!(widths, vec![1.0, 2.5], "a thin underline, then the thick one under 演奏");
     // The candidate window follows the converting clause.
     let (top, _) = tool.ime_caret(&cx(&d, &sel, &p)).unwrap();
-    let lay = vectorcraft_text::layout(FontDb::global(), t);
-    let (at, _) = vectorcraft_text::caret_position(&lay, 9);
+    let lay = oracle_vector_text::layout(FontDb::global(), t);
+    let (at, _) = oracle_vector_text::caret_position(&lay, 9);
     assert!((top - t.xf * at).hypot() < 1e-6);
     // Keys wait for the IME; a commit replaces the marked text.
     assert!(key(&mut tool, &d, ToolKey::Backspace, Mods::default()).is_empty());
@@ -550,7 +550,7 @@ fn snap_to_glyph_lines_up_new_point_type_with_a_baseline() {
         NodeKind::Text(t) => t,
         _ => panic!("text"),
     };
-    let lay = vectorcraft_text::layout(FontDb::global(), existing);
+    let lay = oracle_vector_text::layout(FontDb::global(), existing);
     let baseline_y = (existing.xf * Point::new(0.0, lay.lines[0].baseline)).y;
     let mut tool = TypeTool::new("type");
     tool.pointer(&c, &PointerEvent::new(PointerKind::Down, 250.0, baseline_y + 2.0));
@@ -607,10 +607,10 @@ fn area_type_drag_measure_labels_honor_preference() {
 fn layout_cache_follows_fonts_added_later() {
     // Other tests can load system fonts; this assertion needs its own process-wide database.
     #[cfg(not(target_arch = "wasm32"))]
-    if std::env::var("VECTORCRAFT_FONT_CACHE_TEST_CHILD").as_deref() != Ok("1") {
+    if std::env::var("ORACLE_VECTOR_FONT_CACHE_TEST_CHILD").as_deref() != Ok("1") {
         let output = std::process::Command::new(std::env::current_exe().unwrap())
             .args(["--exact", "text::tests::layout_cache_follows_fonts_added_later", "--nocapture", "--test-threads=1"])
-            .env("VECTORCRAFT_FONT_CACHE_TEST_CHILD", "1")
+            .env("ORACLE_VECTOR_FONT_CACHE_TEST_CHILD", "1")
             .output()
             .unwrap();
         let stdout = String::from_utf8_lossy(&output.stdout);
@@ -626,7 +626,7 @@ fn layout_cache_follows_fonts_added_later() {
     let NodeKind::Text(t) = &d.node(id).unwrap().kind else { panic!("not text") };
     let before = tool.layout(t);
     assert!(Arc::ptr_eq(&before, &tool.layout(t)), "cached while the fonts don't change");
-    let font = vectorcraft_text::test_fonts::variable_font().unwrap();
+    let font = oracle_vector_text::test_fonts::variable_font().unwrap();
     assert!(FontDb::global().add_font(font) > 0, "the test font is new to this process");
     assert!(!Arc::ptr_eq(&before, &tool.layout(t)), "a font added after the layout must refresh it");
 }
@@ -736,8 +736,8 @@ fn a_drag_or_a_click_on_other_type_while_editing_acts_at_once() {
     d.insert(Some(l), 1, Node::new(other, NodeKind::Text(Box::new(t)))).unwrap();
     let c = cx(&d, &sel, &p);
     let t = TypeTool::text(&c, other).unwrap().clone();
-    let lay = vectorcraft_text::layout(FontDb::global(), &t);
-    let (top, bot) = vectorcraft_text::caret_position(&lay, 2);
+    let lay = oracle_vector_text::layout(FontDb::global(), &t);
+    let (top, bot) = oracle_vector_text::caret_position(&lay, 2);
     let at = t.xf * top.midpoint(bot);
     tool.start_editing(id, 0);
     let acts = click(&mut tool, &c, at.x, at.y);

@@ -3,8 +3,8 @@
 //! stroke under it.
 
 use kurbo::{BezPath, PathEl, Point, Shape};
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::{ArrowAlign, Arrowhead, StrokeLayer};
+use oracle_vector_color::{Color, Paint};
+use oracle_vector_doc::{ArrowAlign, Arrowhead, StrokeLayer};
 
 use super::stroke_pieces;
 

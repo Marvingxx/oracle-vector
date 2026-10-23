@@ -1,9 +1,9 @@
 //! Hosting the active tool: pointer/key events → actions → commands.
 
 use serde_json::{Map, Value};
-use vectorcraft_geom::Point;
-use vectorcraft_tools::distort::perspective::widget::WidgetPlace;
-use vectorcraft_tools::{Action, Cursor, Mods, Overlay, PointerEvent, PointerKind, Tool, ToolContext, ToolKey, settings};
+use oracle_vector_geom::Point;
+use oracle_vector_tools::distort::perspective::widget::WidgetPlace;
+use oracle_vector_tools::{Action, Cursor, Mods, Overlay, PointerEvent, PointerKind, Tool, ToolContext, ToolKey, settings};
 
 use crate::{EngineError, Prefs, Result, Session};
 
@@ -26,7 +26,7 @@ pub struct ViewInfo {
     /// View → Show Corner Widget.
     pub corner_widgets: bool,
     /// The document window (none headless): screen-fixed widgets sit in it.
-    pub screen: Option<vectorcraft_tools::ScreenFrame>,
+    pub screen: Option<oracle_vector_tools::ScreenFrame>,
     /// The view's active artboard (an index): artboard rulers measure from it.
     pub artboard: usize,
 }
@@ -52,7 +52,7 @@ impl Default for ViewInfo {
 
 /// The RGB of a colour preference (`#rrggbb`), or `fallback` when it doesn't parse.
 fn rgb(hex: &str, fallback: [u8; 3]) -> [u8; 3] {
-    vectorcraft_color::Color::from_hex(hex).map_or(fallback, |c| {
+    oracle_vector_color::Color::from_hex(hex).map_or(fallback, |c| {
         let [r, g, b, _] = c.to_rgba8(1.0);
         [r, g, b]
     })
@@ -78,7 +78,7 @@ impl Session {
         // Choosing a perspective tool shows the document's perspective grid; Hide Grid hides it
         // again, the tool staying chosen.
         if matches!(id, "perspectiveGrid" | "perspectiveSelection")
-            && self.active().is_some_and(|d| !vectorcraft_tools::distort::perspective::PerspectiveGrid::current(&d.doc).visible)
+            && self.active().is_some_and(|d| !oracle_vector_tools::distort::perspective::PerspectiveGrid::current(&d.doc).visible)
         {
             crate::cmd::distortcmds::silent(self, |g| g.visible = true)?;
         }
@@ -105,7 +105,7 @@ impl Session {
         if let Some(selection) = text_selection {
             self.tool.set_option("textSelection", &selection);
         }
-        if vectorcraft_tools::catalog::is_selection_tool(id) {
+        if oracle_vector_tools::catalog::is_selection_tool(id) {
             self.last_selection_tool = Some(self.tool.id());
         }
         Ok(())
@@ -117,7 +117,7 @@ impl Session {
     /// selection tool from other tools (Alt on the lent Direct Selection gesture stays copy/subtract).
     /// None for the other selection tools and the view tools.
     fn lent_tool(&self, id: &str, mods: &Mods) -> Option<&'static str> {
-        use vectorcraft_tools::catalog::{edits_anchors, is_selection_tool};
+        use oracle_vector_tools::catalog::{edits_anchors, is_selection_tool};
         if matches!(id, "hand" | "zoom" | "rotateView") {
             return None;
         }
@@ -163,7 +163,7 @@ impl Session {
     /// A fresh `id` tool with the options it keeps ([`settings`]): its last values, from this
     /// session or a saved one.
     pub(crate) fn make_tool(&self, id: &str) -> Box<dyn Tool> {
-        let mut t = vectorcraft_tools::create(id);
+        let mut t = oracle_vector_tools::create(id);
         Self::restore_tool_settings(&self.prefs, t.as_mut());
         t
     }
@@ -199,7 +199,7 @@ impl Session {
         Self::store_tool_settings(&mut self.prefs, self.tool.as_ref());
     }
 
-    pub(crate) fn with_tool_cx<R>(&mut self, view: ViewInfo, f: impl FnOnce(&mut dyn vectorcraft_tools::Tool, &ToolContext) -> R) -> R
+    pub(crate) fn with_tool_cx<R>(&mut self, view: ViewInfo, f: impl FnOnce(&mut dyn oracle_vector_tools::Tool, &ToolContext) -> R) -> R
     where
         R: Default,
     {
@@ -253,7 +253,7 @@ impl Session {
             pen_rubber_band: self.prefs.pen_rubber_band,
             curvature_rubber_band: self.prefs.curvature_rubber_band,
             placeholder_text: self.prefs.placeholder_text,
-            smart_guide_color: rgb(&self.prefs.smart_guide_color, vectorcraft_tools::guides::MAGENTA),
+            smart_guide_color: rgb(&self.prefs.smart_guide_color, oracle_vector_tools::guides::MAGENTA),
             alignment_guides: self.prefs.alignment_guides,
             anchor_path_labels: self.prefs.anchor_path_labels,
             measurement_labels: self.prefs.measurement_labels,
@@ -261,7 +261,7 @@ impl Session {
             spacing_guides: self.prefs.spacing_guides,
             snapping_tolerance: self.prefs.snapping_tolerance,
             construction_angles: if self.prefs.construction_guides {
-                vectorcraft_tools::guides::construction_angles(&self.prefs.construction_angles)
+                oracle_vector_tools::guides::construction_angles(&self.prefs.construction_angles)
             } else {
                 &[]
             },
@@ -317,7 +317,7 @@ impl Session {
     fn leave_draw_inside(&mut self, ev: &PointerEvent, view: ViewInfo) -> Result<()> {
         if ev.kind != PointerKind::DoubleClick
             || self.draw_mode != crate::DrawMode::Inside
-            || !vectorcraft_tools::catalog::is_selection_tool(self.tool.id())
+            || !oracle_vector_tools::catalog::is_selection_tool(self.tool.id())
         {
             return Ok(());
         }
@@ -343,7 +343,7 @@ impl Session {
                 let boards = self.active().map_or(0, |d| d.doc.artboards.len());
                 let active = (self.tool.id() == "artboard").then(|| self.tool.options()["active"].as_u64()).flatten();
                 let artboard = active.and_then(|i| usize::try_from(i).ok()).filter(|i| *i < boards);
-                self.with_tool_cx(view, |_, cx| Some(vectorcraft_tools::rulerguide::NewGuide::new(cx, vertical, artboard)))
+                self.with_tool_cx(view, |_, cx| Some(oracle_vector_tools::rulerguide::NewGuide::new(cx, vertical, artboard)))
             }
         };
         let Some(mut g) = g else { return Ok(()) };
@@ -429,7 +429,7 @@ impl Session {
         // The Type tools draw the overflow markers of selected type themselves.
         if !matches!(self.tool.id(), "type" | "areaType" | "typeOnPath" | "verticalType" | "verticalAreaType" | "verticalTypeOnPath") {
             let mut marks = std::mem::take(&mut self.overflow_marks);
-            v.extend(self.with_tool_cx(view, |_, cx| vectorcraft_tools::text::overflow_markers(&mut marks, cx)));
+            v.extend(self.with_tool_cx(view, |_, cx| oracle_vector_tools::text::overflow_markers(&mut marks, cx)));
             self.overflow_marks = marks;
         }
         if let Some(g) = self.ruler_guide.take() {
@@ -439,7 +439,7 @@ impl Session {
         if let Some(d) = self.active() {
             let w = self.prefs.perspective_widget;
             let place = w.show.then_some(WidgetPlace { screen: view.screen.as_ref(), corner: w.position });
-            v.splice(0..0, vectorcraft_tools::distort::perspective::grid_overlays_in(&d.doc, 1.0 / view.zoom.max(1e-9), place));
+            v.splice(0..0, oracle_vector_tools::distort::perspective::grid_overlays_in(&d.doc, 1.0 / view.zoom.max(1e-9), place));
         }
         v
     }
@@ -499,7 +499,7 @@ impl Session {
     pub fn set_tool_option_cmd(&mut self, p: &Value) -> std::result::Result<Value, String> {
         let tool = p.get("tool").and_then(Value::as_str);
         if let Some(t) = tool
-            && vectorcraft_tools::tool_info(t).is_none()
+            && oracle_vector_tools::tool_info(t).is_none()
         {
             return Err(format!("unknown tool `{t}`"));
         }
@@ -509,7 +509,7 @@ impl Session {
         }
         if tool.unwrap_or(self.tool_id()) == "dimension" {
             if let Some(style) = values.get("style") {
-                vectorcraft_doc::dimension::DimensionOptions::from_params(style.clone())?;
+                oracle_vector_doc::dimension::DimensionOptions::from_params(style.clone())?;
             }
             if let Some(mode) = values.get("mode")
                 && !mode.as_str().is_some_and(|m| ["linear", "angular", "radial", "radius", "diameter"].contains(&m))
@@ -520,7 +520,7 @@ impl Session {
         Ok(self.set_tool_options(tool, &values))
     }
 
-    /// Let the active tool finish work a command from outside it ended ([`vectorcraft_tools::Tool::after_command`]):
+    /// Let the active tool finish work a command from outside it ended ([`oracle_vector_tools::Tool::after_command`]):
     /// the Type tool and the Eyedropper clear a character range whose text is no longer selected.
     pub(crate) fn after_command(&mut self) {
         if self.in_tool_actions || (!self.tool.wants_text() && self.tool.id() != "eyedropper") {

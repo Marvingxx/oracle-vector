@@ -1,8 +1,8 @@
 //! Type names the available family as the font spells it, not as the PostScript name splits into
 //! words (#130).
 
-use vectorcraft_doc::NodeKind;
-use vectorcraft_text::FontDb;
+use oracle_vector_doc::NodeKind;
+use oracle_vector_text::FontDb;
 
 use crate::import::import;
 

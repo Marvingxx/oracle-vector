@@ -12,7 +12,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use vectorcraft_color::Paint;
+use oracle_vector_color::Paint;
 
 use crate::{Document, Node, NodeKind};
 

@@ -1,20 +1,20 @@
 [package]
-name = "vectorcraft-render"
+name = "oracle-vector-render"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "VectorCraft renderer: document to pixels (vello_cpu backend)"
+description = "Oracle Vector renderer: document to pixels (vello_cpu backend)"
 
 [lints]
 workspace = true
 
 [dependencies]
-vectorcraft-geom = { workspace = true }
-vectorcraft-color = { workspace = true }
-vectorcraft-doc = { workspace = true }
-vectorcraft-text = { workspace = true }
-vectorcraft-effects = { workspace = true }
-vectorcraft-brush = { workspace = true }
+oracle-vector-geom = { workspace = true }
+oracle-vector-color = { workspace = true }
+oracle-vector-doc = { workspace = true }
+oracle-vector-text = { workspace = true }
+oracle-vector-effects = { workspace = true }
+oracle-vector-brush = { workspace = true }
 vello_cpu = { workspace = true }
 # Filter types (Gaussian blur, drop shadow) are not re-exported by vello_cpu 0.2.
 vello_common = { version = "0.2", default-features = false }
@@ -30,11 +30,11 @@ log = { workspace = true }
 vello_cpu = { workspace = true, features = ["multithreading"] }
 
 [dev-dependencies]
-vectorcraft-testkit = { workspace = true }
+oracle-vector-testkit = { workspace = true }
 # A variable font built in code (no font file is committed).
-vectorcraft-text = { workspace = true, features = ["test-fonts"] }
+oracle-vector-text = { workspace = true, features = ["test-fonts"] }
 # Live-effect plug-ins the cache tests install, written in WebAssembly text.
-vectorcraft-plugins = { workspace = true }
+oracle-vector-plugins = { workspace = true }
 wat = { workspace = true }
 # Decoders the export tests read their files back with.
 image = { workspace = true, features = ["tga"] }

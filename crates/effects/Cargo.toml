@@ -1,23 +1,23 @@
 [package]
-name = "vectorcraft-effects"
+name = "oracle-vector-effects"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "VectorCraft live effects evaluated to geometry"
+description = "Oracle Vector live effects evaluated to geometry"
 
 [lints]
 workspace = true
 
 [dependencies]
-vectorcraft-geom = { workspace = true }
-vectorcraft-three-d = { workspace = true }
-vectorcraft-doc = { workspace = true }
-vectorcraft-pathops = { workspace = true }
-vectorcraft-text = { workspace = true }
-vectorcraft-plugins = { workspace = true }
+oracle-vector-geom = { workspace = true }
+oracle-vector-three-d = { workspace = true }
+oracle-vector-doc = { workspace = true }
+oracle-vector-pathops = { workspace = true }
+oracle-vector-text = { workspace = true }
+oracle-vector-plugins = { workspace = true }
 image = { workspace = true }
 kurbo = { workspace = true }
 serde_json = { workspace = true }
 
 [dev-dependencies]
-vectorcraft-color = { workspace = true }
+oracle-vector-color = { workspace = true }

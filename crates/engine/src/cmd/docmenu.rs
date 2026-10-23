@@ -6,8 +6,8 @@ use std::collections::BTreeSet;
 use std::sync::Arc;
 
 use serde_json::{Value, json};
-use vectorcraft_doc::{CharStyle, Guide, Node, NodeId, NodeKind, SavedSelection, TextKind};
-use vectorcraft_geom::Vec2;
+use oracle_vector_doc::{CharStyle, Guide, Node, NodeId, NodeKind, SavedSelection, TextKind};
+use oracle_vector_geom::Vec2;
 
 use super::edit::selected_roots;
 use super::pathops::Beside;
@@ -86,13 +86,13 @@ pub fn specs() -> Vec<CommandSpec> {
             "{} objects whose topmost stroke has a bristle brush (type bristle in brush.list), whatever the brush is named → {count}",
             has_doc,
             |s, _| {
-                let brushes = vectorcraft_brush::library(&s.doc()?.doc);
+                let brushes = oracle_vector_brush::library(&s.doc()?.doc);
                 by_kind(s, |n| {
                     n.appearance
                         .stroke()
                         .and_then(|st| st.brush.as_deref())
                         .and_then(|name| brushes.iter().find(|b| b.name == name))
-                        .is_some_and(|b| matches!(b.kind, vectorcraft_brush::BrushKind::Bristle(_)))
+                        .is_some_and(|b| matches!(b.kind, oracle_vector_brush::BrushKind::Bristle(_)))
                 })
             }
         ),
@@ -517,7 +517,7 @@ fn make_guides(s: &mut Session, _: &Value) -> Result<Value> {
     Ok(json!({ "count": n }))
 }
 
-fn guide_paths(d: &vectorcraft_doc::Document) -> Vec<NodeId> {
+fn guide_paths(d: &oracle_vector_doc::Document) -> Vec<NodeId> {
     let mut v = vec![];
     d.walk(|n| {
         if matches!(n.kind, NodeKind::Path { guide: true, .. }) {
@@ -594,8 +594,8 @@ fn release_guides(s: &mut Session, p: &Value) -> Result<Value> {
         let mut made = Vec::with_capacity(lines.len());
         for &(_, parent, a, b) in &lines {
             let id = d.alloc_id();
-            let look = vectorcraft_doc::Appearance::basic(vectorcraft_color::Paint::None, vectorcraft_color::Paint::None, 0.0);
-            d.insert(parent, usize::MAX, Node::path(id, vectorcraft_geom::shapes::line(a, b), look))?;
+            let look = oracle_vector_doc::Appearance::basic(oracle_vector_color::Paint::None, oracle_vector_color::Paint::None, 0.0);
+            d.insert(parent, usize::MAX, Node::path(id, oracle_vector_geom::shapes::line(a, b), look))?;
             made.push(id);
         }
         d.retain_guides(sel, |i, _| !lines.iter().any(|l| l.0 == i));
@@ -792,7 +792,7 @@ pub(crate) fn guide_move(s: &mut Session, p: &Value) -> Result<Value> {
             s,
             if copy { "Copy Guide" } else { "Move Guide" },
             ids,
-            vectorcraft_geom::Affine::translate((dx, dy)),
+            oracle_vector_geom::Affine::translate((dx, dy)),
             p,
             true,
         );

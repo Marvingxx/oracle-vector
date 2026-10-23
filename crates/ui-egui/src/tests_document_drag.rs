@@ -2,13 +2,13 @@
 
 use egui::{Event, PointerButton, Pos2};
 use serde_json::json;
-use vectorcraft_engine::Session;
-use vectorcraft_geom::Point;
+use oracle_vector_engine::Session;
+use oracle_vector_geom::Point;
 
-use crate::{VectorcraftApp, canvas, chrome};
+use crate::{OracleVectorApp, canvas, chrome};
 
 /// Run a real tab-strip/canvas frame and return title bounds for pointer-driven gestures.
-fn frame(app: &mut VectorcraftApp, ctx: &egui::Context, time: f64, events: Vec<Event>) -> Vec<egui::Rect> {
+fn frame(app: &mut OracleVectorApp, ctx: &egui::Context, time: f64, events: Vec<Event>) -> Vec<egui::Rect> {
     app.sync_views();
     let focused = events
         .iter()
@@ -55,7 +55,7 @@ fn button(pos: Pos2, pressed: bool) -> Event {
 /// Verify dwell activation, editable placement, source and clipboard preservation, and target Undo/Redo.
 #[test]
 fn dragging_artwork_over_a_tab_switches_then_copies_on_drop() {
-    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    let mut app = OracleVectorApp::new(Session::new(), Default::default());
     app.run("file.new", json!({"width": 400, "height": 300, "name": "Logo"})).unwrap();
     let id = app.run("shape.rectangle", json!({"x": 50, "y": 50, "width": 100, "height": 100})).unwrap()["id"].as_u64().unwrap();
     let source = app.session.active().unwrap().doc.clone();
@@ -99,7 +99,7 @@ fn dragging_artwork_over_a_tab_switches_then_copies_on_drop() {
     assert!(!app.session.tool_busy(), "a completed tab transfer leaves the Selection tool idle");
     assert_eq!(app.session.documents()[0].doc, source);
     assert_eq!(app.session.documents()[0].history.undo.len(), source_undo);
-    assert!(app.session.documents()[0].doc.node(vectorcraft_doc::NodeId(id)).is_some());
+    assert!(app.session.documents()[0].doc.node(oracle_vector_doc::NodeId(id)).is_some());
     app.run("edit.undo", json!({})).unwrap();
     assert_eq!(app.session.active().unwrap().doc, destination);
     app.run("edit.redo", json!({})).unwrap();
@@ -107,13 +107,13 @@ fn dragging_artwork_over_a_tab_switches_then_copies_on_drop() {
 }
 
 /// Begin a Selection move in the first of three documents with no keyboard modifiers.
-fn drag_fixture() -> (VectorcraftApp, egui::Context, Pos2, Vec<egui::Rect>) {
+fn drag_fixture() -> (OracleVectorApp, egui::Context, Pos2, Vec<egui::Rect>) {
     drag_fixture_modifiers(Default::default())
 }
 
 /// Create three document tabs and start dragging source artwork with the supplied modifiers.
-fn drag_fixture_modifiers(modifiers: egui::Modifiers) -> (VectorcraftApp, egui::Context, Pos2, Vec<egui::Rect>) {
-    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+fn drag_fixture_modifiers(modifiers: egui::Modifiers) -> (OracleVectorApp, egui::Context, Pos2, Vec<egui::Rect>) {
+    let mut app = OracleVectorApp::new(Session::new(), Default::default());
     app.run("file.new", json!({"width":400,"height":300,"name":"Source"})).unwrap();
     app.run("shape.rectangle", json!({"x":50,"y":50,"width":100,"height":100})).unwrap();
     app.run("file.new", json!({"width":400,"height":300,"name":"Target"})).unwrap();
@@ -331,7 +331,7 @@ fn source_edits_target_closure_switches_and_focus_loss_cancel_stale_transfers() 
 /// Verify tab-strip relayout under a stationary pointer cannot trigger another document switch.
 #[test]
 fn scrolling_tabs_under_a_stationary_drag_does_not_cascade_to_other_documents() {
-    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    let mut app = OracleVectorApp::new(Session::new(), Default::default());
     for i in 0..8 {
         app.run("file.new", json!({"width":400,"height":300,"name":format!("Document {i}")})).unwrap();
     }

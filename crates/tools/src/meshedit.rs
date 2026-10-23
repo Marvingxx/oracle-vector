@@ -6,9 +6,9 @@
 use std::borrow::Cow;
 
 use serde_json::{Value, json};
-use vectorcraft_doc::live::{GradientMesh, envelope_grid};
-use vectorcraft_doc::{EnvelopeKind, Node, NodeId, NodeKind};
-use vectorcraft_geom::{Point, Vec2};
+use oracle_vector_doc::live::{GradientMesh, envelope_grid};
+use oracle_vector_doc::{EnvelopeKind, Node, NodeId, NodeKind};
+use oracle_vector_geom::{Point, Vec2};
 
 use crate::{Action, Overlay, ToolContext};
 
@@ -145,9 +145,9 @@ mod tests {
     use super::*;
     use crate::testutil::*;
     use crate::{PointerEvent, PointerKind, Tool};
-    use vectorcraft_doc::live::{EnvelopeOptions, grid_points};
-    use vectorcraft_doc::{Document, Selection};
-    use vectorcraft_geom::{Affine, Rect};
+    use oracle_vector_doc::live::{EnvelopeOptions, grid_points};
+    use oracle_vector_doc::{Document, Selection};
+    use oracle_vector_geom::{Affine, Rect};
 
     /// The rectangle of [`doc_with_rect`] (100..200 square) in a 1×1 mesh envelope.
     fn doc_with_envelope() -> (Document, NodeId) {

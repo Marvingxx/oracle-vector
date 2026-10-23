@@ -1,4 +1,4 @@
-//! VectorCraft tools: pointer events in → commands and overlays out.
+//! Oracle Vector tools: pointer events in → commands and overlays out.
 //!
 //! Tools never mutate the document directly. They emit [`Action`]s that the engine executes:
 //! `Begin` snapshots the document, each `Preview` re-applies one command on top of that snapshot
@@ -44,9 +44,9 @@ pub mod xform;
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use vectorcraft_color::Paint;
-use vectorcraft_doc::{Document, NodeId, Selection, Unit};
-use vectorcraft_geom::{BezPath, Point, Rect, Vec2};
+use oracle_vector_color::Paint;
+use oracle_vector_doc::{Document, NodeId, Selection, Unit};
+use oracle_vector_geom::{BezPath, Point, Rect, Vec2};
 
 pub use catalog::{TOOL_GROUPS, ToolInfo, tool_info};
 
@@ -170,10 +170,10 @@ pub struct PaintDefaults {
     /// The appearance new art takes (stroke options, more fills and strokes, effects), its top
     /// fill and stroke repainted with `fill`, `stroke` and `stroke_width`; `None`: one plain fill
     /// and stroke. Its placed gradients are relative to the unit box.
-    pub appearance: Option<vectorcraft_doc::Appearance>,
+    pub appearance: Option<oracle_vector_doc::Appearance>,
     /// New art's opacity and blend mode.
     pub opacity: f32,
-    pub blend: vectorcraft_color::BlendMode,
+    pub blend: oracle_vector_color::BlendMode,
     /// The graphic style the template came from (by name): new art is linked to it.
     pub style: Option<String>,
     /// The template is the last selection's appearance (New Art Has Basic Appearance off): with
@@ -185,8 +185,8 @@ impl Default for PaintDefaults {
     /// White fill, 1 pt black stroke, nothing else.
     fn default() -> Self {
         Self {
-            fill: Paint::solid(vectorcraft_color::Color::WHITE),
-            stroke: Paint::solid(vectorcraft_color::Color::BLACK),
+            fill: Paint::solid(oracle_vector_color::Color::WHITE),
+            stroke: Paint::solid(oracle_vector_color::Color::BLACK),
             stroke_width: 1.0,
             appearance: None,
             opacity: 1.0,
@@ -408,8 +408,8 @@ impl ToolContext<'_> {
         let half = (5.0 + f64::from(self.anchor_size.clamp(1, 7)) - 3.0) / 2.0;
         self.tol(self.selection_tolerance.max(half + 2.0))
     }
-    pub fn hit_options(&self) -> vectorcraft_doc::hit::HitOptions {
-        vectorcraft_doc::hit::HitOptions {
+    pub fn hit_options(&self) -> oracle_vector_doc::hit::HitOptions {
+        oracle_vector_doc::hit::HitOptions {
             tol: self.pick_tol(),
             outline: self.outline,
             path_only: self.path_only,
@@ -425,9 +425,9 @@ impl ToolContext<'_> {
     /// Only for what a press or a hover selects: a double-click, loaded text or a guide's release
     /// acts on what is drawn and takes [`Self::hit_options`].
     ///
-    /// [`HitOptions::clip_outlines`]: vectorcraft_doc::hit::HitOptions::clip_outlines
-    pub fn selection_hit_options(&self) -> vectorcraft_doc::hit::HitOptions {
-        vectorcraft_doc::hit::HitOptions { clip_outlines: true, ..self.hit_options() }
+    /// [`HitOptions::clip_outlines`]: oracle_vector_doc::hit::HitOptions::clip_outlines
+    pub fn selection_hit_options(&self) -> oracle_vector_doc::hit::HitOptions {
+        oracle_vector_doc::hit::HitOptions { clip_outlines: true, ..self.hit_options() }
     }
 }
 
@@ -871,8 +871,8 @@ pub(crate) fn json_ids(ids: &[NodeId]) -> Value {
 #[cfg(test)]
 pub(crate) mod testutil {
     use super::*;
-    use vectorcraft_doc::{Appearance, Node};
-    use vectorcraft_geom::shapes;
+    use oracle_vector_doc::{Appearance, Node};
+    use oracle_vector_geom::shapes;
 
     pub fn doc_with_rect() -> (Document, NodeId) {
         let mut d = Document::new(500.0, 500.0);
@@ -890,12 +890,12 @@ pub(crate) mod testutil {
         let l = d.layers[0].id;
         let (g, clip, art) = (d.alloc_id(), d.alloc_id(), d.alloc_id());
         let mut path = Node::path(clip, shapes::rectangle(Rect::new(400.0, 400.0, 500.0, 500.0)), Default::default());
-        if let vectorcraft_doc::NodeKind::Path { clipping, .. } = &mut path.kind {
+        if let oracle_vector_doc::NodeKind::Path { clipping, .. } = &mut path.kind {
             *clipping = true;
         }
         let picture = Node::path(art, shapes::rectangle(Rect::new(350.0, 350.0, 550.0, 550.0)), Appearance::default_art());
         let group =
-            Node::new(g, vectorcraft_doc::NodeKind::Group { children: vec![std::sync::Arc::new(path), std::sync::Arc::new(picture)], clip: true });
+            Node::new(g, oracle_vector_doc::NodeKind::Group { children: vec![std::sync::Arc::new(path), std::sync::Arc::new(picture)], clip: true });
         d.insert(Some(l), 1, group).unwrap();
         (d, g, clip, art)
     }
@@ -906,7 +906,7 @@ pub(crate) mod testutil {
         let l = d.add_layer(Some("Masked"));
         let clip = d.alloc_id();
         let mut path = Node::path(clip, shapes::rectangle(mask), Default::default());
-        if let vectorcraft_doc::NodeKind::Path { clipping, .. } = &mut path.kind {
+        if let oracle_vector_doc::NodeKind::Path { clipping, .. } = &mut path.kind {
             *clipping = true;
         }
         d.insert(Some(l), 0, path).unwrap();
@@ -921,9 +921,9 @@ pub(crate) mod testutil {
     pub fn doc_with_type_on_a_layer_masks_edge() -> (Document, NodeId, Point) {
         let (mut d, _) = doc_with_rect();
         let id = d.alloc_id();
-        let mut t = vectorcraft_doc::TextObject::point(Point::new(300.0, 300.0), "Some words", Default::default());
-        t.kind = vectorcraft_doc::TextKind::Area { frame: shapes::rectangle(Rect::new(0.0, 0.0, 120.0, 40.0)) };
-        add_masked_layer(&mut d, Rect::new(250.0, 250.0, 360.0, 400.0), Node::new(id, vectorcraft_doc::NodeKind::Text(Box::new(t))));
+        let mut t = oracle_vector_doc::TextObject::point(Point::new(300.0, 300.0), "Some words", Default::default());
+        t.kind = oracle_vector_doc::TextKind::Area { frame: shapes::rectangle(Rect::new(0.0, 0.0, 120.0, 40.0)) };
+        add_masked_layer(&mut d, Rect::new(250.0, 250.0, 360.0, 400.0), Node::new(id, oracle_vector_doc::NodeKind::Text(Box::new(t))));
         (d, id, Point::new(358.5, 320.0))
     }
 
@@ -932,9 +932,9 @@ pub(crate) mod testutil {
         let (mut d, _) = doc_with_rect();
         let l = d.layers[0].id;
         let id = d.alloc_id();
-        let mut t = vectorcraft_doc::TextObject::point(Point::new(300.0, 300.0), "Some words", Default::default());
-        t.kind = vectorcraft_doc::TextKind::Area { frame: shapes::rectangle(Rect::new(0.0, 0.0, 120.0, 40.0)) };
-        d.insert(Some(l), 1, Node::new(id, vectorcraft_doc::NodeKind::Text(Box::new(t)))).unwrap();
+        let mut t = oracle_vector_doc::TextObject::point(Point::new(300.0, 300.0), "Some words", Default::default());
+        t.kind = oracle_vector_doc::TextKind::Area { frame: shapes::rectangle(Rect::new(0.0, 0.0, 120.0, 40.0)) };
+        d.insert(Some(l), 1, Node::new(id, oracle_vector_doc::NodeKind::Text(Box::new(t)))).unwrap();
         (d, id)
     }
 
@@ -943,13 +943,13 @@ pub(crate) mod testutil {
         let (mut d, _) = doc_with_rect();
         let l = d.layers[0].id;
         let id = d.alloc_id();
-        let mut t = vectorcraft_doc::TextObject::point(Point::ZERO, "Path type", Default::default());
-        let path = vectorcraft_geom::PathData::from_bezpath(&vectorcraft_geom::BezPath::from_vec(vec![
-            vectorcraft_geom::PathEl::MoveTo(Point::new(100.0, 300.0)),
-            vectorcraft_geom::PathEl::LineTo(Point::new(400.0, 300.0)),
+        let mut t = oracle_vector_doc::TextObject::point(Point::ZERO, "Path type", Default::default());
+        let path = oracle_vector_geom::PathData::from_bezpath(&oracle_vector_geom::BezPath::from_vec(vec![
+            oracle_vector_geom::PathEl::MoveTo(Point::new(100.0, 300.0)),
+            oracle_vector_geom::PathEl::LineTo(Point::new(400.0, 300.0)),
         ]));
-        t.kind = vectorcraft_doc::TextKind::OnPath { path, start: 0.2, end: None };
-        d.insert(Some(l), 1, Node::new(id, vectorcraft_doc::NodeKind::Text(Box::new(t)))).unwrap();
+        t.kind = oracle_vector_doc::TextKind::OnPath { path, start: 0.2, end: None };
+        d.insert(Some(l), 1, Node::new(id, oracle_vector_doc::NodeKind::Text(Box::new(t)))).unwrap();
         (d, id)
     }
 
@@ -964,10 +964,10 @@ pub(crate) mod testutil {
         let a = Node::path(d.alloc_id(), square(0.0), Appearance::default_art());
         let b = Node::path(d.alloc_id(), square(50.0), Appearance::default_art());
         let mut sources = Node::group(d.alloc_id(), vec![Arc::new(a), Arc::new(b)]);
-        sources.name = Some(vectorcraft_doc::shaper::SOURCES.into());
+        sources.name = Some(oracle_vector_doc::shaper::SOURCES.into());
         sources.opacity = 0.0;
         let mut face = Node::path(d.alloc_id(), square(0.0), Appearance::default_art());
-        face.name = Some(format!("{}0", vectorcraft_doc::shaper::FILL_PREFIX));
+        face.name = Some(format!("{}0", oracle_vector_doc::shaper::FILL_PREFIX));
         let (sources_id, face_id) = (sources.id, face.id);
         let mut group = Node::group(d.alloc_id(), vec![Arc::new(sources), Arc::new(face)]);
         group.extras_mut().shaper = Some(Box::default());

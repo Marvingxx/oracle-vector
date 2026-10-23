@@ -1,23 +1,23 @@
-//! `plugin.*` commands: sandboxed WebAssembly plug-ins (`vectorcraft-plugins`).
+//! `plugin.*` commands: sandboxed WebAssembly plug-ins (`oracle-vector-plugins`).
 //!
 //! Plug-ins are installed with `plugin.install` (kept across restarts in the apps' plug-in folder,
 //! [`Session::attach_plugin_store`]) or from every `*.wasm` in the Additional Plug-ins Folder
 //! preference, and listed with `plugin.list` / `plugin.info`. Object filters run
 //! with `plugin.run` on the selected paths and compound paths (one undo step, transactional: a
 //! plug-in that fails leaves the document untouched); live-effect plug-ins are applied like any
-//! effect (`effect.apply {effect: "plugin.<id>"}`) and drawn by `vectorcraft-effects`; exporters
+//! effect (`effect.apply {effect: "plugin.<id>"}`) and drawn by `oracle-vector-effects`; exporters
 //! add a file format that `document.export` writes (`fileio::plugin_formats`).
 
 use std::sync::{Arc, Mutex};
 
 use serde_json::{Map, Value, json};
-use vectorcraft_doc::{Effect, Node};
-use vectorcraft_plugins::{Kind, Plugin, effect, export, objects, registry};
+use oracle_vector_doc::{Effect, Node};
+use oracle_vector_plugins::{Kind, Plugin, effect, export, objects, registry};
 
 use super::*;
 
 /// What a plug-in error looks like to the user.
-fn err(e: vectorcraft_plugins::Error) -> EngineError {
+fn err(e: oracle_vector_plugins::Error) -> EngineError {
     EngineError::Other(e.to_string())
 }
 
@@ -56,7 +56,7 @@ fn plugin_params(p: &Value) -> Value {
 
 fn plugin_by_id(cmd: &str, p: &Value) -> Result<Arc<Plugin>> {
     let id = str_param(p, "id").ok_or_else(|| bad(cmd, "missing `id` (see plugin.list)"))?;
-    registry::get(id).ok_or_else(|| err(vectorcraft_plugins::Error::NotFound(id.into())))
+    registry::get(id).ok_or_else(|| err(oracle_vector_plugins::Error::NotFound(id.into())))
 }
 
 /// `plugin.run`: runs filter `id` on `ids` (else the selected paths and compound paths) with its
@@ -84,7 +84,7 @@ fn run(s: &mut Session, p: &Value) -> Result<Value> {
     let parent = st.insertion_parent();
     let bounds = st.doc.bounds_of(&inputs, false);
     let board = bounds.and_then(|b| st.doc.artboard_at(b.center())).and_then(|i| st.doc.artboards.get(i)).or(st.doc.artboards.first());
-    let rect = |r: vectorcraft_geom::Rect| json!([r.x0, r.y0, r.x1, r.y1]);
+    let rect = |r: oracle_vector_geom::Rect| json!([r.x0, r.y0, r.x1, r.y1]);
     params["_context"] = json!({"mode": "filter", "bounds": bounds.map(rect), "artboard": board.map(|a| rect(a.rect))});
     let input = objects::encode_input(&st.doc, &inputs);
     let params = serde_json::to_vec(&params).map_err(|e| bad(C, e.to_string()))?;
@@ -105,7 +105,7 @@ fn run(s: &mut Session, p: &Value) -> Result<Value> {
 /// Texturizer) comes as the effect stores it, never as a file to read: a plug-in can't have the
 /// host read one.
 fn admit_effects(fx: &[Effect], n: &Node) -> std::result::Result<Vec<Effect>, String> {
-    use vectorcraft_render::effects;
+    use oracle_vector_render::effects;
     const C: &str = "plugin.run";
     let mut out = Vec::with_capacity(fx.len());
     for (j, e) in fx.iter().enumerate() {
@@ -154,8 +154,8 @@ fn install(s: &mut Session, p: &Value) -> Result<Value> {
             if data.len() > MAX_DATA_CHARS {
                 return Err(bad(C, "`dataBase64` is larger than the module limit"));
             }
-            let bytes = vectorcraft_format::base64_decode(data).ok_or_else(|| bad(C, "`dataBase64` is not valid base64"))?;
-            let plugin = Plugin::load(&bytes, vectorcraft_plugins::Limits::default()).map_err(err)?;
+            let bytes = oracle_vector_format::base64_decode(data).ok_or_else(|| bad(C, "`dataBase64` is not valid base64"))?;
+            let plugin = Plugin::load(&bytes, oracle_vector_plugins::Limits::default()).map_err(err)?;
             let plugin = match str_param(p, "name") {
                 Some(name) => plugin.with_source(name),
                 None => plugin,
@@ -177,7 +177,7 @@ fn install(s: &mut Session, p: &Value) -> Result<Value> {
 #[cfg(not(target_arch = "wasm32"))]
 fn load_path(path: &str) -> Result<(Plugin, Vec<u8>)> {
     crate::file_access::check_read(path).map_err(EngineError::Other)?;
-    let limits = vectorcraft_plugins::Limits::default();
+    let limits = oracle_vector_plugins::Limits::default();
     let bytes = crate::store::read_capped(std::path::Path::new(path), limits.max_module_bytes as u64).map_err(EngineError::Other)?;
     Ok((Plugin::load(&bytes, limits).map_err(err)?.with_source(path), bytes))
 }
@@ -257,7 +257,7 @@ fn info(_: &mut Session, p: &Value) -> Result<Value> {
 fn remove(s: &mut Session, p: &Value) -> Result<Value> {
     let id = str_param(p, "id").ok_or_else(|| bad("plugin.remove", "missing `id`"))?;
     s.unstore_plugin(id);
-    if registry::remove(id) { Ok(json!({"removed": id})) } else { Err(err(vectorcraft_plugins::Error::NotFound(id.into()))) }
+    if registry::remove(id) { Ok(json!({"removed": id})) } else { Err(err(oracle_vector_plugins::Error::NotFound(id.into()))) }
 }
 
 pub fn specs() -> Vec<CommandSpec> {

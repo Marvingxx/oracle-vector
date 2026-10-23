@@ -1,8 +1,8 @@
 //! Fill and stroke paint (the toolbar proxies and their defaults) and the Transparency panel.
 
 use serde_json::{Value, json};
-use vectorcraft_color::{BlendMode, Color, GradientPaint, Paint};
-use vectorcraft_doc::{Appearance, CharStyle, Document, Node, NodeId, NodeKind};
+use oracle_vector_color::{BlendMode, Color, GradientPaint, Paint};
+use oracle_vector_doc::{Appearance, CharStyle, Document, Node, NodeId, NodeKind};
 
 use super::appearance::{ItemTarget, appearance_targets, edit_items, edit_items_then, item_target};
 use super::gradient::{item_paint_bounds, place_paint, place_run_paint, run_paint_mut, run_stroke_weight, unplaced};
@@ -300,18 +300,18 @@ pub(crate) fn check_keep_model(p: &Value, cmd: &str) -> Result<()> {
 
 /// The model RGB colours given in `p` are stored in: the document's in a CMYK document (`None` in
 /// an RGB one, or with `keepModel`).
-fn new_color_model(s: &Session, p: &Value) -> Option<vectorcraft_color::cms::Model> {
+fn new_color_model(s: &Session, p: &Value) -> Option<oracle_vector_color::cms::Model> {
     let mode = s.active()?.doc.color_mode;
-    (mode != vectorcraft_doc::ColorMode::Rgb && !bool_or(p, "keepModel", false)).then(|| mode.model())
+    (mode != oracle_vector_doc::ColorMode::Rgb && !bool_or(p, "keepModel", false)).then(|| mode.model())
 }
 
 /// `c` in `model` ([`new_color_model`]) when it is an RGB color, converted through the color
 /// settings (the working spaces and their intent) as Document Color Mode converts it. Other colors
 /// are returned as given.
-pub(crate) fn stored_color(model: Option<vectorcraft_color::cms::Model>, c: Color) -> Color {
+pub(crate) fn stored_color(model: Option<oracle_vector_color::cms::Model>, c: Color) -> Color {
     match (c, model) {
         (Color::Rgb { .. }, Some(m)) => {
-            let cms = vectorcraft_color::cms::active();
+            let cms = oracle_vector_color::cms::active();
             cms.convert(&c, m, cms.settings().intent)
         }
         _ => c,
@@ -339,7 +339,7 @@ pub(crate) fn paint_from(s: &Session, p: &Value) -> Result<Option<Paint>> {
         let d = &s.doc()?.doc;
         // A pattern definition works as its swatch even without a swatch entry.
         if d.swatch(name).is_none() && d.pattern(name).is_some() {
-            return Ok(Some(vectorcraft_doc::pattern::pattern_paint(name)));
+            return Ok(Some(oracle_vector_doc::pattern::pattern_paint(name)));
         }
         let sw = d.swatch(name).ok_or_else(|| EngineError::Other(format!("no swatch `{name}`")))?;
         let tint = tint_param(p, "paint")?;
@@ -430,14 +430,14 @@ fn apply_paint(s: &mut Session, p: &Value, paint: Paint, fill: bool) -> Result<V
         super::overprint::edit_counted(s, if fill { "Fill Color" } else { "Stroke Color" }, |d| {
             let Some(NodeKind::Text(t)) = d.node_mut(id).map(|n| &mut n.kind) else { return Err(EngineError::NoNode(id)) };
             let (xf, lb) = (t.xf, t.local_bounds());
-            vectorcraft_text::edit::style_range(&mut t.runs, a, b, |st| {
+            oracle_vector_text::edit::style_range(&mut t.runs, a, b, |st| {
                 if fill {
                     st.fill = place_run_paint(&paint, p, xf, lb);
                 } else {
                     if !paint.is_none() {
                         run_stroke_weight(st);
                     }
-                    st.stroke = place_run_paint(&paint, p, xf, vectorcraft_doc::appearance::stroke_paint_bounds(lb, st.stroke_width));
+                    st.stroke = place_run_paint(&paint, p, xf, oracle_vector_doc::appearance::stroke_paint_bounds(lb, st.stroke_width));
                 }
             });
             super::typecmd::refresh_bounds(t);
@@ -547,7 +547,7 @@ fn spans_targets(p: &Value, paint: &Paint) -> std::result::Result<bool, String> 
     if p.get("swatch").is_some() {
         return Err("span: \"selection\" places a `gradient`, not a swatch".into());
     }
-    if g.gradient.kind == vectorcraft_color::GradientKind::Freeform || g.freeform.is_some() {
+    if g.gradient.kind == oracle_vector_color::GradientKind::Freeform || g.freeform.is_some() {
         return Err("span: \"selection\" places a linear or radial gradient, not a freeform one".into());
     }
     if g.geom.is_some() {
@@ -573,7 +573,7 @@ fn placed_across(d: &Document, ids: &[NodeId], paint: Paint, p: &Value, fill: bo
     match place_paint(&paint, p, Some(union)) {
         Paint::Gradient(placed) if placed.geom.is_some() => Paint::Gradient(placed),
         _ => {
-            let geom = vectorcraft_color::GradientGeom::fit(g.gradient.kind, union, g.angle);
+            let geom = oracle_vector_color::GradientGeom::fit(g.gradient.kind, union, g.angle);
             Paint::Gradient(Box::new(GradientPaint { geom: Some(geom), ..(**g).clone() }))
         }
     }
@@ -748,7 +748,7 @@ fn transparency(s: &mut Session, p: &Value) -> Result<Value> {
         return Err(bad(C, format!("unknown blend mode {b}")));
     }
     if let Some(k) = q.get("knockout")
-        && vectorcraft_doc::Knockout::from_value(k).is_none()
+        && oracle_vector_doc::Knockout::from_value(k).is_none()
     {
         return Err(bad(C, format!("unknown knockout state {k}")));
     }

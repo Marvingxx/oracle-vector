@@ -3,7 +3,7 @@
 use std::collections::HashSet;
 
 use serde::{Deserialize, Serialize};
-use vectorcraft_geom::Rect;
+use oracle_vector_geom::Rect;
 
 /// Most categories (rows) and series (columns) a graph's data grid holds: the grid is built in full for drawing and
 /// for the data window, so a file can't make it allocate without bound.
@@ -308,9 +308,9 @@ impl TickLength {
 #[serde(default, rename_all = "camelCase")]
 pub struct SeriesPaint {
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub fill: Option<vectorcraft_color::Paint>,
+    pub fill: Option<oracle_vector_color::Paint>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub stroke: Option<vectorcraft_color::Paint>,
+    pub stroke: Option<oracle_vector_color::Paint>,
     /// Stroke weight in points, kept with [`Self::stroke`].
     #[serde(skip_serializing_if = "Option::is_none")]
     pub stroke_width: Option<f64>,

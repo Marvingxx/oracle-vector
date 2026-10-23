@@ -1,9 +1,9 @@
 //! Brushes and symbols: commands, tools, rendering and persistence.
 
 use serde_json::{Value, json};
-use vectorcraft_doc::{Document, Node, NodeKind};
-use vectorcraft_geom::Rect;
-use vectorcraft_tools::{Mods, PointerEvent, PointerKind};
+use oracle_vector_doc::{Document, Node, NodeKind};
+use oracle_vector_geom::Rect;
+use oracle_vector_tools::{Mods, PointerEvent, PointerKind};
 
 use super::*;
 
@@ -129,9 +129,9 @@ fn new_brushes_from_params_and_selection() {
 fn brushes_outside_the_layers(s: &Session, pattern: &str) -> Vec<String> {
     let d = &s.doc().unwrap().doc;
     let mut out = vec![];
-    let mut items = |place: &str, items: &[vectorcraft_doc::AppearanceItem]| {
+    let mut items = |place: &str, items: &[oracle_vector_doc::AppearanceItem]| {
         for it in items {
-            if let vectorcraft_doc::AppearanceItem::Stroke(st) = it {
+            if let oracle_vector_doc::AppearanceItem::Stroke(st) = it {
                 out.push(format!("{place}: {}", st.brush.as_deref().unwrap_or("-")));
             }
         }
@@ -143,7 +143,7 @@ fn brushes_outside_the_layers(s: &Session, pattern: &str) -> Vec<String> {
     let mut masks = vec![];
     d.walk(|n| masks.extend(n.extras().mask.as_deref().map(|m| m.art.clone())));
     masks.iter().for_each(|n| tree("mask", n));
-    let holder = vectorcraft_brush::find(d, "Holder").unwrap();
+    let holder = oracle_vector_brush::find(d, "Holder").unwrap();
     holder.art().into_iter().for_each(|n| tree("brush art", n));
     items("style", &d.graphic_styles.iter().find(|x| x.name == "Linked").unwrap().appearance.items);
     out
@@ -344,11 +344,11 @@ fn new_duplicate_and_renamed_brushes_trim_their_names() {
     assert!(e.contains("a brush named `Quill` exists"), "{e}");
     // Duplicate Brush names the copy of a brush whose saved name has white space around it, as a
     // saved file can hold, from the trimmed name (" Old " gives "Old copy").
-    let mut lib = vectorcraft_brush::library(&s.doc().unwrap().doc);
+    let mut lib = oracle_vector_brush::library(&s.doc().unwrap().doc);
     lib.iter_mut().filter(|b| b.name == "Pen").for_each(|b| b.name = " Old ".into());
-    vectorcraft_brush::store(std::sync::Arc::make_mut(&mut s.doc_mut().unwrap().doc), &lib);
+    oracle_vector_brush::store(std::sync::Arc::make_mut(&mut s.doc_mut().unwrap().doc), &lib);
     assert_eq!(s.execute("brush.duplicate", &json!({"name": " Old "})).unwrap()["name"], "Old copy");
-    let names: Vec<String> = vectorcraft_brush::library(&s.doc().unwrap().doc).into_iter().map(|b| b.name).collect();
+    let names: Vec<String> = oracle_vector_brush::library(&s.doc().unwrap().doc).into_iter().map(|b| b.name).collect();
     assert_eq!(names[names.len() - 6..], ["Nib", " Old ", "New Calligraphic Brush", "Quill", "Nib copy", "Old copy"]);
 }
 
@@ -358,7 +358,7 @@ fn new_duplicate_and_renamed_brushes_trim_their_names() {
 #[test]
 fn bristle_brush_names_have_at_most_31_characters() {
     let mut s = session();
-    let library = |s: &Session| vectorcraft_brush::library(&s.doc().unwrap().doc);
+    let library = |s: &Session| oracle_vector_brush::library(&s.doc().unwrap().doc);
     let refused = |s: &mut Session, cmd: &str, p: Value| s.execute(cmd, &p).unwrap_err().to_string();
     let (long, fits) = ("b".repeat(32), "é".repeat(31));
     let e = refused(&mut s, "brush.new", json!({"type": "bristle", "name": long}));
@@ -382,7 +382,7 @@ fn bristle_brush_names_have_at_most_31_characters() {
     let mut lib = library(&s);
     lib.iter_mut().filter(|b| b.name == short).for_each(|b| b.name = old.clone());
     lib.iter_mut().filter(|b| b.name == fits).for_each(|b| b.name = spaced.clone());
-    vectorcraft_brush::store(std::sync::Arc::make_mut(&mut s.doc_mut().unwrap().doc), &lib);
+    oracle_vector_brush::store(std::sync::Arc::make_mut(&mut s.doc_mut().unwrap().doc), &lib);
     let l = line(&mut s);
     s.execute("brush.apply", &json!({"name": old, "ids": [l.0]})).unwrap();
     // Brush Options without a new name, with the same name, or with the name only trimmed keep them.
@@ -392,8 +392,8 @@ fn bristle_brush_names_have_at_most_31_characters() {
     assert_eq!(s.execute("brush.get", &json!({"name": old})).unwrap()["size"], json!(9.0));
     assert_eq!(s.execute("brush.duplicate", &json!({"name": old})).unwrap()["name"], format!("{old} copy"));
     // Saved and opened again, the brush and the stroke painted with it keep the name.
-    let back = vectorcraft_format::load(&vectorcraft_format::save(&s.doc().unwrap().doc, false)).unwrap();
-    assert!(vectorcraft_brush::find(&back, &old).is_some_and(|b| b.kind.type_id() == "bristle"));
+    let back = oracle_vector_format::load(&oracle_vector_format::save(&s.doc().unwrap().doc, false)).unwrap();
+    assert!(oracle_vector_brush::find(&back, &old).is_some_and(|b| b.kind.type_id() == "bristle"));
     assert_eq!(back.node(l).unwrap().appearance.stroke().unwrap().brush.as_deref(), Some(old.as_str()));
     let mut s2 = Session::new();
     s2.add_document(back, None);
@@ -445,9 +445,9 @@ fn unused(s: &mut Session) -> Vec<String> {
 #[test]
 fn brush_unused_lists_the_brushes_no_stroke_paints_with() {
     let mut s = session();
-    let mut lib = vectorcraft_brush::library(&s.doc().unwrap().doc);
+    let mut lib = oracle_vector_brush::library(&s.doc().unwrap().doc);
     lib.retain(|b| ["3 pt. Round", "6 pt. Flat", "Charcoal"].contains(&b.name.as_str()));
-    vectorcraft_brush::store(std::sync::Arc::make_mut(&mut s.doc_mut().unwrap().doc), &lib);
+    oracle_vector_brush::store(std::sync::Arc::make_mut(&mut s.doc_mut().unwrap().doc), &lib);
     let a = rect(&mut s, 10.0, 10.0, 50.0, 50.0);
     s.execute("brush.apply", &json!({"name": "6 pt. Flat"})).unwrap();
     let undo = s.doc().unwrap().history.undo.len();
@@ -575,7 +575,7 @@ fn pressure_round(s: &mut Session) {
     s.execute("brush.options", &json!({"name": "3 pt. Round", "params": params})).unwrap();
 }
 
-fn pressure_of(s: &Session, id: NodeId) -> Option<vectorcraft_doc::PressureProfile> {
+fn pressure_of(s: &Session, id: NodeId) -> Option<oracle_vector_doc::PressureProfile> {
     node(s, id).appearance.stroke().and_then(|st| st.pressure.clone())
 }
 
@@ -605,20 +605,20 @@ fn paintbrush_records_pen_pressure_on_the_stroke() {
     assert_eq!(pressure_of(&s, mouse), None, "a mouse presses fully: nothing to record");
     // Drawn: thin where the pen pressed lightly, 6 pt where it pressed fully.
     let doc: Document = (*s.doc().unwrap().doc).clone();
-    let art = |d: &Document, id: NodeId| vectorcraft_brush::node_pieces(d, d.node(id).unwrap()).unwrap();
-    let heavy_end = vectorcraft_brush::pieces_bounds(&art(&doc, pen)).unwrap();
+    let art = |d: &Document, id: NodeId| oracle_vector_brush::node_pieces(d, d.node(id).unwrap()).unwrap();
+    let heavy_end = oracle_vector_brush::pieces_bounds(&art(&doc, pen)).unwrap();
     assert!((heavy_end.height() - 6.0).abs() < 0.3, "{heavy_end:?}");
-    let even = vectorcraft_brush::pieces_bounds(&art(&doc, mouse)).unwrap();
+    let even = oracle_vector_brush::pieces_bounds(&art(&doc, mouse)).unwrap();
     assert!((even.height() - 3.0).abs() < 0.1, "no pressure draws the size itself: {even:?}");
     // Saved and reopened as it was.
-    let back = vectorcraft_format::load(&vectorcraft_format::save(&doc, false)).unwrap();
+    let back = oracle_vector_format::load(&oracle_vector_format::save(&doc, false)).unwrap();
     assert_eq!(back.node(pen).unwrap().appearance.stroke().unwrap().pressure, Some(p));
     // SVG and PDF draw the brush through the same stroke code: without the pressure they differ.
     let mut flat = doc.clone();
     flat.node_mut(pen).unwrap().appearance.stroke_mut().unwrap().pressure = None;
-    assert_ne!(vectorcraft_svg::export(&doc, &Default::default()), vectorcraft_svg::export(&flat, &Default::default()));
+    assert_ne!(oracle_vector_svg::export(&doc, &Default::default()), oracle_vector_svg::export(&flat, &Default::default()));
     let pdf = |d: &Document| {
-        vectorcraft_pdf::export(d, &vectorcraft_pdf::PdfOptions { created: Some(0), ..vectorcraft_pdf::PdfOptions::uncompressed() }).unwrap()
+        oracle_vector_pdf::export(d, &oracle_vector_pdf::PdfOptions { created: Some(0), ..oracle_vector_pdf::PdfOptions::uncompressed() }).unwrap()
     };
     assert_ne!(pdf(&doc), pdf(&flat));
 }
@@ -638,7 +638,7 @@ fn continuing_a_stroke_joins_its_pressure() {
     s.execute("path.freehand", &json!({"points": [[0, 150, 1], [-100, 150, 0]], "style": "brush", "extend": {"id": id.0, "end": "start"}})).unwrap();
     let p = pressure_of(&s, id).unwrap();
     assert!(p.at(0.0) < 0.05 && (p.at(0.5) - 1.0).abs() < 0.05, "{p:?}");
-    assert_eq!(p.at(1.0), vectorcraft_doc::PressureProfile::MID, "the old part had no pressure");
+    assert_eq!(p.at(1.0), oracle_vector_doc::PressureProfile::MID, "the old part had no pressure");
 }
 
 /// Pen pressure belongs to its path: new art, graphic styles and Brush Options' edits leave it.
@@ -676,8 +676,8 @@ fn brush_options_set_variation_modes() {
 /// The bounds of the brush art `id`'s strokes draw.
 fn brushed_bounds(s: &Session, id: NodeId) -> Rect {
     let st = s.doc().unwrap();
-    let pieces = vectorcraft_brush::node_pieces(&st.doc, &node(s, id)).expect("brushed");
-    vectorcraft_brush::pieces_bounds(&pieces).expect("draws")
+    let pieces = oracle_vector_brush::node_pieces(&st.doc, &node(s, id)).expect("brushed");
+    oracle_vector_brush::pieces_bounds(&pieces).expect("draws")
 }
 
 /// Scatter, Art and Pattern Brush Options: the params reach the brush and every stroke painted
@@ -764,7 +764,7 @@ fn hue_shift_without_a_key_takes_the_most_used_art_color() {
     paint(&mut s, b, "#ff0000", Some("#ff0000"));
     let c = rect(&mut s, 70.0, 200.0, 20.0, 8.0);
     paint(&mut s, c, "#ff0000", None);
-    let color = |r: f32, g: f32, b: f32| serde_json::to_value(vectorcraft_color::Color::rgb(r, g, b)).unwrap();
+    let color = |r: f32, g: f32, b: f32| serde_json::to_value(oracle_vector_color::Color::rgb(r, g, b)).unwrap();
     let (red, green) = (color(1.0, 0.0, 0.0), color(0.0, 1.0, 0.0));
     let hue_shift = json!({"colorization": {"method": "hueShift"}});
     let r = s.execute("brush.new", &json!({"type": "scatter", "name": "Key", "ids": [a.0, b.0, c.0], "params": hue_shift})).unwrap();
@@ -967,20 +967,20 @@ fn symbol_export_type_defaults_to_movie_clip_and_round_trips() {
     let (_, name, _) = make_symbol(&mut s);
     let list = s.execute("symbol.list", &json!({})).unwrap();
     assert_eq!(list["symbols"][0]["exportType"], "movieClip");
-    assert!(s.doc().unwrap().doc.unknown.get(vectorcraft_doc::SYMBOL_EXPORT_TYPE).is_none());
+    assert!(s.doc().unwrap().doc.unknown.get(oracle_vector_doc::SYMBOL_EXPORT_TYPE).is_none());
     s.execute("symbol.options", &json!({"name": name, "exportType": "graphic"})).unwrap();
     assert_eq!(s.execute("symbol.list", &json!({})).unwrap()["symbols"][0]["exportType"], "graphic");
-    assert_eq!(s.doc().unwrap().doc.unknown[vectorcraft_doc::SYMBOL_EXPORT_TYPE][&name], json!("graphic"));
+    assert_eq!(s.doc().unwrap().doc.unknown[oracle_vector_doc::SYMBOL_EXPORT_TYPE][&name], json!("graphic"));
     let copy = s.execute("symbol.duplicate", &json!({"name": name})).unwrap();
     assert_eq!(copy["exportType"], "graphic");
     s.execute("symbol.options", &json!({"name": name, "newName": "Renamed", "exportType": "movieClip"})).unwrap();
     let list = s.execute("symbol.list", &json!({})).unwrap();
     let renamed = list["symbols"].as_array().unwrap().iter().find(|x| x["name"] == "Renamed").unwrap();
     assert_eq!(renamed["exportType"], "movieClip");
-    assert!(s.doc().unwrap().doc.unknown.get(vectorcraft_doc::SYMBOL_EXPORT_TYPE).and_then(|m| m.get("Renamed")).is_none());
-    assert_eq!(s.doc().unwrap().doc.unknown[vectorcraft_doc::SYMBOL_EXPORT_TYPE]["Box copy"], json!("graphic"));
+    assert!(s.doc().unwrap().doc.unknown.get(oracle_vector_doc::SYMBOL_EXPORT_TYPE).and_then(|m| m.get("Renamed")).is_none());
+    assert_eq!(s.doc().unwrap().doc.unknown[oracle_vector_doc::SYMBOL_EXPORT_TYPE]["Box copy"], json!("graphic"));
     s.execute("symbol.delete", &json!({"name": "Box copy"})).unwrap();
-    assert!(s.doc().unwrap().doc.unknown.get(vectorcraft_doc::SYMBOL_EXPORT_TYPE).is_none());
+    assert!(s.doc().unwrap().doc.unknown.get(oracle_vector_doc::SYMBOL_EXPORT_TYPE).is_none());
     rect(&mut s, 0.0, 0.0, 10.0, 10.0);
     let r = s.execute("symbol.new", &json!({"name": "Icon", "exportType": "graphic"})).unwrap();
     assert_eq!(r["exportType"], "graphic");
@@ -1036,7 +1036,7 @@ fn symbolism_adjustments() {
 /// `paint.setFill` stores it.
 #[test]
 fn symbol_stainer_rgb_color_in_a_cmyk_document_separates_through_the_color_settings() {
-    use vectorcraft_color::{Color, Paint, cms};
+    use oracle_vector_color::{Color, Paint, cms};
     let mut s = Session::new();
     s.execute("file.new", &json!({"width": 400, "height": 300, "colorMode": "cmyk"})).unwrap();
     let (inst, _, b) = make_symbol(&mut s);
@@ -1051,7 +1051,7 @@ fn symbol_stainer_rgb_color_in_a_cmyk_document_separates_through_the_color_setti
 /// `keepModel` left out.
 #[test]
 fn symbol_stainer_refuses_a_keep_model_given_as_text() {
-    use vectorcraft_color::{Color, Paint, cms};
+    use oracle_vector_color::{Color, Paint, cms};
     let mut s = Session::new();
     s.execute("file.new", &json!({"width": 400, "height": 300, "colorMode": "cmyk"})).unwrap();
     let (inst, _, b) = make_symbol(&mut s);
@@ -1144,7 +1144,7 @@ fn brushed_strokes_and_instances_render() {
     let l = line(&mut s);
     s.execute("brush.apply", &json!({"name": "Chain", "ids": [l.0]})).unwrap();
     let doc = s.doc().unwrap().doc.clone();
-    let img = vectorcraft_render::Renderer::new().render_region(&doc, Rect::new(0.0, 0.0, 400.0, 300.0), 1.0, true);
+    let img = oracle_vector_render::Renderer::new().render_region(&doc, Rect::new(0.0, 0.0, 400.0, 300.0), 1.0, true);
     let dark = |x: u32, y: u32| {
         let p = img.pixel(x, y);
         (p[0] as u32 + p[1] as u32 + p[2] as u32) < 300
@@ -1157,20 +1157,20 @@ fn brushed_strokes_and_instances_render() {
 }
 
 #[test]
-fn brushes_and_symbols_survive_vectorcraft_round_trip() {
+fn brushes_and_symbols_survive_oracle_vector_round_trip() {
     let mut s = session();
     make_symbol(&mut s);
     s.execute("brush.new", &json!({"type": "calligraphic", "name": "Mine", "params": {"size": 7}})).unwrap();
     let l = line(&mut s);
     s.execute("brush.apply", &json!({"name": "Mine", "ids": [l.0]})).unwrap();
     let doc = s.doc().unwrap().doc.clone();
-    let bytes = vectorcraft_format::save(&doc, false);
-    let back = vectorcraft_format::load(&bytes).unwrap();
-    assert_eq!(vectorcraft_brush::library(&back), vectorcraft_brush::library(&doc));
-    assert_eq!(vectorcraft_brush::find(&back, "Mine").map(|b| b.kind.type_id()), Some("calligraphic"));
+    let bytes = oracle_vector_format::save(&doc, false);
+    let back = oracle_vector_format::load(&bytes).unwrap();
+    assert_eq!(oracle_vector_brush::library(&back), oracle_vector_brush::library(&doc));
+    assert_eq!(oracle_vector_brush::find(&back, "Mine").map(|b| b.kind.type_id()), Some("calligraphic"));
     assert_eq!(back.symbols, doc.symbols);
     assert_eq!(back.unknown.get("symbolSizes"), doc.unknown.get("symbolSizes"));
-    assert_eq!(back.unknown.get(vectorcraft_doc::SYMBOL_REGISTRATION), doc.unknown.get(vectorcraft_doc::SYMBOL_REGISTRATION));
+    assert_eq!(back.unknown.get(oracle_vector_doc::SYMBOL_REGISTRATION), doc.unknown.get(oracle_vector_doc::SYMBOL_REGISTRATION));
     let bl = back.node(l).unwrap();
     assert_eq!(bl.appearance.stroke().unwrap().brush.as_deref(), Some("Mine"));
     // A reloaded document places instances at the natural size.
@@ -1203,7 +1203,7 @@ fn symbol_nine_slice_guides_round_trip() {
     let mut s = session();
     let (_, name, _) = make_symbol(&mut s);
     assert!(s.execute("symbol.list", &json!({})).unwrap()["symbols"][0]["nineSlice"].is_null());
-    assert!(s.doc().unwrap().doc.unknown.get(vectorcraft_doc::SYMBOL_NINE_SLICE).is_none());
+    assert!(s.doc().unwrap().doc.unknown.get(oracle_vector_doc::SYMBOL_NINE_SLICE).is_none());
     assert!(s.execute("symbol.options", &json!({"name": name, "nineSliceGuides": [0.6, 0.2, 0.6, 0.2]})).is_err());
     assert!(s.execute("symbol.options", &json!({"name": name, "nineSlice": "yes"})).is_err());
     let r = s.execute("symbol.options", &json!({"name": name, "nineSlice": true})).unwrap();
@@ -1217,5 +1217,5 @@ fn symbol_nine_slice_guides_round_trip() {
     assert!(s.doc().unwrap().doc.symbol_nine_slice(&name).is_none());
     s.execute("symbol.options", &json!({"name": "Panel", "nineSlice": false})).unwrap();
     s.execute("symbol.delete", &json!({"name": "Box copy"})).unwrap();
-    assert!(s.doc().unwrap().doc.unknown.get(vectorcraft_doc::SYMBOL_NINE_SLICE).is_none());
+    assert!(s.doc().unwrap().doc.unknown.get(oracle_vector_doc::SYMBOL_NINE_SLICE).is_none());
 }

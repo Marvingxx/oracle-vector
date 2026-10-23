@@ -2,8 +2,8 @@
 //! the Contents (Characters) slot, `target: "contents"`, Target Contents and effects on layers.
 
 use serde_json::{Value, json};
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::{Node, NodeKind};
+use oracle_vector_color::{Color, Paint};
+use oracle_vector_doc::{Node, NodeKind};
 
 use super::*;
 
@@ -36,8 +36,8 @@ fn group(s: &mut Session) -> (NodeId, [NodeId; 2]) {
 
 fn pixel(s: &Session, x: u32, y: u32) -> [u8; 4] {
     let doc = s.doc().unwrap().doc.clone();
-    let opts = vectorcraft_render::RenderOptions { background: Some([255, 255, 255, 255]), ..Default::default() };
-    vectorcraft_render::Renderer::new().render(&doc, 200, 200, vectorcraft_geom::Affine::IDENTITY, &opts).pixel(x, y)
+    let opts = oracle_vector_render::RenderOptions { background: Some([255, 255, 255, 255]), ..Default::default() };
+    oracle_vector_render::Renderer::new().render(&doc, 200, 200, oracle_vector_geom::Affine::IDENTITY, &opts).pixel(x, y)
 }
 
 const GREEN: [u8; 4] = [0, 255, 0, 255];
@@ -103,7 +103,7 @@ fn effects_and_fills_apply_to_layers_by_id() {
     // Two undo steps take both off again.
     run(&mut s, "edit.undo", json!({}));
     run(&mut s, "edit.undo", json!({}));
-    assert_eq!(node(&s, layer).appearance, vectorcraft_doc::Appearance::default());
+    assert_eq!(node(&s, layer).appearance, oracle_vector_doc::Appearance::default());
     // Nothing selected and no ids: an error, not a silent no-op.
     assert!(s.execute("appearance.addFill", &json!({})).is_err());
 }
@@ -132,11 +132,11 @@ fn an_effect_on_the_types_own_stroke_exports_as_the_offset_outline() {
     run(&mut s, "appearance.moveItem", json!({"from": "contents", "to": 1}));
     run(&mut s, "effect.apply", json!({"effect": "path.offsetPath", "params": {"offset": 4}, "item": 0}));
     let doc = s.doc().unwrap().doc.clone();
-    let svg = vectorcraft_svg::export(&doc, &Default::default());
+    let svg = oracle_vector_svg::export(&doc, &Default::default());
     assert!(!svg.contains("<text") && svg.contains("<path"), "{svg}");
     // The baked type is its outlines, and the stroke's outline lies 4 pt outside the glyphs on every side.
-    let glyphs = vectorcraft_render::effects::outline_text(&node(&s, t)).unwrap().geometric_bounds().unwrap();
-    let baked = vectorcraft_render::effects::bake_document(&doc).unwrap();
+    let glyphs = oracle_vector_render::effects::outline_text(&node(&s, t)).unwrap().geometric_bounds().unwrap();
+    let baked = oracle_vector_render::effects::bake_document(&doc).unwrap();
     let n = baked.node(t).unwrap();
     assert!(!matches!(n.kind, NodeKind::Text(_)), "{n:?}");
     let b = n.geometric_bounds().unwrap();
@@ -157,7 +157,7 @@ fn type_with_an_inline_graphic_stays_type_when_its_own_stroke_has_an_effect() {
     run(&mut s, "paint.setStroke", json!({"color": "#ff0000", "item": 0}));
     run(&mut s, "effect.apply", json!({"effect": "path.offsetPath", "params": {"offset": 4}, "item": 0}));
     // Exports keep it as type, with its inline graphic.
-    let baked = vectorcraft_render::effects::bake_document(&s.doc().unwrap().doc).unwrap();
+    let baked = oracle_vector_render::effects::bake_document(&s.doc().unwrap().doc).unwrap();
     assert!(matches!(baked.node(t).unwrap().kind, NodeKind::Text(_)));
 }
 
@@ -167,7 +167,7 @@ fn image(s: &mut Session) -> NodeId {
     image::RgbaImage::from_pixel(30, 30, image::Rgba([255, 0, 0, 255]))
         .write_to(&mut std::io::Cursor::new(&mut png), image::ImageFormat::Png)
         .unwrap();
-    let r = run(s, "file.place", json!({"name": "red.png", "dataBase64": vectorcraft_format::base64_encode(&png), "at": [65, 65]}));
+    let r = run(s, "file.place", json!({"name": "red.png", "dataBase64": oracle_vector_format::base64_encode(&png), "at": [65, 65]}));
     NodeId(r["ids"][0].as_u64().unwrap())
 }
 
@@ -198,7 +198,7 @@ fn an_images_stroke_with_outline_object_draws_exports_and_expands_along_its_fram
     // Without an effect the stroke draws nothing, and Use Preview Bounds measures the frame.
     assert_eq!(pixel(&s, 49, 65), [255; 4]);
     s.prefs.use_preview_bounds = true;
-    assert_eq!(s.transform_bounds(&[im]), Some(vectorcraft_geom::Rect::new(50.0, 50.0, 80.0, 80.0)));
+    assert_eq!(s.transform_bounds(&[im]), Some(oracle_vector_geom::Rect::new(50.0, 50.0, 80.0, 80.0)));
     assert!(s.execute("effect.expandAppearance", &json!({})).is_err());
     run(&mut s, "effect.apply", json!({"effect": "path.outlineObject", "item": 0}));
     // Under the image, the stroke's outer 2 pt shows.
@@ -206,9 +206,9 @@ fn an_images_stroke_with_outline_object_draws_exports_and_expands_along_its_fram
     assert_eq!(pixel(&s, 47, 65), [255; 4]);
     // SVG and PDF hold the image and the frame stroked 4 pt.
     let doc = s.doc().unwrap().doc.clone();
-    let svg = vectorcraft_svg::export(&doc, &Default::default());
+    let svg = oracle_vector_svg::export(&doc, &Default::default());
     assert!(svg.contains("<image") && svg.contains("stroke-width=\"4\""), "{svg}");
-    let back = vectorcraft_pdf::import(&vectorcraft_pdf::export(&doc, &Default::default()).unwrap()).unwrap();
+    let back = oracle_vector_pdf::import(&oracle_vector_pdf::export(&doc, &Default::default()).unwrap()).unwrap();
     let (mut images, mut frames) = (0, 0);
     for l in &back.layers {
         l.walk(&mut |n| {
@@ -235,8 +235,8 @@ fn an_images_stroke_with_outline_object_draws_exports_and_expands_along_its_fram
 fn click(s: &mut Session, x: f64, y: f64) -> Vec<NodeId> {
     let v = ViewInfo::default();
     s.select_tool("selection", v).unwrap();
-    for k in [vectorcraft_tools::PointerKind::Down, vectorcraft_tools::PointerKind::Up] {
-        s.pointer(&vectorcraft_tools::PointerEvent::new(k, x, y), v).unwrap();
+    for k in [oracle_vector_tools::PointerKind::Down, oracle_vector_tools::PointerKind::Up] {
+        s.pointer(&oracle_vector_tools::PointerEvent::new(k, x, y), v).unwrap();
     }
     s.active().unwrap().selection.objects.clone()
 }
@@ -298,7 +298,7 @@ fn group_appearance_round_trips_and_expands() {
     run(&mut s, "appearance.moveItem", json!({"from": "contents", "to": 1}));
     run(&mut s, "effect.apply", json!({"effect": "distort.transform", "params": {"moveV": 50}}));
     let doc = s.doc().unwrap().doc.clone();
-    let back = vectorcraft_format::load(&vectorcraft_format::save(&doc, false)).unwrap();
+    let back = oracle_vector_format::load(&oracle_vector_format::save(&doc, false)).unwrap();
     assert_eq!(back.node(g).unwrap().appearance, doc.node(g).unwrap().appearance);
     assert_eq!(back.node(g).unwrap().appearance.contents_index, Some(1));
     // Expand Appearance: the fill and stroke become paths below and above the moved members.
@@ -327,7 +327,7 @@ fn type_in_a_group_with_a_geometry_effect_exports_and_expands_with_its_look() {
     let g = id_of(&run(&mut s, "object.group", json!({})));
     run(&mut s, "effect.apply", json!({"effect": "path.offsetPath", "params": {"offset": 0}}));
     // SVG export writes the type's outlines at its opacity, and none of them while it is hidden.
-    let svg = |s: &Session| vectorcraft_svg::export(&s.doc().unwrap().doc, &Default::default());
+    let svg = |s: &Session| oracle_vector_svg::export(&s.doc().unwrap().doc, &Default::default());
     let shown = svg(&s);
     assert!(!shown.contains("<text") && shown.contains("opacity=\"0.5\""), "{shown}");
     run(&mut s, "select.set", json!({"ids": [t.0]}));
@@ -347,7 +347,7 @@ fn hidden_type_with_a_geometry_effect_is_left_out_of_svg_export() {
     let mut s = session();
     let t = id_of(&run(&mut s, "text.create", json!({"x": 20, "y": 100, "text": "Hi"})));
     run(&mut s, "effect.apply", json!({"effect": "path.offsetPath", "params": {"offset": 0}, "ids": [t.0]}));
-    let svg = |s: &Session| vectorcraft_svg::export(&s.doc().unwrap().doc, &Default::default());
+    let svg = |s: &Session| oracle_vector_svg::export(&s.doc().unwrap().doc, &Default::default());
     let shown = svg(&s);
     run(&mut s, "select.set", json!({"ids": [t.0]}));
     run(&mut s, "object.hide", json!({}));

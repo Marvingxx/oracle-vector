@@ -1,10 +1,10 @@
 //! Inline graphics in text: document symbols placed in a run of text, flowing like a glyph
-//! (beyond Illustrator; InDesign's inline anchored objects). See [`vectorcraft_doc::InlineArt`].
+//! (beyond Illustrator; InDesign's inline anchored objects). See [`oracle_vector_doc::InlineArt`].
 
 use serde_json::{Value, json};
-use vectorcraft_doc::text::INLINE_MAX_SCALE;
-use vectorcraft_doc::{Document, InlineArt, NodeId, NodeKind, TextRun};
-use vectorcraft_text::edit;
+use oracle_vector_doc::text::INLINE_MAX_SCALE;
+use oracle_vector_doc::{Document, InlineArt, NodeId, NodeKind, TextRun};
+use oracle_vector_text::edit;
 
 use super::typecmd::refresh_bounds;
 use super::*;
@@ -90,7 +90,7 @@ fn insert_inline(s: &mut Session, p: &Value) -> Result<Value> {
         let style = edit::insertion_style(&t.runs, a, b);
         let caret = edit::replace_range_styled(&mut t.runs, a, b, &[TextRun::inline(art, style)]);
         // The inline character is one plain-text byte range: ruby over it follows the text.
-        t.ruby_after_replace(a, b, vectorcraft_doc::text::INLINE_CHAR.len_utf8());
+        t.ruby_after_replace(a, b, oracle_vector_doc::text::INLINE_CHAR.len_utf8());
         refresh_bounds(t);
         Ok(caret)
     })?;

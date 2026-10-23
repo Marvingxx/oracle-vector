@@ -4,11 +4,11 @@
 use serde_json::{Value, json};
 
 use super::shapes::grid_pin_to_anchor;
-use crate::VectorcraftApp;
+use crate::OracleVectorApp;
 use crate::state::Dialog;
 
 /// A click with a shape tool opens its size dialog.
-pub fn open_tool_dialog(app: &mut VectorcraftApp, kind: &str, p: Value) {
+pub fn open_tool_dialog(app: &mut OracleVectorApp, kind: &str, p: Value) {
     let x = p.get("x").and_then(Value::as_f64).unwrap_or(0.0);
     let y = p.get("y").and_then(Value::as_f64).unwrap_or(0.0);
     let alt = p.get("alt").and_then(Value::as_bool).unwrap_or(false);
@@ -70,7 +70,7 @@ pub fn open_tool_dialog(app: &mut VectorcraftApp, kind: &str, p: Value) {
         }
         // A Flare tool click: the Flare Tool Options, with the tool's values; OK draws a flare there.
         "flare" => {
-            super::flare_options::open(app, Some(vectorcraft_geom::Point::new(x, y)));
+            super::flare_options::open(app, Some(oracle_vector_geom::Point::new(x, y)));
             return;
         }
         "rotate" | "reflect" | "scale" | "shear" | "artboardOptions" => {

@@ -2,8 +2,8 @@
 
 use std::sync::Arc;
 
-use vectorcraft_doc::{Document, Node, NodeKind, SymbolBoxes};
-use vectorcraft_geom::{Affine, Rect};
+use oracle_vector_doc::{Document, Node, NodeKind, SymbolBoxes};
+use oracle_vector_geom::{Affine, Rect};
 
 /// What may draw differently in a document than in its version before an edit ([`changed`]).
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -94,7 +94,7 @@ impl Diff<'_> {
     }
 
     fn add(&mut self, r: Option<Rect>) {
-        self.area = vectorcraft_geom::union_opt(self.area, r);
+        self.area = oracle_vector_geom::union_opt(self.area, r);
     }
 }
 

@@ -3,19 +3,19 @@
 //! which opens the Simplify dialog at the slider's tolerance. While the strip is open, the canvas
 //! previews `object.path.simplify {level}`; Enter or a click outside the strip keeps the result as
 //! one undo step, and Escape puts the paths back. The slider opens at level 50, a tolerance of
-//! 1 pt (`vectorcraft_pathops::simplify_level_tolerance` maps levels to tolerances).
+//! 1 pt (`oracle_vector_pathops::simplify_level_tolerance` maps levels to tolerances).
 //!
 //! Fields: `level` (0..=100, the command's parameter).
 
 use egui::{Color32, CornerRadius, Order, Pos2, Sense, Stroke, vec2};
 use serde_json::{Value, json};
-use vectorcraft_engine::{SIMPLIFY_LEVEL, simplify_level_tolerance};
-use vectorcraft_geom::Rect;
+use oracle_vector_engine::{SIMPLIFY_LEVEL, simplify_level_tolerance};
+use oracle_vector_geom::Rect;
 
 use super::{DialogResult, DialogSpec, form, modal};
 use crate::state::Dialog;
 use crate::theme::Tokens;
-use crate::{VectorcraftApp, widgets};
+use crate::{OracleVectorApp, widgets};
 
 /// The dialog kind of the Simplify slider.
 pub(crate) const KIND: &str = "simplifySlider";
@@ -32,7 +32,7 @@ pub(crate) fn fields() -> Value {
 }
 
 /// Whether the Simplify slider is open.
-pub(crate) fn showing(app: &VectorcraftApp) -> bool {
+pub(crate) fn showing(app: &OracleVectorApp) -> bool {
     app.ui.dialog.as_ref().is_some_and(|d| d.kind == KIND)
 }
 
@@ -46,18 +46,18 @@ fn params(d: &Dialog) -> Value {
     json!({ "level": level(d) })
 }
 
-fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> DialogResult {
+fn confirm(app: &mut OracleVectorApp, d: &Dialog) -> DialogResult {
     form::commit_preview(app, CMD, params(d))
 }
 
 /// The open slider, or an error when it isn't open.
-fn open_slider(app: &VectorcraftApp) -> Result<Dialog, String> {
+fn open_slider(app: &OracleVectorApp) -> Result<Dialog, String> {
     app.ui.dialog.clone().filter(|d| d.kind == KIND).ok_or_else(|| "the Simplify slider is not open".to_string())
 }
 
 /// Auto-Simplify (`ui.simplifyAuto`): the open slider moves to the level `object.path.simplify
 /// {auto: true}` picks for the selection, and the canvas previews it → {level}.
-pub(crate) fn auto(app: &mut VectorcraftApp) -> Result<Value, String> {
+pub(crate) fn auto(app: &mut OracleVectorApp) -> Result<Value, String> {
     let mut d = open_slider(app)?;
     let _ = app.session.begin_interaction(LABEL);
     let r = app.session.preview(CMD, &json!({ "auto": true })).map_err(|e| e.to_string())?;
@@ -70,7 +70,7 @@ pub(crate) fn auto(app: &mut VectorcraftApp) -> Result<Value, String> {
 
 /// More Options (`ui.simplifyMoreOptions`): the Simplify dialog takes the slider's place, at the
 /// slider's tolerance → {tolerance}.
-pub(crate) fn more_options(app: &mut VectorcraftApp) -> Result<Value, String> {
+pub(crate) fn more_options(app: &mut OracleVectorApp) -> Result<Value, String> {
     let d = open_slider(app)?;
     let tolerance = simplify_level_tolerance(level(&d));
     app.ui.dialog = Some(Dialog::new("simplify", super::path_ops::simplify_dialog(tolerance)));
@@ -82,7 +82,7 @@ const BOUNDS: &str = "__bounds";
 
 /// The selection's bounds before the preview: the interaction's snapshot when a preview runs, read
 /// once and kept in `d`, so the strip stays where it opened while the preview changes the paths.
-fn bounds(app: &mut VectorcraftApp, d: &mut Dialog) -> Option<Rect> {
+fn bounds(app: &mut OracleVectorApp, d: &mut Dialog) -> Option<Rect> {
     if let Some([x0, y0, x1, y1]) = d.fields.get(BOUNDS).and_then(|v| serde_json::from_value::<[f64; 4]>(v.clone()).ok()) {
         return Some(Rect::new(x0, y0, x1, y1));
     }
@@ -96,7 +96,7 @@ fn bounds(app: &mut VectorcraftApp, d: &mut Dialog) -> Option<Rect> {
 
 /// Where the strip goes: under the lowest corner on screen of `bounds` (the selection's, before the
 /// preview), centered on them, kept on the canvas.
-fn place(app: &mut VectorcraftApp, ctx: &egui::Context, id: egui::Id, bounds: Option<Rect>) -> Pos2 {
+fn place(app: &mut OracleVectorApp, ctx: &egui::Context, id: egui::Id, bounds: Option<Rect>) -> Pos2 {
     let size = egui::AreaState::load(ctx, id).and_then(|s| s.size).unwrap_or(vec2(270.0, 42.0));
     let screen = ctx.content_rect();
     let Some((rect, view)) = app.canvas_rect.zip(app.view().copied()) else { return screen.center() - size / 2.0 };
@@ -118,7 +118,7 @@ enum Action {
     MoreOptions,
 }
 
-fn show(app: &mut VectorcraftApp, ctx: &egui::Context) {
+fn show(app: &mut OracleVectorApp, ctx: &egui::Context) {
     let Some(mut d) = app.ui.dialog.clone() else { return };
     let t = Tokens::get(ctx);
     let id = egui::Id::new(("dialog", KIND));

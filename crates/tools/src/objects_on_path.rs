@@ -5,9 +5,9 @@
 //! Behavior: <https://helpx.adobe.com/illustrator/using/objects-on-path.html>.
 
 use serde_json::json;
-use vectorcraft_doc::NodeId;
-use vectorcraft_doc::objects_on_path::{attachable_path, is_objects_on_path};
-use vectorcraft_geom::{BezPath, Point};
+use oracle_vector_doc::NodeId;
+use oracle_vector_doc::objects_on_path::{attachable_path, is_objects_on_path};
+use oracle_vector_geom::{BezPath, Point};
 
 use crate::{Action, Cursor, Mods, Overlay, PointerEvent, PointerKind, Tool, ToolContext, ToolKey};
 
@@ -16,16 +16,16 @@ const HIGHLIGHT: [u8; 3] = [0x4f, 0x9d, 0xff];
 
 /// The path a click at `p` attaches the selected objects to: the path object hit there, when it can
 /// take objects, is in no Objects on Path group, is not a clipping path or part of a compound path,
-/// blend, envelope, repeat or Intertwine group ([`vectorcraft_doc::objects_on_path::held`]), and
+/// blend, envelope, repeat or Intertwine group ([`oracle_vector_doc::objects_on_path::held`]), and
 /// something else is selected.
 pub fn target(cx: &ToolContext, p: Point) -> Option<(NodeId, BezPath)> {
-    let h = vectorcraft_doc::hit::hit_test(cx.doc, p, cx.hit_options())?;
+    let h = oracle_vector_doc::hit::hit_test(cx.doc, p, cx.hit_options())?;
     let n = cx.doc.node(h.leaf)?;
     let path = attachable_path(n)?;
     if h.ancestry.iter().filter(|a| **a != h.leaf).any(|a| cx.doc.node(*a).is_some_and(is_objects_on_path)) {
         return None;
     }
-    if vectorcraft_doc::objects_on_path::held(cx.doc, h.leaf).is_some() {
+    if oracle_vector_doc::objects_on_path::held(cx.doc, h.leaf).is_some() {
         return None;
     }
     cx.selection.objects.iter().any(|id| *id != h.leaf).then(|| (h.leaf, path.to_bezpath()))
@@ -94,8 +94,8 @@ pub fn create(id: &str) -> Option<Box<dyn crate::Tool>> {
 
 #[cfg(test)]
 mod tests {
-    use vectorcraft_doc::{Appearance, Document, Node, NodeKind, Selection};
-    use vectorcraft_geom::{Rect, shapes};
+    use oracle_vector_doc::{Appearance, Document, Node, NodeKind, Selection};
+    use oracle_vector_geom::{Rect, shapes};
 
     use super::*;
     use crate::testutil::{cx, paint};

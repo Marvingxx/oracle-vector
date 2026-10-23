@@ -6,9 +6,9 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Arc;
 
 use serde_json::{Value, json};
-use vectorcraft_color::Paint;
-use vectorcraft_doc::{AppearanceItem, Document, Node, NodeId, NodeKind, TextKind, TextRun};
-use vectorcraft_geom::Rect;
+use oracle_vector_color::Paint;
+use oracle_vector_doc::{AppearanceItem, Document, Node, NodeId, NodeKind, TextKind, TextRun};
+use oracle_vector_geom::Rect;
 
 use super::typecmd::refresh_bounds;
 use super::*;
@@ -67,7 +67,7 @@ pub fn specs() -> Vec<CommandSpec> {
 fn scope(s: &Session, selection_only: bool) -> Result<Vec<NodeId>> {
     let st = s.doc()?;
     let mut v = vec![];
-    let mut add = |n: &vectorcraft_doc::Node| {
+    let mut add = |n: &oracle_vector_doc::Node| {
         n.walk(&mut |c| {
             if matches!(c.kind, NodeKind::Text(_)) && !v.contains(&c.id) {
                 v.push(c.id);
@@ -120,7 +120,7 @@ pub(super) fn used_fonts(d: &Document) -> BTreeSet<UsedFont> {
 /// brushes or placed documents).
 /// The type that prints is visible type on `layers` (the layers that print) but not on a template
 /// layer (of area type and type on a path that don't fit, the runs that their layout draws),
-/// where what it paints ([`vectorcraft_render::painted_bounds`], its effects applied) meets an area
+/// where what it paints ([`oracle_vector_render::painted_bounds`], its effects applied) meets an area
 /// inside the clipping paths around it, the type in the opacity masks and patterns of the objects
 /// that print and in the pieces their brushes draw, and the type of the symbols that their
 /// instances and inline graphics show.
@@ -173,7 +173,7 @@ impl Printed<'_> {
         }
         // A layer or group with effects, fills or strokes of its own prints where they paint (moved,
         // shadowed…), drawn from its members' shapes.
-        let moved = vectorcraft_render::effects::has_container_appearance(n);
+        let moved = oracle_vector_render::effects::has_container_appearance(n);
         let open = !moved && matches!(n.kind, NodeKind::Layer { clip: false, .. } | NodeKind::Group { clip: false, .. });
         if let Some(a) = areas
             && !open
@@ -198,7 +198,7 @@ impl Printed<'_> {
                 _ => None,
             })
             .collect();
-        let brushed = vectorcraft_brush::has_brush(n);
+        let brushed = oracle_vector_brush::has_brush(n);
         if (mask.is_some() || !patterns.is_empty() || brushed) && areas.is_none_or(|a| !open || self.meets(n, a)) {
             if let Some(m) = mask {
                 self.art(&m.art);
@@ -215,7 +215,7 @@ impl Printed<'_> {
             }
             // The pieces its brushes draw along the path (art and pattern brushes leave type out).
             if brushed {
-                for piece in vectorcraft_brush::node_pieces(d, n).unwrap_or_default() {
+                for piece in oracle_vector_brush::node_pieces(d, n).unwrap_or_default() {
                     self.art(&piece);
                 }
             }
@@ -244,7 +244,7 @@ impl Printed<'_> {
                 let clipped = match (clip, areas) {
                     (false, _) => None,
                     (true, Some(a)) => Some(self.clip(n, a)),
-                    (true, None) => vectorcraft_render::painted_bounds(self.d, n).map(|c| vec![c]),
+                    (true, None) => oracle_vector_render::painted_bounds(self.d, n).map(|c| vec![c]),
                 };
                 for c in children {
                     self.node(c, clipped.as_deref().or(areas));
@@ -279,21 +279,21 @@ impl Printed<'_> {
 
     /// Whether what `n` paints, its effects applied, meets one of `areas`.
     fn meets(&self, n: &Node, areas: &[Rect]) -> bool {
-        vectorcraft_render::painted_bounds(self.d, n).is_some_and(|b| areas.iter().any(|r| b.intersect(*r).area() > 0.0 || r.contains_rect(b)))
+        oracle_vector_render::painted_bounds(self.d, n).is_some_and(|b| areas.iter().any(|r| b.intersect(*r).area() > 0.0 || r.contains_rect(b)))
     }
 
     /// The parts of `areas` inside the bounds of clip group `n` (its clipping path's).
     fn clip(&self, n: &Node, areas: &[Rect]) -> Vec<Rect> {
-        let Some(c) = vectorcraft_render::painted_bounds(self.d, n) else { return areas.to_vec() };
+        let Some(c) = oracle_vector_render::painted_bounds(self.d, n) else { return areas.to_vec() };
         areas.iter().filter(|r| c.intersect(**r).area() > 0.0 || r.contains_rect(c)).map(|r| r.intersect(c)).collect()
     }
 }
 
 /// The runs of `t` that print, and whether its text doesn't fit: all of them, or of area type and
 /// type on a path that don't fit, the runs that their layout draws glyphs or inline graphics of.
-fn drawn_runs(t: &vectorcraft_doc::TextObject) -> (Vec<&TextRun>, bool) {
+fn drawn_runs(t: &oracle_vector_doc::TextObject) -> (Vec<&TextRun>, bool) {
     let drawn: Option<BTreeSet<usize>> = (!matches!(t.kind, TextKind::Point))
-        .then(|| vectorcraft_text::layout(vectorcraft_text::FontDb::global(), t))
+        .then(|| oracle_vector_text::layout(oracle_vector_text::FontDb::global(), t))
         .filter(|lay| lay.overflow)
         .map(|lay| lay.glyphs.iter().map(|g| g.run).chain(lay.inlines.iter().map(|i| i.run)).collect());
     let runs = t.runs.iter().enumerate().filter(|(i, _)| drawn.as_ref().is_none_or(|d| d.contains(i))).map(|(_, r)| r).collect();
@@ -309,13 +309,13 @@ pub(super) fn substitution_warning(d: &Document) -> Option<String> {
 
 /// [`substitution_warning`] for type set in `fonts`.
 pub(super) fn substitution_warning_of(fonts: BTreeSet<UsedFont>) -> Option<String> {
-    let db = vectorcraft_text::FontDb::global();
+    let db = oracle_vector_text::FontDb::global();
     let mut missing: Vec<String> = Vec::new();
     let mut styles: BTreeSet<String> = BTreeSet::new();
     for (family, style, _) in fonts {
         match db.resolve(&family, &style) {
-            None | Some((_, vectorcraft_text::FontMatch::Missing)) => missing.push(family),
-            Some((face, vectorcraft_text::FontMatch::Style)) => {
+            None | Some((_, oracle_vector_text::FontMatch::Missing)) => missing.push(family),
+            Some((face, oracle_vector_text::FontMatch::Style)) => {
                 styles.insert(format!("{family} {style} was drawn in {} {}", face.family, face.style));
             }
             Some(_) => {}
@@ -327,7 +327,7 @@ pub(super) fn substitution_warning_of(fonts: BTreeSet<UsedFont>) -> Option<Strin
     if !missing.is_empty() {
         parts.push(format!(
             "fonts that aren't available were written in the fallback font, {}: {} (install them, or replace them with Find Font)",
-            vectorcraft_text::FALLBACK_FAMILY,
+            oracle_vector_text::FALLBACK_FAMILY,
             missing.join(", ")
         ));
     }
@@ -340,7 +340,7 @@ pub(super) fn substitution_warning_of(fonts: BTreeSet<UsedFont>) -> Option<Strin
     (!parts.is_empty()).then(|| parts.join("; "))
 }
 
-fn text(d: &Document, id: NodeId) -> Option<&vectorcraft_doc::TextObject> {
+fn text(d: &Document, id: NodeId) -> Option<&oracle_vector_doc::TextObject> {
     match d.node(id).map(|n| &n.kind) {
         Some(NodeKind::Text(t)) => Some(t),
         _ => None,
@@ -350,7 +350,7 @@ fn text(d: &Document, id: NodeId) -> Option<&vectorcraft_doc::TextObject> {
 fn fonts(s: &mut Session, p: &Value) -> Result<Value> {
     let ids = scope(s, bool_or(p, "selectionOnly", false))?;
     let d = &s.doc()?.doc;
-    let db = vectorcraft_text::FontDb::global();
+    let db = oracle_vector_text::FontDb::global();
     let mut found: BTreeMap<UsedFont, (usize, Vec<NodeId>, String)> = BTreeMap::new();
     for id in ids {
         for r in text(d, id).map(|t| t.runs.as_slice()).unwrap_or_default() {
@@ -367,14 +367,14 @@ fn fonts(s: &mut Session, p: &Value) -> Result<Value> {
         .map(|((family, style, version), (runs, objects, chars))| {
             // The face the type is set in: the version it names when that one is installed.
             let resolved = db.resolve(&family, &style).map(|(f, m)| (db.face_version(&family, &style, version.as_deref()).unwrap_or(f), m));
-            let status = resolved.as_ref().map(|(_, m)| *m).unwrap_or(vectorcraft_text::FontMatch::Missing);
+            let status = resolved.as_ref().map(|(_, m)| *m).unwrap_or(oracle_vector_text::FontMatch::Missing);
             let mut lacking: Vec<char> = chars.chars().filter(|c| !c.is_whitespace() && !c.is_control()).collect();
             lacking.sort_unstable();
             lacking.dedup();
             lacking.retain(|c| !resolved.as_ref().is_some_and(|(f, _)| f.covers(*c)));
             let mut row = json!({
                 "family": family, "style": style, "runs": runs, "objects": objects.len(),
-                "missing": status == vectorcraft_text::FontMatch::Missing,
+                "missing": status == oracle_vector_text::FontMatch::Missing,
                 "status": status.as_str(),
                 "resolved": resolved.as_ref().map(|(f, _)| json!({ "family": f.family, "style": f.style })),
                 "missingGlyphs": lacking.len(),
@@ -399,14 +399,14 @@ fn replace(s: &mut Session, p: &Value) -> Result<Value> {
     const C: &str = "text.replaceFont";
     let (ff, fs) = font_param(p, "from", C)?;
     let (tf, ts) = font_param(p, "to", C)?;
-    let db = vectorcraft_text::FontDb::global();
+    let db = oracle_vector_text::FontDb::global();
     // Any name of the family (ヒラギノ角ゴシック) is stored as its own name (Hiragino Sans).
     let tf = match db.resolve(&tf, ts.as_deref().unwrap_or("Regular")) {
-        Some((f, m)) if m != vectorcraft_text::FontMatch::Missing => f.family.clone(),
+        Some((f, m)) if m != oracle_vector_text::FontMatch::Missing => f.family.clone(),
         _ => return Err(bad(C, format!("font family `{tf}` is not available"))),
     };
     let ids = scope(s, bool_or(p, "selectionOnly", false))?;
-    let matches = |st: &vectorcraft_doc::CharStyle| {
+    let matches = |st: &oracle_vector_doc::CharStyle| {
         st.font_family.eq_ignore_ascii_case(&ff) && fs.as_ref().is_none_or(|x| st.font_style.eq_ignore_ascii_case(x))
     };
     let n = s.edit("Replace Font", |d, _| {
@@ -431,7 +431,7 @@ fn replace(s: &mut Session, p: &Value) -> Result<Value> {
                 }
             }
             if changed {
-                vectorcraft_text::edit::normalize(&mut t.runs);
+                oracle_vector_text::edit::normalize(&mut t.runs);
                 refresh_bounds(t);
             }
         }
@@ -461,7 +461,7 @@ fn select_font(s: &mut Session, p: &Value) -> Result<Value> {
 }
 
 fn font_list(_: &mut Session, p: &Value) -> Result<Value> {
-    let db = vectorcraft_text::FontDb::global();
+    let db = oracle_vector_text::FontDb::global();
     match str_param(p, "family") {
         Some(family) => {
             if !db.has_family(family) {
@@ -492,7 +492,7 @@ fn font_list(_: &mut Session, p: &Value) -> Result<Value> {
 }
 
 pub(crate) fn rescan(s: &mut Session, _: &Value) -> Result<Value> {
-    let db = vectorcraft_text::FontDb::global();
+    let db = oracle_vector_text::FontDb::global();
     #[cfg(not(target_arch = "wasm32"))]
     let faces = db.load_system_fonts();
     #[cfg(target_arch = "wasm32")]
@@ -530,14 +530,14 @@ mod tests {
     #[test]
     fn the_additional_fonts_folder_joins_the_font_scan() {
         let mut s = Session::new();
-        let dir = std::env::temp_dir().join("vectorcraft-fonts-folder-pref");
+        let dir = std::env::temp_dir().join("oracle-vector-fonts-folder-pref");
         s.execute("prefs.set", &json!({"key": "fontsFolder", "value": format!("  {}  ", dir.display())})).unwrap();
-        assert_eq!(vectorcraft_text::user_font_dirs(), std::slice::from_ref(&dir));
+        assert_eq!(oracle_vector_text::user_font_dirs(), std::slice::from_ref(&dir));
         if !cfg!(target_arch = "wasm32") {
-            assert!(vectorcraft_text::system_font_dirs().contains(&dir));
+            assert!(oracle_vector_text::system_font_dirs().contains(&dir));
         }
         s.execute("prefs.set", &json!({"key": "fontsFolder", "value": ""})).unwrap();
-        assert!(vectorcraft_text::user_font_dirs().is_empty() && !vectorcraft_text::system_font_dirs().contains(&dir));
+        assert!(oracle_vector_text::user_font_dirs().is_empty() && !oracle_vector_text::system_font_dirs().contains(&dir));
     }
 
     #[test]
@@ -594,7 +594,7 @@ mod open_tests {
         assert_eq!(row("Semibold").1, "exact");
         assert_eq!(row("Black Wide").1, "substitute", "{rows:?}");
         assert_eq!(row("Black Wide").2, "Source Sans 3");
-        assert_eq!((row("Regular").1.as_str(), row("Regular").2.as_str()), ("missing", vectorcraft_text::FALLBACK_FAMILY));
+        assert_eq!((row("Regular").1.as_str(), row("Regular").2.as_str()), ("missing", oracle_vector_text::FALLBACK_FAMILY));
         s.execute("text.create", &json!({"x": 10, "y": 90, "text": "Ab 雅楽", "font": "Inter"})).unwrap();
         let inter = s.execute("text.fonts", &json!({})).unwrap().as_array().unwrap().iter().find(|f| f["family"] == "Inter").cloned().unwrap();
         assert_eq!(inter["missingGlyphs"], 2, "雅 and 楽 come from a fallback font: {inter}");
@@ -618,8 +618,8 @@ mod open_tests {
         s.execute("text.setStyle", &json!({"tracking": 400})).unwrap();
         let want = s.doc().unwrap().doc.node(NodeId(id)).unwrap().geometric_bounds().unwrap();
         // Save and reopen: the cache isn't in the file, yet the bounds must match.
-        let bytes = vectorcraft_format::save(&s.doc().unwrap().doc, false);
-        let reopened = vectorcraft_format::load(&bytes).unwrap();
+        let bytes = oracle_vector_format::save(&s.doc().unwrap().doc, false);
+        let reopened = oracle_vector_format::load(&bytes).unwrap();
         let mut t = Session::new();
         t.add_document(reopened, None);
         let got = t.doc().unwrap().doc.node(NodeId(id)).unwrap().geometric_bounds().unwrap();

@@ -9,19 +9,19 @@
 use std::sync::LazyLock;
 
 use serde_json::{Value, json};
-use vectorcraft_engine::cmd::fileio::{self, ArtboardPick, Format};
+use oracle_vector_engine::cmd::fileio::{self, ArtboardPick, Format};
 
 use super::{DialogSpec, dxf_options, eps_options, form, plugin, png_options, save_pdf, svg_options, text_export};
 use crate::state::Dialog;
 use crate::theme::Tokens;
-use crate::{VectorcraftApp, io, widgets};
+use crate::{OracleVectorApp, io, widgets};
 
 pub(super) const SPEC: DialogSpec =
     DialogSpec { heading: |_| tl!("Export As").into(), body, confirm, ok: Some("Export…"), min_width: 380.0, ..DialogSpec::FORM };
 
 /// The built-in formats Export As writes (the native format and `.ai` are Save As's).
 static BUILT_IN: LazyLock<Vec<&'static Format>> =
-    LazyLock::new(|| fileio::FORMATS.iter().filter(|f| f.write && !matches!(f.id, "vectorcraft" | "ai")).collect());
+    LazyLock::new(|| fileio::FORMATS.iter().filter(|f| f.write && !matches!(f.id, "oracle-vector" | "ai")).collect());
 /// Formats listed after them that can't be written (`fileio::unsupported` ids), greyed out.
 const UNAVAILABLE: [(&str, &str); 1] = [("dwg", "DWG (use DXF)")];
 
@@ -32,7 +32,7 @@ pub(super) fn formats() -> Vec<&'static Format> {
 
 /// Is `f` an exporter plug-in's format?
 fn from_plugin(f: &Format) -> bool {
-    vectorcraft_plugins::export::by_format(f.id).is_some()
+    oracle_vector_plugins::export::by_format(f.id).is_some()
 }
 
 /// What to use instead when the field names a format that can't be written (DWG).
@@ -44,7 +44,7 @@ fn unavailable(d: &Dialog) -> Option<(&'static str, &'static str)> {
 
 /// Open the dialog on `format` (an id or extension, default PNG); `p` may preset `useArtboards`
 /// and `range`.
-pub fn open(app: &mut VectorcraftApp, format: Option<&str>, p: &Value) {
+pub fn open(app: &mut OracleVectorApp, format: Option<&str>, p: &Value) {
     let n = app.session.active().map_or(0, |s| s.doc.artboards.len());
     let missing = format.and_then(|f| UNAVAILABLE.iter().find(|u| u.0.eq_ignore_ascii_case(f.trim_start_matches('.'))));
     let format = match missing {
@@ -71,7 +71,7 @@ fn chosen(d: &Dialog) -> Option<&'static Format> {
     find(&id).or_else(|| find("png"))
 }
 
-fn body(_: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
+fn body(_: &mut OracleVectorApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     let t = Tokens::get(ui.ctx());
     let Some(f) = chosen(d) else { return false };
     let missing = unavailable(d);
@@ -120,12 +120,12 @@ fn body(_: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
 }
 
 /// Check the artboard range, pick the file, then show the format's options or write the file.
-fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn confirm(app: &mut OracleVectorApp, d: &Dialog) -> Result<Value, String> {
     if let Some((_, hint)) = unavailable(d) {
         return Err(hint.into());
     }
     let f = chosen(d).ok_or("no format to export to")?;
-    let plugin = vectorcraft_plugins::export::by_format(f.id);
+    let plugin = oracle_vector_plugins::export::by_format(f.id);
     let use_artboards = d.bool("useArtboards") && plugin.is_none();
     let all = d.bool("all");
     let range = d.str("range");
@@ -136,7 +136,7 @@ fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
     }
     // Nothing to export keeps the dialog open too (before the save dialog, not after it). An
     // exporter plug-in decides for itself what it can write.
-    if !use_artboards && plugin.is_none() && app.session.active().is_some_and(|s| vectorcraft_render::encode::art_bounds(&s.doc).is_none()) {
+    if !use_artboards && plugin.is_none() && app.session.active().is_some_and(|s| oracle_vector_render::encode::art_bounds(&s.doc).is_none()) {
         return Err("nothing to export: the document has no visible art (or turn on Use Artboards)".into());
     }
     app.ui.dialog = None;
@@ -151,9 +151,9 @@ fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
 /// After the save panel picked `path`: the options dialog of format `f` (or of its exporter
 /// plug-in), else the file written.
 fn options_or_write(
-    app: &mut VectorcraftApp,
+    app: &mut OracleVectorApp,
     f: &'static Format,
-    plugin: Option<std::sync::Arc<vectorcraft_plugins::Plugin>>,
+    plugin: Option<std::sync::Arc<oracle_vector_plugins::Plugin>>,
     path: String,
     use_artboards: bool,
     all: bool,

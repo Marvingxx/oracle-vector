@@ -4,11 +4,11 @@
 // Integration tests: unwrapping and panicking on failure is fine here, unlike in shipped code (AGENTS.md › Robustness).
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
-use vectorcraft_color::{BlendMode, Color, Gradient, GradientGeom, GradientKind, GradientPaint, Paint};
-use vectorcraft_doc::{Appearance, CharStyle, Document, Effect, Justify, LiveShape, Node, NodeId, NodeKind, TextObject};
-use vectorcraft_geom::shapes::{self, CornerKind};
-use vectorcraft_geom::{Affine, Point, Rect};
-use vectorcraft_svg::{CssOptions, CssRule, CssUnits, ExportOptions, Styling, css_rules, export};
+use oracle_vector_color::{BlendMode, Color, Gradient, GradientGeom, GradientKind, GradientPaint, Paint};
+use oracle_vector_doc::{Appearance, CharStyle, Document, Effect, Justify, LiveShape, Node, NodeId, NodeKind, TextObject};
+use oracle_vector_geom::shapes::{self, CornerKind};
+use oracle_vector_geom::{Affine, Point, Rect};
+use oracle_vector_svg::{CssOptions, CssRule, CssUnits, ExportOptions, Styling, css_rules, export};
 
 fn doc() -> Document {
     Document::new(400.0, 300.0)
@@ -190,15 +190,15 @@ fn shrunk_area_type_gives_the_size_it_draws_at() {
     let mut n = text(&mut d, "Area type that is too long for its frame", st);
     let mut fit = 1.0;
     if let NodeKind::Text(t) = &mut n.kind {
-        t.kind = vectorcraft_doc::TextKind::Area { frame: shapes::rectangle(Rect::new(0.0, 0.0, 100.0, 40.0)) };
-        t.area.fit = vectorcraft_doc::AreaFit::ShrinkText { min_percent: 10.0 };
-        let lay = vectorcraft_text::layout(vectorcraft_text::FontDb::global(), t);
+        t.kind = oracle_vector_doc::TextKind::Area { frame: shapes::rectangle(Rect::new(0.0, 0.0, 100.0, 40.0)) };
+        t.area.fit = oracle_vector_doc::AreaFit::ShrinkText { min_percent: 10.0 };
+        let lay = oracle_vector_text::layout(oracle_vector_text::FontDb::global(), t);
         assert!(!lay.overflow && lay.fit_scale < 0.9, "the text is shrunk to fit: {}", lay.fit_scale);
         fit = lay.fit_scale;
     }
     let id = add(&mut d, n);
     let r = one(&d, id, &CssOptions::default());
-    let px = |v: f64| format!("{}px", vectorcraft_svg::fmt_num(v, 3));
+    let px = |v: f64| format!("{}px", oracle_vector_svg::fmt_num(v, 3));
     assert_eq!(prop(&r, "font-size"), Some(px(18.0 * fit).as_str()), "{r:?}");
     assert_eq!(prop(&r, "letter-spacing"), Some(px(0.9 * fit).as_str()), "{r:?}");
     assert_eq!(prop(&r, "line-height"), Some(px(24.0 * fit).as_str()), "{r:?}");

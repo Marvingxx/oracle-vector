@@ -2,7 +2,7 @@
 
 Every non-code asset in this repository (icons, images, fonts, example art, colour profiles, presets) is listed here with its author, source and licence. `cargo xtask assets` (part of `cargo xtask ci`) fails if an asset file is missing from this table.
 
-**Policy (mandatory):** VectorCraft contains **no Adobe iconography, images, artwork, presets, swatch/brush/symbol/pattern libraries or ICC profiles**. Every asset is either original work by VectorCraft contributors, or third-party material under an open licence (OSI open source, public domain / CC0, or Creative Commons that allows redistribution), and it is attributed below. Screenshots of Adobe software are never committed. The one exception is the ArtCraft name, wordmark and logos in `docs/brand/`: ArtCraft trademarks, not open source, usable only under [`docs/brand/LICENSE-brand.txt`](docs/brand/LICENSE-brand.txt).
+**Policy (mandatory):** Oracle Vector contains **no Adobe iconography, images, artwork, presets, swatch/brush/symbol/pattern libraries or ICC profiles**. Every asset is either original work by Oracle Vector contributors, or third-party material under an open licence (OSI open source, public domain / CC0, or Creative Commons that allows redistribution), and it is attributed below. Screenshots of Adobe software are never committed. The one exception is the ArtCraft name, wordmark and logos in `docs/brand/`: ArtCraft trademarks, not open source, usable only under [`docs/brand/LICENSE-brand.txt`](docs/brand/LICENSE-brand.txt).
 
 Generated-in-code art is original and has no file to list. This covers the default swatches, brushes, symbols, patterns, graphic styles, image-trace presets and the vector tool cursors (`crates/ui-egui/src/cursors.rs`).
 
@@ -20,27 +20,28 @@ Generated-in-code art is original and has no file to list. This covers the defau
 | `docs/brand/artcraft-mark-black.svg` | ArtCraft team (project owner) | https://getartcraft.com/ | ArtCraft trademark, see docs/brand/LICENSE-brand.txt (not open source) | Used in README only; not shipped in the app |
 | `docs/brand/artcraft-mark.png` | ArtCraft team (project owner) | https://getartcraft.com/ | ArtCraft trademark, see docs/brand/LICENSE-brand.txt (not open source) | Used in README only; not shipped in the app |
 | `docs/brand/artcraft-mark.svg` | ArtCraft team (project owner) | https://getartcraft.com/ | ArtCraft trademark, see docs/brand/LICENSE-brand.txt (not open source) | Used in README only; not shipped in the app |
-| `assets/app-icon/LICENSE.txt` | (licence/readme text) | VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/app-icon/README.md` | (licence/readme text) | VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/app-icon/hicolor/128x128/apps/ai.storyteller.vectorcraft.png` | Project owner (ArtCraft team) | Original artwork drawn in ArtCraft for VectorCraft, vectorised and rendered by `packaging/icons.sh` | MIT OR Apache-2.0 (`assets/app-icon/LICENSE.txt`) | App icon (engraved dragon) |
-| `assets/app-icon/hicolor/16x16/apps/ai.storyteller.vectorcraft.png` | Project owner (ArtCraft team) | Original artwork drawn in ArtCraft for VectorCraft, vectorised and rendered by `packaging/icons.sh` | MIT OR Apache-2.0 (`assets/app-icon/LICENSE.txt`) | App icon (engraved dragon) |
-| `assets/app-icon/hicolor/24x24/apps/ai.storyteller.vectorcraft.png` | Project owner (ArtCraft team) | Original artwork drawn in ArtCraft for VectorCraft, vectorised and rendered by `packaging/icons.sh` | MIT OR Apache-2.0 (`assets/app-icon/LICENSE.txt`) | App icon (engraved dragon) |
-| `assets/app-icon/hicolor/256x256/apps/ai.storyteller.vectorcraft.png` | Project owner (ArtCraft team) | Original artwork drawn in ArtCraft for VectorCraft, vectorised and rendered by `packaging/icons.sh` | MIT OR Apache-2.0 (`assets/app-icon/LICENSE.txt`) | App icon (engraved dragon) |
-| `assets/app-icon/hicolor/32x32/apps/ai.storyteller.vectorcraft.png` | Project owner (ArtCraft team) | Original artwork drawn in ArtCraft for VectorCraft, vectorised and rendered by `packaging/icons.sh` | MIT OR Apache-2.0 (`assets/app-icon/LICENSE.txt`) | App icon (engraved dragon) |
-| `assets/app-icon/hicolor/48x48/apps/ai.storyteller.vectorcraft.png` | Project owner (ArtCraft team) | Original artwork drawn in ArtCraft for VectorCraft, vectorised and rendered by `packaging/icons.sh` | MIT OR Apache-2.0 (`assets/app-icon/LICENSE.txt`) | App icon (engraved dragon) |
-| `assets/app-icon/hicolor/512x512/apps/ai.storyteller.vectorcraft.png` | Project owner (ArtCraft team) | Original artwork drawn in ArtCraft for VectorCraft, vectorised and rendered by `packaging/icons.sh` | MIT OR Apache-2.0 (`assets/app-icon/LICENSE.txt`) | App icon (engraved dragon) |
-| `assets/app-icon/hicolor/64x64/apps/ai.storyteller.vectorcraft.png` | Project owner (ArtCraft team) | Original artwork drawn in ArtCraft for VectorCraft, vectorised and rendered by `packaging/icons.sh` | MIT OR Apache-2.0 (`assets/app-icon/LICENSE.txt`) | App icon (engraved dragon) |
-| `assets/app-icon/hicolor/scalable/apps/ai.storyteller.vectorcraft.svg` | Project owner (ArtCraft team) | Original artwork drawn in ArtCraft for VectorCraft, vectorised and rendered by `packaging/icons.sh` | MIT OR Apache-2.0 (`assets/app-icon/LICENSE.txt`) | App icon (engraved dragon) |
-| `assets/app-icon/vectorcraft-1024.png` | Project owner (ArtCraft team) | Original artwork drawn in ArtCraft for VectorCraft, vectorised and rendered by `packaging/icons.sh` | MIT OR Apache-2.0 (`assets/app-icon/LICENSE.txt`) | App icon (engraved dragon) |
-| `assets/app-icon/vectorcraft-macos-512.png` | Project owner (ArtCraft team) | Original artwork drawn in ArtCraft for VectorCraft, vectorised and rendered by `packaging/icons.sh` | MIT OR Apache-2.0 (`assets/app-icon/LICENSE.txt`) | App icon (engraved dragon) |
-| `assets/app-icon/vectorcraft-small.svg` | Project owner (ArtCraft team) | Original artwork drawn in ArtCraft for VectorCraft, vectorised and rendered by `packaging/icons.sh` | MIT OR Apache-2.0 (`assets/app-icon/LICENSE.txt`) | App icon (engraved dragon) |
-| `assets/app-icon/vectorcraft.icns` | Project owner (ArtCraft team) | Original artwork drawn in ArtCraft for VectorCraft, vectorised and rendered by `packaging/icons.sh` | MIT OR Apache-2.0 (`assets/app-icon/LICENSE.txt`) | App icon (engraved dragon) |
-| `assets/app-icon/vectorcraft.ico` | Project owner (ArtCraft team) | Original artwork drawn in ArtCraft for VectorCraft, vectorised and rendered by `packaging/icons.sh` | MIT OR Apache-2.0 (`assets/app-icon/LICENSE.txt`) | App icon (engraved dragon) |
-| `assets/app-icon/vectorcraft.svg` | Project owner (ArtCraft team) | Original artwork drawn in ArtCraft for VectorCraft, vectorised and rendered by `packaging/icons.sh` | MIT OR Apache-2.0 (`assets/app-icon/LICENSE.txt`) | App icon (engraved dragon) |
-| `packaging/macos/dmg/background.svg` | Xus Badia (contributed in #493) | Original artwork for VectorCraft's DMG window; links the app icon `assets/app-icon/vectorcraft-small.svg` | MIT OR Apache-2.0 (licensed by the contributor under the project licence) | DMG background source. Text in Inter and JetBrains Mono (OFL-1.1, `assets/fonts`), not embedded; paper grain generated by an SVG `feTurbulence` filter |
+| `assets/app-icon/LICENSE.txt` | (licence/readme text) | Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/app-icon/README.md` | (licence/readme text) | Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/app-icon/hicolor/128x128/apps/app.oracle.oracle-vector.png` | Project owner (ArtCraft team) | Original artwork drawn in ArtCraft for Oracle Vector, vectorised and rendered by `packaging/icons.sh` | MIT OR Apache-2.0 (`assets/app-icon/LICENSE.txt`) | App icon (engraved dragon) |
+| `assets/app-icon/hicolor/16x16/apps/app.oracle.oracle-vector.png` | Project owner (ArtCraft team) | Original artwork drawn in ArtCraft for Oracle Vector, vectorised and rendered by `packaging/icons.sh` | MIT OR Apache-2.0 (`assets/app-icon/LICENSE.txt`) | App icon (engraved dragon) |
+| `assets/app-icon/hicolor/24x24/apps/app.oracle.oracle-vector.png` | Project owner (ArtCraft team) | Original artwork drawn in ArtCraft for Oracle Vector, vectorised and rendered by `packaging/icons.sh` | MIT OR Apache-2.0 (`assets/app-icon/LICENSE.txt`) | App icon (engraved dragon) |
+| `assets/app-icon/hicolor/256x256/apps/app.oracle.oracle-vector.png` | Project owner (ArtCraft team) | Original artwork drawn in ArtCraft for Oracle Vector, vectorised and rendered by `packaging/icons.sh` | MIT OR Apache-2.0 (`assets/app-icon/LICENSE.txt`) | App icon (engraved dragon) |
+| `assets/app-icon/hicolor/32x32/apps/app.oracle.oracle-vector.png` | Project owner (ArtCraft team) | Original artwork drawn in ArtCraft for Oracle Vector, vectorised and rendered by `packaging/icons.sh` | MIT OR Apache-2.0 (`assets/app-icon/LICENSE.txt`) | App icon (engraved dragon) |
+| `assets/app-icon/hicolor/48x48/apps/app.oracle.oracle-vector.png` | Project owner (ArtCraft team) | Original artwork drawn in ArtCraft for Oracle Vector, vectorised and rendered by `packaging/icons.sh` | MIT OR Apache-2.0 (`assets/app-icon/LICENSE.txt`) | App icon (engraved dragon) |
+| `assets/app-icon/hicolor/512x512/apps/app.oracle.oracle-vector.png` | Project owner (ArtCraft team) | Original artwork drawn in ArtCraft for Oracle Vector, vectorised and rendered by `packaging/icons.sh` | MIT OR Apache-2.0 (`assets/app-icon/LICENSE.txt`) | App icon (engraved dragon) |
+| `assets/app-icon/hicolor/64x64/apps/app.oracle.oracle-vector.png` | Project owner (ArtCraft team) | Original artwork drawn in ArtCraft for Oracle Vector, vectorised and rendered by `packaging/icons.sh` | MIT OR Apache-2.0 (`assets/app-icon/LICENSE.txt`) | App icon (engraved dragon) |
+| `assets/app-icon/hicolor/scalable/apps/app.oracle.oracle-vector.svg` | Project owner (ArtCraft team) | Original artwork drawn in ArtCraft for Oracle Vector, vectorised and rendered by `packaging/icons.sh` | MIT OR Apache-2.0 (`assets/app-icon/LICENSE.txt`) | App icon (engraved dragon) |
+| `assets/app-icon/oracle-vector-1024.png` | Project owner (ArtCraft team) | Original artwork drawn in ArtCraft for Oracle Vector, vectorised and rendered by `packaging/icons.sh` | MIT OR Apache-2.0 (`assets/app-icon/LICENSE.txt`) | App icon (engraved dragon) |
+| `assets/app-icon/oracle-vector-macos-512.png` | Project owner (ArtCraft team) | Original artwork drawn in ArtCraft for Oracle Vector, vectorised and rendered by `packaging/icons.sh` | MIT OR Apache-2.0 (`assets/app-icon/LICENSE.txt`) | App icon (engraved dragon) |
+| `assets/app-icon/oracle-vector-small.svg` | Project owner (ArtCraft team) | Original artwork drawn in ArtCraft for Oracle Vector, vectorised and rendered by `packaging/icons.sh` | MIT OR Apache-2.0 (`assets/app-icon/LICENSE.txt`) | App icon (engraved dragon) |
+| `assets/app-icon/oracle-vector.icns` | Project owner (ArtCraft team) | Original artwork drawn in ArtCraft for Oracle Vector, vectorised and rendered by `packaging/icons.sh` | MIT OR Apache-2.0 (`assets/app-icon/LICENSE.txt`) | App icon (engraved dragon) |
+| `assets/app-icon/oracle-vector.ico` | Project owner (ArtCraft team) | Original artwork drawn in ArtCraft for Oracle Vector, vectorised and rendered by `packaging/icons.sh` | MIT OR Apache-2.0 (`assets/app-icon/LICENSE.txt`) | App icon (engraved dragon) |
+| `assets/app-icon/oracle-vector.svg` | Project owner (ArtCraft team) | Original artwork drawn in ArtCraft for Oracle Vector, vectorised and rendered by `packaging/icons.sh` | MIT OR Apache-2.0 (`assets/app-icon/LICENSE.txt`) | App icon (engraved dragon) |
+| `packaging/macos/dmg/background.svg` | Xus Badia (contributed in #493) | Original artwork for Oracle Vector's DMG window; links the app icon `assets/app-icon/oracle-vector-small.svg` | MIT OR Apache-2.0 (licensed by the contributor under the project licence) | DMG background source. Text in Inter and JetBrains Mono (OFL-1.1, `assets/fonts`), not embedded; paper grain generated by an SVG `feTurbulence` filter |
 | `packaging/macos/dmg/background.tiff` | Xus Badia (contributed in #493) | Rendered from `packaging/macos/dmg/background.svg` by `packaging/macos/dmg/generate.py` | MIT OR Apache-2.0 | 1x + 2x DMG background; includes the app icon (see its rows), text rendered from OFL-1.1 fonts and LittleCMS's built-in sRGB profile ("No copyright, use freely") |
 | `packaging/macos/dmg/DS_Store` | Xus Badia (layout, #493) | Written by `packaging/macos/dmg/generate.py` | MIT OR Apache-2.0 | Finder view settings for the DMG (window, icon size and positions, background alias); no machine data |
 | `assets/fonts/Inter-Medium.ttf` | Rasmus Andersson / The Inter Project Authors | https://github.com/rsms/inter | OFL-1.1 (`assets/fonts/OFL-Inter.txt`) | Open-source typeface, not product iconography or artwork |
+| `assets/fonts/Lexend-Variable.ttf` | Bonnie Shaver-Troup, Thomas Jockin and the Lexend Project Authors | https://github.com/googlefonts/lexend | OFL-1.1 (`assets/fonts/OFL-Lexend.txt`) | Open-source typeface, not product iconography or artwork |
 | `assets/fonts/Inter-Regular.ttf` | Rasmus Andersson / The Inter Project Authors | https://github.com/rsms/inter | OFL-1.1 (`assets/fonts/OFL-Inter.txt`) | Open-source typeface, not product iconography or artwork |
 | `assets/fonts/Inter-SemiBold.ttf` | Rasmus Andersson / The Inter Project Authors | https://github.com/rsms/inter | OFL-1.1 (`assets/fonts/OFL-Inter.txt`) | Open-source typeface, not product iconography or artwork |
 | `assets/fonts/JetBrainsMono-Regular.ttf` | The JetBrains Mono Project Authors | https://github.com/JetBrains/JetBrainsMono | OFL-1.1 (`assets/fonts/OFL-JetBrainsMono.txt`) | Open-source typeface, not product iconography or artwork |
@@ -81,157 +82,157 @@ Generated-in-code art is original and has no file to list. This covers the defau
 | `assets/icons/cloud.svg` | Lucide Icons and Contributors | https://lucide.dev (lucide-static v1.49.0; header kept in file) | ISC (`assets/icons/LICENSE-lucide.txt`) |  |
 | `assets/icons/combine.svg` | Lucide Icons and Contributors | https://lucide.dev (lucide-static v1.49.0; header kept in file) | ISC (`assets/icons/LICENSE-lucide.txt`) |  |
 | `assets/icons/copy.svg` | Lucide Icons and Contributors | https://lucide.dev (lucide-static v1.49.0; header kept in file) | ISC (`assets/icons/LICENSE-lucide.txt`) |  |
-| `assets/icons/dc-actions.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-al-bottom.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-al-center.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-al-hcenter.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-al-left.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-al-right.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-al-top.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-al-vcenter.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-align.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-alignto-artboard.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-alignto-key.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-alignto-selection.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-anchor.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-anchor-smooth.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-appearance.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-arc.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-arrow-down.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-arrow-extend.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-arrow-fill.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 | The Selection and Direct Selection arrows' fill, painted black or white under their outline |
-| `assets/icons/dc-arrow-tip.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-arrow-up.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-artboard-options.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-artboards.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-blend.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-bloat.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-cap-butt.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-cap-round.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-cap-square.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-center-hide.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-center-show.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-clear.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-color-guide.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-crystallize.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-cube.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-dash-align.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-dash-exact.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-dimension.svg` | Osama Amin | Original work, drawn for VectorCraft: a dimension line with arrowheads between two extension lines | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-dir-off.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-dir-on.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-direct.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-dist-bottom.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-dist-hcenter.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-dist-hspace.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-dist-left.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-dist-right.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-dist-top.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-dist-vcenter.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-dist-vspace.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-draw-behind.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-draw-inside.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-draw-normal.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-ellipse.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-fill-none.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-filter.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-flare.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-folder.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-free-transform.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-fx.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-gamut.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-grad-freeform.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-grad-linear.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-grad-radial.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-grad-stroke-across.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-grad-stroke-along.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-grad-stroke-within.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-gradient.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-graphic-styles.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-grid-view.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-group-select.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-join-bevel.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-join-miter.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-join-round.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-join.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-knife.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-line-cut.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-line.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-list-view.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-live-bucket.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-live-select.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-mask-none.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-measure.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-mesh.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-mirror-cut.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-new-fill.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-new-item.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-new-stroke.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-objects-on-path.svg` | VectorCraft contributors | Original work, drawn for VectorCraft: three small squares along a curve | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-options.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-para-center.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-para-justify-all.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-para-justify-center.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-para-justify-left.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-para-justify-right.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-para-left.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-para-ltr.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-para-right.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-para-rtl.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-path-eraser.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-pathfinder.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-perspective.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-pf-crop.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-pf-divide.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-pf-exclude.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-pf-intersect.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-pf-merge.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-pf-minus-back.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-pf-minus-front.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-pf-outline.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-pf-trim.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-pf-unite.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-place-symbol.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-polar-grid.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-polygon.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-pucker.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-puppet.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-rearrange.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-rect-cut.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-rect-grid.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-reference-point.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-remove-brush.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-reshape.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-reverse.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-rotate-view.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-rounded-rect.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-rule-evenodd.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-rule-nonzero.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-scallop.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-screen-mode.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-selection.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-shape-builder.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-shear.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-smooth.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-stroke-center.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-stroke-inside.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-stroke-outside.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-stroke.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-swap.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-swatch-kinds.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-symbol-sprayer.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-touch-type.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-transform-panel.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-transparency.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-twirl.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-type-area.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-type-path.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-type-vertical.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-width-profile.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-width.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-wrinkle.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-zoom-large.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
-| `assets/icons/dc-zoom-small.svg` | VectorCraft contributors | Original work, drawn for VectorCraft | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-actions.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-al-bottom.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-al-center.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-al-hcenter.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-al-left.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-al-right.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-al-top.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-al-vcenter.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-align.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-alignto-artboard.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-alignto-key.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-alignto-selection.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-anchor.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-anchor-smooth.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-appearance.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-arc.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-arrow-down.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-arrow-extend.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-arrow-fill.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 | The Selection and Direct Selection arrows' fill, painted black or white under their outline |
+| `assets/icons/dc-arrow-tip.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-arrow-up.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-artboard-options.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-artboards.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-blend.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-bloat.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-cap-butt.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-cap-round.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-cap-square.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-center-hide.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-center-show.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-clear.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-color-guide.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-crystallize.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-cube.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-dash-align.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-dash-exact.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-dimension.svg` | Osama Amin | Original work, drawn for Oracle Vector: a dimension line with arrowheads between two extension lines | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-dir-off.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-dir-on.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-direct.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-dist-bottom.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-dist-hcenter.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-dist-hspace.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-dist-left.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-dist-right.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-dist-top.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-dist-vcenter.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-dist-vspace.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-draw-behind.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-draw-inside.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-draw-normal.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-ellipse.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-fill-none.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-filter.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-flare.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-folder.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-free-transform.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-fx.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-gamut.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-grad-freeform.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-grad-linear.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-grad-radial.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-grad-stroke-across.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-grad-stroke-along.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-grad-stroke-within.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-gradient.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-graphic-styles.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-grid-view.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-group-select.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-join-bevel.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-join-miter.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-join-round.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-join.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-knife.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-line-cut.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-line.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-list-view.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-live-bucket.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-live-select.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-mask-none.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-measure.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-mesh.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-mirror-cut.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-new-fill.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-new-item.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-new-stroke.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-objects-on-path.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector: three small squares along a curve | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-options.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-para-center.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-para-justify-all.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-para-justify-center.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-para-justify-left.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-para-justify-right.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-para-left.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-para-ltr.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-para-right.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-para-rtl.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-path-eraser.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-pathfinder.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-perspective.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-pf-crop.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-pf-divide.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-pf-exclude.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-pf-intersect.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-pf-merge.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-pf-minus-back.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-pf-minus-front.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-pf-outline.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-pf-trim.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-pf-unite.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-place-symbol.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-polar-grid.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-polygon.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-pucker.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-puppet.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-rearrange.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-rect-cut.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-rect-grid.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-reference-point.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-remove-brush.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-reshape.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-reverse.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-rotate-view.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-rounded-rect.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-rule-evenodd.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-rule-nonzero.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-scallop.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-screen-mode.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-selection.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-shape-builder.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-shear.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-smooth.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-stroke-center.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-stroke-inside.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-stroke-outside.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-stroke.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-swap.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-swatch-kinds.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-symbol-sprayer.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-touch-type.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-transform-panel.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-transparency.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-twirl.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-type-area.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-type-path.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-type-vertical.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-width-profile.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-width.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-wrinkle.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-zoom-large.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
+| `assets/icons/dc-zoom-small.svg` | Oracle Vector contributors | Original work, drawn for Oracle Vector | MIT OR Apache-2.0 |  |
 | `assets/icons/ellipsis.svg` | Lucide Icons and Contributors | https://lucide.dev (lucide-static v1.49.0; header kept in file) | ISC (`assets/icons/LICENSE-lucide.txt`) |  |
 | `assets/icons/eraser.svg` | Lucide Icons and Contributors | https://lucide.dev (lucide-static v1.49.0; header kept in file) | ISC (`assets/icons/LICENSE-lucide.txt`) |  |
 | `assets/icons/eye-off.svg` | Lucide Icons and Contributors | https://lucide.dev (lucide-static v1.49.0; header kept in file) | ISC (`assets/icons/LICENSE-lucide.txt`) |  |
@@ -272,8 +273,8 @@ Generated-in-code art is original and has no file to list. This covers the defau
 | `assets/icons/paintbrush.svg` | Lucide Icons and Contributors | https://lucide.dev (lucide-static v1.49.0; header kept in file) | ISC (`assets/icons/LICENSE-lucide.txt`) |  |
 | `assets/icons/palette.svg` | Lucide Icons and Contributors | https://lucide.dev (lucide-static v1.49.0; header kept in file) | ISC (`assets/icons/LICENSE-lucide.txt`) |  |
 | `assets/icons/pen-tool.svg` | Lucide Icons and Contributors | https://lucide.dev (lucide-static v1.49.0; header kept in file) | ISC (`assets/icons/LICENSE-lucide.txt`) |  |
-| `assets/icons/pen-tool-add.svg` | Lucide Icons and Contributors; badge by VectorCraft contributors | https://lucide.dev (lucide-static v1.49.0 `pen-tool`; header kept in file) | ISC (`assets/icons/LICENSE-lucide.txt`) | Lucide's pen-tool with a plus badge |
-| `assets/icons/pen-tool-delete.svg` | Lucide Icons and Contributors; badge by VectorCraft contributors | https://lucide.dev (lucide-static v1.49.0 `pen-tool`; header kept in file) | ISC (`assets/icons/LICENSE-lucide.txt`) | Lucide's pen-tool with a minus badge |
+| `assets/icons/pen-tool-add.svg` | Lucide Icons and Contributors; badge by Oracle Vector contributors | https://lucide.dev (lucide-static v1.49.0 `pen-tool`; header kept in file) | ISC (`assets/icons/LICENSE-lucide.txt`) | Lucide's pen-tool with a plus badge |
+| `assets/icons/pen-tool-delete.svg` | Lucide Icons and Contributors; badge by Oracle Vector contributors | https://lucide.dev (lucide-static v1.49.0 `pen-tool`; header kept in file) | ISC (`assets/icons/LICENSE-lucide.txt`) | Lucide's pen-tool with a minus badge |
 | `assets/icons/pencil.svg` | Lucide Icons and Contributors | https://lucide.dev (lucide-static v1.49.0; header kept in file) | ISC (`assets/icons/LICENSE-lucide.txt`) |  |
 | `assets/icons/pilcrow.svg` | Lucide Icons and Contributors | https://lucide.dev (lucide-static v1.49.0; header kept in file) | ISC (`assets/icons/LICENSE-lucide.txt`) |  |
 | `assets/icons/pin.svg` | Lucide Icons and Contributors | https://lucide.dev (lucide-static v1.49.0; header kept in file) | ISC (`assets/icons/LICENSE-lucide.txt`) |  |
@@ -318,29 +319,29 @@ Generated-in-code art is original and has no file to list. This covers the defau
 | `assets/icons/waves.svg` | Lucide Icons and Contributors | https://lucide.dev (lucide-static v1.49.0; header kept in file) | ISC (`assets/icons/LICENSE-lucide.txt`) |  |
 | `assets/icons/x.svg` | Lucide Icons and Contributors | https://lucide.dev (lucide-static v1.49.0; header kept in file) | ISC; derived from Feather, also MIT (`assets/icons/LICENSE-lucide.txt`) |  |
 | `assets/icons/zoom-in.svg` | Lucide Icons and Contributors | https://lucide.dev (lucide-static v1.49.0; header kept in file) | ISC; derived from Feather, also MIT (`assets/icons/LICENSE-lucide.txt`) |  |
-| `docs/images/dusk-poster.png` | VectorCraft contributors | Rendered by VectorCraft from `examples/dusk-poster.vectorcraft` | MIT OR Apache-2.0 |  |
-| `examples/dusk-poster.vectorcraft` | VectorCraft contributors | Original artwork built through the VectorCraft command API | MIT OR Apache-2.0 |  |
-| `examples/dusk-poster.svg` | VectorCraft contributors | SVG export of the above | MIT OR Apache-2.0 |  |
-| `docs/images/shot-1-neon.png` | VectorCraft contributors | Screenshot of VectorCraft itself (VectorCraft/Lucide UI icons only), editing `examples/neon-drive.vectorcraft` | MIT OR Apache-2.0 |  |
-| `docs/images/shot-2-ribbons.png` | VectorCraft contributors | Screenshot of VectorCraft itself, editing `examples/ribbons.vectorcraft` | MIT OR Apache-2.0 |  |
-| `docs/images/shot-3-sheet.png` | VectorCraft contributors | Screenshot of VectorCraft itself, editing `examples/feature-sheet.vectorcraft` | MIT OR Apache-2.0 |  |
-| `docs/images/shot-4-bezier.png` | VectorCraft contributors | Screenshot of VectorCraft itself, editing `examples/feature-sheet.vectorcraft` | MIT OR Apache-2.0 |  |
-| `docs/images/shot-5-perspective.png` | VectorCraft contributors | Screenshot of VectorCraft itself, editing `examples/perspective-city.vectorcraft` | MIT OR Apache-2.0 |  |
-| `docs/images/shot-6-revolve.png` | VectorCraft contributors | Screenshot of VectorCraft itself, editing `examples/still-life.vectorcraft` | MIT OR Apache-2.0 |  |
-| `docs/images/shot-7-dimensions.png` | VectorCraft contributors | Screenshot of VectorCraft itself, editing `examples/bracket-drawing.vectorcraft` | MIT OR Apache-2.0 |  |
-| `docs/images/art-still-life.png` | VectorCraft contributors | Rendered by VectorCraft from `examples/still-life.vectorcraft` | MIT OR Apache-2.0 |  |
-| `examples/still-life.vectorcraft` | VectorCraft contributors | Original artwork built through the VectorCraft command API | MIT OR Apache-2.0 |  |
-| `examples/bracket-drawing.vectorcraft` | VectorCraft contributors | Original drawing built through the VectorCraft command API | MIT OR Apache-2.0 |  |
-| `docs/images/art-neon-drive.png` | VectorCraft contributors | Rendered by VectorCraft from `examples/neon-drive.vectorcraft` | MIT OR Apache-2.0 |  |
-| `docs/images/art-ribbons.png` | VectorCraft contributors | Rendered by VectorCraft from `examples/ribbons.vectorcraft` | MIT OR Apache-2.0 |  |
-| `docs/images/art-pathfinder.png` | VectorCraft contributors | Rendered by VectorCraft from `examples/feature-sheet.vectorcraft` (artboard 1) | MIT OR Apache-2.0 |  |
-| `docs/images/art-mesh.png` | VectorCraft contributors | Rendered by VectorCraft from `examples/feature-sheet.vectorcraft` (artboard 2) | MIT OR Apache-2.0 |  |
-| `docs/images/art-repeat.png` | VectorCraft contributors | Rendered by VectorCraft from `examples/feature-sheet.vectorcraft` (artboard 3) | MIT OR Apache-2.0 |  |
-| `docs/images/art-envelope.png` | VectorCraft contributors | Rendered by VectorCraft from `examples/feature-sheet.vectorcraft` (artboard 4) | MIT OR Apache-2.0 |  |
-| `examples/neon-drive.vectorcraft` | VectorCraft contributors | Original artwork built through the VectorCraft command API | MIT OR Apache-2.0 |  |
-| `examples/ribbons.vectorcraft` | VectorCraft contributors | Original artwork built through the VectorCraft command API | MIT OR Apache-2.0 |  |
-| `examples/feature-sheet.vectorcraft` | VectorCraft contributors | Original artwork built through the VectorCraft command API | MIT OR Apache-2.0 |  |
-| `examples/perspective-city.vectorcraft` | VectorCraft contributors | Original artwork built through the VectorCraft command API | MIT OR Apache-2.0 |  |
+| `docs/images/dusk-poster.png` | Oracle Vector contributors | Rendered by Oracle Vector from `examples/dusk-poster.oracle-vector` | MIT OR Apache-2.0 |  |
+| `examples/dusk-poster.oracle-vector` | Oracle Vector contributors | Original artwork built through the Oracle Vector command API | MIT OR Apache-2.0 |  |
+| `examples/dusk-poster.svg` | Oracle Vector contributors | SVG export of the above | MIT OR Apache-2.0 |  |
+| `docs/images/shot-1-neon.png` | Oracle Vector contributors | Screenshot of Oracle Vector itself (Oracle Vector/Lucide UI icons only), editing `examples/neon-drive.oracle-vector` | MIT OR Apache-2.0 |  |
+| `docs/images/shot-2-ribbons.png` | Oracle Vector contributors | Screenshot of Oracle Vector itself, editing `examples/ribbons.oracle-vector` | MIT OR Apache-2.0 |  |
+| `docs/images/shot-3-sheet.png` | Oracle Vector contributors | Screenshot of Oracle Vector itself, editing `examples/feature-sheet.oracle-vector` | MIT OR Apache-2.0 |  |
+| `docs/images/shot-4-bezier.png` | Oracle Vector contributors | Screenshot of Oracle Vector itself, editing `examples/feature-sheet.oracle-vector` | MIT OR Apache-2.0 |  |
+| `docs/images/shot-5-perspective.png` | Oracle Vector contributors | Screenshot of Oracle Vector itself, editing `examples/perspective-city.oracle-vector` | MIT OR Apache-2.0 |  |
+| `docs/images/shot-6-revolve.png` | Oracle Vector contributors | Screenshot of Oracle Vector itself, editing `examples/still-life.oracle-vector` | MIT OR Apache-2.0 |  |
+| `docs/images/shot-7-dimensions.png` | Oracle Vector contributors | Screenshot of Oracle Vector itself, editing `examples/bracket-drawing.oracle-vector` | MIT OR Apache-2.0 |  |
+| `docs/images/art-still-life.png` | Oracle Vector contributors | Rendered by Oracle Vector from `examples/still-life.oracle-vector` | MIT OR Apache-2.0 |  |
+| `examples/still-life.oracle-vector` | Oracle Vector contributors | Original artwork built through the Oracle Vector command API | MIT OR Apache-2.0 |  |
+| `examples/bracket-drawing.oracle-vector` | Oracle Vector contributors | Original drawing built through the Oracle Vector command API | MIT OR Apache-2.0 |  |
+| `docs/images/art-neon-drive.png` | Oracle Vector contributors | Rendered by Oracle Vector from `examples/neon-drive.oracle-vector` | MIT OR Apache-2.0 |  |
+| `docs/images/art-ribbons.png` | Oracle Vector contributors | Rendered by Oracle Vector from `examples/ribbons.oracle-vector` | MIT OR Apache-2.0 |  |
+| `docs/images/art-pathfinder.png` | Oracle Vector contributors | Rendered by Oracle Vector from `examples/feature-sheet.oracle-vector` (artboard 1) | MIT OR Apache-2.0 |  |
+| `docs/images/art-mesh.png` | Oracle Vector contributors | Rendered by Oracle Vector from `examples/feature-sheet.oracle-vector` (artboard 2) | MIT OR Apache-2.0 |  |
+| `docs/images/art-repeat.png` | Oracle Vector contributors | Rendered by Oracle Vector from `examples/feature-sheet.oracle-vector` (artboard 3) | MIT OR Apache-2.0 |  |
+| `docs/images/art-envelope.png` | Oracle Vector contributors | Rendered by Oracle Vector from `examples/feature-sheet.oracle-vector` (artboard 4) | MIT OR Apache-2.0 |  |
+| `examples/neon-drive.oracle-vector` | Oracle Vector contributors | Original artwork built through the Oracle Vector command API | MIT OR Apache-2.0 |  |
+| `examples/ribbons.oracle-vector` | Oracle Vector contributors | Original artwork built through the Oracle Vector command API | MIT OR Apache-2.0 |  |
+| `examples/feature-sheet.oracle-vector` | Oracle Vector contributors | Original artwork built through the Oracle Vector command API | MIT OR Apache-2.0 |  |
+| `examples/perspective-city.oracle-vector` | Oracle Vector contributors | Original artwork built through the Oracle Vector command API | MIT OR Apache-2.0 |  |
 
 ## Assets embedded by the PDF backend
 

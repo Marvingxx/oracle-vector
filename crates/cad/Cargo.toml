@@ -1,25 +1,25 @@
 [package]
-name = "vectorcraft-cad"
+name = "oracle-vector-cad"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "VectorCraft CAD interchange: a hand-written ASCII DXF writer (R12 to 2018)"
+description = "Oracle Vector CAD interchange: a hand-written ASCII DXF writer (R12 to 2018)"
 
 [lints]
 workspace = true
 
 [dependencies]
-vectorcraft-geom = { workspace = true }
-vectorcraft-color = { workspace = true }
-vectorcraft-doc = { workspace = true }
-vectorcraft-effects = { workspace = true }
-vectorcraft-brush = { workspace = true }
-vectorcraft-pathops = { workspace = true }
-vectorcraft-text = { workspace = true }
+oracle-vector-geom = { workspace = true }
+oracle-vector-color = { workspace = true }
+oracle-vector-doc = { workspace = true }
+oracle-vector-effects = { workspace = true }
+oracle-vector-brush = { workspace = true }
+oracle-vector-pathops = { workspace = true }
+oracle-vector-text = { workspace = true }
 kurbo = { workspace = true }
 image = { workspace = true }
 
 [dev-dependencies]
 serde_json = { workspace = true }
 # The tests lay type out in the bundled fonts (the workspace leaves turning them on to the engine).
-vectorcraft-text = { workspace = true, features = ["bundled-fonts"] }
+oracle-vector-text = { workspace = true, features = ["bundled-fonts"] }

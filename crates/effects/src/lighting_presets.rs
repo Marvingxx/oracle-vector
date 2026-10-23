@@ -3,7 +3,7 @@
 //! retains the existing default. A preset replaces the light rig and ambient only.
 
 use serde_json::{Value, json};
-use vectorcraft_three_d::{DEFAULT_LIGHT, Light};
+use oracle_vector_three_d::{DEFAULT_LIGHT, Light};
 
 #[derive(Clone, Copy, Debug)]
 pub struct LightingPreset {

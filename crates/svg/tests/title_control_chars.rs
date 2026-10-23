@@ -1,7 +1,7 @@
 // Integration tests: unwrapping and panicking on failure is fine here, unlike in shipped code (AGENTS.md › Robustness).
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
-use vectorcraft_doc::Document;
-use vectorcraft_svg::{ExportOptions, export, import};
+use oracle_vector_doc::Document;
+use oracle_vector_svg::{ExportOptions, export, import};
 
 #[test]
 fn title_and_description_control_chars_are_filtered() {

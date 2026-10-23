@@ -7,9 +7,9 @@
 //! `%AI3_BeginEncoding` names (else `name`).
 
 use kurbo::{Affine, BezPath, ParamCurve, ParamCurveArclen};
-use vectorcraft_color::Paint;
-use vectorcraft_doc::{CharStyle, Justify, NodeKind, ParaStyle, TextKind, TextObject, TextRun};
-use vectorcraft_geom::PathData;
+use oracle_vector_color::Paint;
+use oracle_vector_doc::{CharStyle, Justify, NodeKind, ParaStyle, TextKind, TextObject, TextRun};
+use oracle_vector_geom::PathData;
 
 use super::super::obj::V;
 use super::{FLIP, GState, Reader};

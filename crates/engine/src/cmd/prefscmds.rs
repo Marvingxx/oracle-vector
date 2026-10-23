@@ -8,7 +8,7 @@ use serde_json::{Map, Value, json};
 use super::*;
 use crate::Prefs;
 use crate::units::Measure;
-use vectorcraft_doc::{GridPrefs, Unit};
+use oracle_vector_doc::{GridPrefs, Unit};
 
 /// What kind of value a preference holds.
 #[derive(Clone, Copy, Debug)]
@@ -269,12 +269,13 @@ pub const PREF_SPECS: &[PrefSpec] = &[
         choice(&[("dark", "Dark"), ("mediumDark", "Medium Dark"), ("mediumLight", "Medium Light"), ("light", "Light")])
     ),
     p!("uiColorScheme", "User Interface", "", "Color Scheme", choice(&[("modern", "Modern"), ("classic", "Classic")])),
+    p!("uiFont", "User Interface", "", "Interface Font", choice(&[("lexend", "Lexend (Oracle)"), ("inter", "Inter")])),
     p!(
         "uiAccent",
         "User Interface",
         "",
         "Accent Color",
-        choice(&[("coral", "Coral"), ("blue", "Blue"), ("violet", "Violet"), ("green", "Green"), ("amber", "Amber"), ("pink", "Pink")])
+        choice(&[("oracle", "Oracle"), ("coral", "Coral"), ("blue", "Blue"), ("violet", "Violet"), ("green", "Green"), ("amber", "Amber"), ("pink", "Pink")])
     ),
     p!(
         "canvasColor",
@@ -388,7 +389,7 @@ fn validate_group(key: &str, current: &Value, v: &Value) -> std::result::Result<
             if let (Some(o), Some(p)) = (merged.as_object_mut(), v.as_object()) {
                 o.extend(p.clone());
             }
-            serde_json::from_value::<vectorcraft_tools::distort::perspective::widget::WidgetOptions>(merged)
+            serde_json::from_value::<oracle_vector_tools::distort::perspective::widget::WidgetOptions>(merged)
                 .map(|o| json!(o))
                 .map_err(|e| e.to_string())
         }
@@ -539,19 +540,19 @@ impl Session {
         self.prefs = p;
         if fonts_folder_changed {
             let folder = self.prefs.fonts_folder.trim();
-            vectorcraft_text::set_user_font_dirs(if folder.is_empty() { vec![] } else { vec![folder.into()] });
+            oracle_vector_text::set_user_font_dirs(if folder.is_empty() { vec![] } else { vec![folder.into()] });
             // Once the fonts were scanned, scan again now: the folder's fonts appear (or go) in the
             // font menus, and type in them lays out again. The first scan reads it anyway.
-            if vectorcraft_text::FontDb::global().installed_fonts_changed() {
+            if oracle_vector_text::FontDb::global().installed_fonts_changed() {
                 // Its result only counts the faces cataloged.
                 let _ = super::fonts::rescan(self, &serde_json::Value::Null);
             }
         }
         if hyphen_exceptions_changed {
             // Preferences › Hyphenation › Exceptions (#394): the layout reads the process-wide list.
-            vectorcraft_text::set_hyphenation_exceptions(&self.prefs.hyphenation_exceptions);
+            oracle_vector_text::set_hyphenation_exceptions(&self.prefs.hyphenation_exceptions);
         }
-        vectorcraft_render::set_default_threads(u16::try_from(self.prefs.render_threads).ok());
+        oracle_vector_render::set_default_threads(u16::try_from(self.prefs.render_threads).ok());
         for st in &mut self.docs {
             if history_changed {
                 st.history.limit = self.prefs.history_states as usize;

@@ -13,10 +13,10 @@
 
 use egui::{Rect, Sense, Ui, vec2};
 use serde_json::{Value, json};
-use vectorcraft_color::cms::{self, Lab};
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::ColorMode;
-use vectorcraft_engine::cmd::color_value;
+use oracle_vector_color::cms::{self, Lab};
+use oracle_vector_color::{Color, Paint};
+use oracle_vector_doc::ColorMode;
+use oracle_vector_engine::cmd::color_value;
 
 use super::form::PREVIEWED;
 use super::{DialogAction, DialogSpec};
@@ -24,7 +24,7 @@ use crate::panels::color::{GAMUT_WARNING, WEB_WARNING, gamut_fix, hex_digits, is
 use crate::panels::{c32, color_json};
 use crate::state::Dialog;
 use crate::theme::Tokens;
-use crate::{VectorcraftApp, widgets};
+use crate::{OracleVectorApp, widgets};
 
 pub(super) const KIND: &str = "colorPicker";
 
@@ -194,7 +194,7 @@ fn store(d: &mut Dialog, p: &Picked) {
 }
 
 /// The colour the proxy shows (a gradient's first stop; the last colour for None and patterns).
-fn proxy_color(app: &VectorcraftApp, stroke: bool) -> Color {
+fn proxy_color(app: &OracleVectorApp, stroke: bool) -> Color {
     let (f, s) = crate::panels::current_paints(app);
     match if stroke { s } else { f } {
         Paint::Solid { color, .. } => color,
@@ -206,7 +206,7 @@ fn proxy_color(app: &VectorcraftApp, stroke: bool) -> Color {
 /// `ui.colorPicker {stroke?, artboard?, color?}`: open the picker for the fill (or stroke) proxy,
 /// or for artboard `artboard`'s background color, starting from `color`, else the proxy's color
 /// or the artboard's color (white when it has none).
-pub fn open(app: &mut VectorcraftApp, p: &Value) -> Result<Value, String> {
+pub fn open(app: &mut OracleVectorApp, p: &Value) -> Result<Value, String> {
     let stroke = p.get("stroke").and_then(Value::as_bool).unwrap_or(!app.session.fill_active);
     let artboard = match p.get("artboard") {
         None | Some(Value::Null) => None,
@@ -279,7 +279,7 @@ fn header(ui: &mut Ui, title: &str) {
 
 /// Draws the responsive picker and updates its color fields and live preview.
 /// Returns the requested action for the shared frame to confirm or cancel.
-fn body(app: &mut VectorcraftApp, ui: &mut Ui, d: &mut Dialog) -> DialogAction {
+fn body(app: &mut OracleVectorApp, ui: &mut Ui, d: &mut Dialog) -> DialogAction {
     let channel = Channel::parse(&d.str("channel")).unwrap_or_default();
     let web = d.bool("webOnly");
     let swatches = d.bool("swatches");
@@ -405,7 +405,7 @@ fn body(app: &mut VectorcraftApp, ui: &mut Ui, d: &mut Dialog) -> DialogAction {
 /// (the colour then only becomes the default paint, on OK).
 /// Opened for an artboard, the picker shows the color on that artboard's paper, with or without a
 /// selection.
-fn preview(app: &mut VectorcraftApp, d: &mut Dialog) {
+fn preview(app: &mut OracleVectorApp, d: &mut Dialog) {
     let (cmd, params) = paint_command(app, d);
     let first = !app.session.in_interaction();
     let unchanged = d.fields.get(PREVIEWED) == Some(&params) || first && d.fields.get("original").and_then(color_value) == Some(picked(d).color);
@@ -429,7 +429,7 @@ fn preview(app: &mut VectorcraftApp, d: &mut Dialog) {
 
 /// The command that applies the picked colour to the proxy, and its params (as CMYK in a CMYK
 /// document). Opened for an artboard, the command sets that artboard's background color.
-fn paint_command(app: &VectorcraftApp, d: &Dialog) -> (&'static str, Value) {
+fn paint_command(app: &OracleVectorApp, d: &Dialog) -> (&'static str, Value) {
     let mut c = picked(d).color;
     if matches!(c, Color::Rgb { .. }) && app.session.active().is_some_and(|s| s.doc.color_mode == ColorMode::Cmyk) {
         let [cy, m, y, k] = c.to_cmyk_managed(cms::active().settings().intent);
@@ -551,7 +551,7 @@ fn value_fields(ui: &mut Ui, p: &Picked, channel: Channel) -> (Option<Picked>, O
 }
 
 /// The document's colour swatches as a list; returns the clicked swatch's colour.
-fn swatch_list(app: &VectorcraftApp, ui: &mut Ui, current: &Color, side: f32) -> Option<Color> {
+fn swatch_list(app: &OracleVectorApp, ui: &mut Ui, current: &Color, side: f32) -> Option<Color> {
     let t = Tokens::get(ui.ctx());
     let mut chosen = None;
     ui.allocate_ui(vec2(side + SLIDER_GAP + SLIDER_W, side), |ui| {
@@ -592,7 +592,7 @@ fn swatch_list(app: &VectorcraftApp, ui: &mut Ui, current: &Color, side: f32) ->
 /// OK: apply the colour to the proxy, keeping the live preview as one undo step. For an artboard,
 /// OK with the starting color unchanged and nothing previewed closes the picker and leaves the
 /// artboard as it was: without a background color, or with its color in its own color model.
-fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn confirm(app: &mut OracleVectorApp, d: &Dialog) -> Result<Value, String> {
     if d.bool("keep") && !app.session.in_interaction() && d.fields.get("original").and_then(color_value) == Some(picked(d).color) {
         app.ui.dialog = None;
         return Ok(Value::Null);
@@ -603,32 +603,32 @@ fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
 
 #[cfg(test)]
 mod tests {
-    use vectorcraft_engine::Session;
+    use oracle_vector_engine::Session;
 
     use super::*;
     use crate::panels::color::in_gamut;
 
-    fn app() -> VectorcraftApp {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    fn app() -> OracleVectorApp {
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 200})).unwrap();
         app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 50, "height": 50})).unwrap();
         app
     }
 
-    fn frame(app: &mut VectorcraftApp) {
+    fn frame(app: &mut OracleVectorApp) {
         let ctx = egui::Context::default();
         crate::theme::install_fonts(&ctx);
         let mut out = ctx.run_ui(Default::default(), |ui| super::super::show(app, ui.ctx()));
         out.textures_delta.clear();
     }
 
-    fn fill_hex(app: &VectorcraftApp) -> String {
+    fn fill_hex(app: &OracleVectorApp) -> String {
         crate::panels::current_paints(app).0.color().unwrap().to_hex()
     }
 
     /// Runs one frame of the dialog with `events` in `ctx`, which keeps the keyboard focus from
     /// frame to frame, and returns the texts drawn with their screen rects.
-    fn frame_in(ctx: &egui::Context, app: &mut VectorcraftApp, events: Vec<egui::Event>) -> Vec<(String, Rect)> {
+    fn frame_in(ctx: &egui::Context, app: &mut OracleVectorApp, events: Vec<egui::Event>) -> Vec<(String, Rect)> {
         let mut out = ctx.run_ui(egui::RawInput { events, ..Default::default() }, |ui| super::super::show(app, ui.ctx()));
         out.textures_delta.clear();
         fn collect(s: &egui::Shape, out: &mut Vec<(String, Rect)>) {
@@ -716,7 +716,7 @@ mod tests {
     #[test]
     fn the_selection_shows_the_colour_live() {
         let mut app = app();
-        let undo = |app: &VectorcraftApp| app.session.doc().unwrap().history.undo.len();
+        let undo = |app: &OracleVectorApp| app.session.doc().unwrap().history.undo.len();
         let before = undo(&app);
         app.run("ui.colorPicker", json!({})).unwrap();
         frame(&mut app);
@@ -748,8 +748,8 @@ mod tests {
         let mut app = app();
         app.run("select.set", json!({"ids": []})).unwrap();
         app.run("artboard.new", json!({})).unwrap();
-        let color = |app: &VectorcraftApp| app.session.doc().unwrap().doc.artboards[1].color.map(|c| c.to_hex());
-        let undo = |app: &VectorcraftApp| app.session.doc().unwrap().history.undo.len();
+        let color = |app: &OracleVectorApp| app.session.doc().unwrap().doc.artboards[1].color.map(|c| c.to_hex());
+        let undo = |app: &OracleVectorApp| app.session.doc().unwrap().history.undo.len();
         let art = app.session.doc().unwrap().doc.layers.clone();
         let before = undo(&app);
         app.run("ui.colorPicker", json!({"artboard": 1})).unwrap();
@@ -784,8 +784,8 @@ mod tests {
     fn an_untouched_picker_leaves_an_artboard_without_a_color() {
         let mut app = app();
         app.run("artboard.new", json!({})).unwrap();
-        let color = |app: &VectorcraftApp| app.session.doc().unwrap().doc.artboards[1].color.map(|c| c.to_hex());
-        let undo = |app: &VectorcraftApp| app.session.doc().unwrap().history.undo.len();
+        let color = |app: &OracleVectorApp| app.session.doc().unwrap().doc.artboards[1].color.map(|c| c.to_hex());
+        let undo = |app: &OracleVectorApp| app.session.doc().unwrap().history.undo.len();
         let before = undo(&app);
         app.run("ui.colorPicker", json!({"artboard": 1})).unwrap();
         frame(&mut app);
@@ -808,8 +808,8 @@ mod tests {
         app.run("artboard.new", json!({})).unwrap();
         app.run("file.documentColorMode", json!({"mode": "cmyk"})).unwrap();
         app.run("artboard.setProps", json!({"index": 1, "color": "#ff0000"})).unwrap();
-        let color = |app: &VectorcraftApp| app.session.doc().unwrap().doc.artboards[1].color;
-        let undo = |app: &VectorcraftApp| app.session.doc().unwrap().history.undo.len();
+        let color = |app: &OracleVectorApp| app.session.doc().unwrap().doc.artboards[1].color;
+        let undo = |app: &OracleVectorApp| app.session.doc().unwrap().history.undo.len();
         let start = color(&app);
         assert!(matches!(start, Some(Color::Rgb { .. })), "set as RGB");
         let before = undo(&app);
@@ -834,8 +834,8 @@ mod tests {
         let mut app = app();
         app.run("artboard.new", json!({})).unwrap();
         app.run("artboard.setProps", json!({"index": 1, "color": "#ff0000"})).unwrap();
-        let color = |app: &VectorcraftApp| app.session.doc().unwrap().doc.artboards[1].color.map(|c| c.to_hex());
-        let undo = |app: &VectorcraftApp| app.session.doc().unwrap().history.undo.len();
+        let color = |app: &OracleVectorApp| app.session.doc().unwrap().doc.artboards[1].color.map(|c| c.to_hex());
+        let undo = |app: &OracleVectorApp| app.session.doc().unwrap().history.undo.len();
         let before = undo(&app);
         app.run("ui.colorPicker", json!({"artboard": 1})).unwrap();
         frame(&mut app);
@@ -974,7 +974,7 @@ mod tests {
 
     /// Runs a dialog frame with real egui input at a physical window size, accounting for UI zoom,
     /// and returns the painted controls for layout and interaction assertions.
-    fn draw(ctx: &egui::Context, app: &mut VectorcraftApp, size: egui::Vec2, events: Vec<egui::Event>) -> Drawn {
+    fn draw(ctx: &egui::Context, app: &mut OracleVectorApp, size: egui::Vec2, events: Vec<egui::Event>) -> Drawn {
         let input =
             egui::RawInput { screen_rect: Some(Rect::from_min_size(egui::Pos2::ZERO, size / ctx.zoom_factor())), events, ..Default::default() };
         let mut out = ctx.run_ui(input, |ui| {
@@ -995,7 +995,7 @@ mod tests {
     }
 
     /// Lets the auto-sized dialog settle over six frames and returns the next frame's controls.
-    fn settled(ctx: &egui::Context, app: &mut VectorcraftApp, size: egui::Vec2) -> Drawn {
+    fn settled(ctx: &egui::Context, app: &mut OracleVectorApp, size: egui::Vec2) -> Drawn {
         for _ in 0..6 {
             draw(ctx, app, size, vec![]);
         }
@@ -1011,7 +1011,7 @@ mod tests {
     }
 
     /// Sends a primary pointer press and release in separate frames at the given position.
-    fn click_at(ctx: &egui::Context, app: &mut VectorcraftApp, at: egui::Pos2) {
+    fn click_at(ctx: &egui::Context, app: &mut OracleVectorApp, at: egui::Pos2) {
         for pressed in [true, false] {
             draw(
                 ctx,

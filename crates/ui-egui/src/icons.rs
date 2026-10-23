@@ -178,7 +178,7 @@ mod tests {
     }
 
     /// Appearance (effects) and Pathfinder both lived in the icon column; they used the same
-    /// overlapping-squares motif (storytold/vectorcraft#2681).
+    /// overlapping-squares motif (Marvingxx/oracle-vector#2681).
     #[test]
     fn appearance_panel_icon_is_not_the_pathfinder_icon() {
         let appearance = String::from_utf8_lossy(include_bytes!("../../../assets/icons/dc-appearance.svg"));

@@ -188,8 +188,8 @@ fn bundled_catalogs_are_consistent() {
                 // A command id, or an effect id: Effect menu items share `effect.apply` /
                 // `effect.dialog`, so the effect's own id is what tells them apart.
                 let known = crate::menus::UI_COMMANDS.iter().any(|c| c.0 == src)
-                    || vectorcraft_engine::cmd::command_specs().iter().any(|c| c.id == src)
-                    || vectorcraft_effects::effect_catalog().iter().any(|e| e.id == src);
+                    || oracle_vector_engine::cmd::command_specs().iter().any(|c| c.id == src)
+                    || oracle_vector_effects::effect_catalog().iter().any(|e| e.id == src);
                 assert!(known, "{}: unknown command id {src:?}", l.code);
             }
         }
@@ -213,9 +213,9 @@ fn partial_catalogs_only_translate_strings_the_ui_shows() {
 /// only: the tests running beside it on other threads still draw in English.
 #[test]
 fn the_engine_follows_the_interface_language() {
-    let mut app = crate::VectorcraftApp::new(vectorcraft_engine::Session::new(), crate::Services::default());
+    let mut app = crate::OracleVectorApp::new(oracle_vector_engine::Session::new(), crate::Services::default());
     let ctx = egui::Context::default();
-    let frame = |app: &mut crate::VectorcraftApp| {
+    let frame = |app: &mut crate::OracleVectorApp| {
         ctx.run_ui(egui::RawInput::default(), |ui| app.logic(ui.ctx())).textures_delta.clear();
     };
     frame(&mut app);
@@ -241,7 +241,7 @@ fn the_engine_follows_the_interface_language() {
 #[test]
 fn language_command_sets_the_preference() {
     use crate::menus::{checked, run_ui_command};
-    let mut app = crate::VectorcraftApp::new(vectorcraft_engine::Session::new(), crate::Services::default());
+    let mut app = crate::OracleVectorApp::new(oracle_vector_engine::Session::new(), crate::Services::default());
     assert_eq!(checked(&app, "app.language", &serde_json::json!({"lang": "auto"})), Some(true));
     run_ui_command(&mut app, "app.language", &serde_json::json!({"lang": "ja"})).unwrap().unwrap();
     assert_eq!(app.session.prefs.interface_language, "ja");
@@ -258,7 +258,7 @@ fn language_command_sets_the_preference() {
     // Every registered language is in the Mac App menu's Language, by its own name (the in-window
     // bar has no Language menu).
     let layout = crate::native_menu::mac_layout(&app, &crate::native_menu::from_tree(&app, &crate::menus::menu_tree()), Lang::EN);
-    let app_menu = layout.bar.menus.into_iter().find(|m| m.title == "VectorCraft").expect("App menu");
+    let app_menu = layout.bar.menus.into_iter().find(|m| m.title == "Oracle Vector").expect("App menu");
     fn items(nodes: &[crate::native_menu::Node], out: &mut Vec<String>) {
         for n in nodes {
             match n {
@@ -296,8 +296,8 @@ fn is_georgian(c: char) -> bool {
 #[cfg(feature = "interface-fonts")]
 #[test]
 fn bundled_fonts_cover_the_catalogs() {
-    let japanese_ui_font = vectorcraft_text::CRAFT_FONTS.iter().any(|f| f.is_japanese());
-    let georgian_ui_font = vectorcraft_text::CRAFT_FONTS.iter().any(|f| f.is_georgian());
+    let japanese_ui_font = oracle_vector_text::CRAFT_FONTS.iter().any(|f| f.is_japanese());
+    let georgian_ui_font = oracle_vector_text::CRAFT_FONTS.iter().any(|f| f.is_georgian());
     let ctx = egui::Context::default();
     crate::theme::install_fonts(&ctx);
     let mut output = ctx.run_ui(egui::RawInput::default(), |_| {});
@@ -473,9 +473,9 @@ fn every_undo_label_is_translated() {
     let scan = undo_scan();
     let mut labels = scan.labels;
     assert!(labels.len() > 300, "scan found only {} undo labels", labels.len());
-    labels.extend(vectorcraft_effects::effect_catalog().iter().map(|e| e.label.trim_end_matches('…').to_string()));
+    labels.extend(oracle_vector_effects::effect_catalog().iter().map(|e| e.label.trim_end_matches('…').to_string()));
     let liquify = ["warp", "twirl", "pucker", "bloat", "scallop", "crystallize", "wrinkle"];
-    labels.extend(liquify.iter().filter_map(|k| vectorcraft_tools::distort::liquify::LiquifyKind::parse(k)).map(|k| format!("{} Tool", k.label())));
+    labels.extend(liquify.iter().filter_map(|k| oracle_vector_tools::distort::liquify::LiquifyKind::parse(k)).map(|k| format!("{} Tool", k.label())));
     assert_eq!(scan.formatted.iter().collect::<Vec<_>>(), ["{} Tool"], "step names built with format! (make them with Session::edit_named)");
     assert!(scan.templates.len() >= 3, "scan found only the templates {:?}", scan.templates);
     for l in LANGUAGES.iter().filter(|l| l.complete_menus) {
@@ -855,11 +855,11 @@ fn string_literals(e: &str, keep: impl Fn(&str, &str) -> bool) -> Vec<String> {
     out
 }
 
-/// `VECTORCRAFT_I18N_DUMP=<file> cargo test -p vectorcraft-ui-egui dump_source_strings` writes every
+/// `ORACLE_VECTOR_I18N_DUMP=<file> cargo test -p oracle-vector-ui-egui dump_source_strings` writes every
 /// English source string a complete catalog has to cover, one per line, for translators.
 #[test]
 fn dump_source_strings() {
-    let Ok(path) = std::env::var("VECTORCRAFT_I18N_DUMP") else { return };
+    let Ok(path) = std::env::var("ORACLE_VECTOR_I18N_DUMP") else { return };
     let mut all = crate::menus::menu_strings();
     all.extend(tl_literals());
     all.extend(undo_labels());
@@ -879,7 +879,7 @@ const KEEPS_MENU_NAMES: [&str; 18] = ["cs", "de", "el", "es", "fr", "hu", "it", 
 /// names and the perspective grid presets (names, shown untranslated wherever else they appear).
 /// Each language's own name in the Language menu is left alone too.
 const MENU_KEEP_AS_IS: &[&str] = &[
-    "VectorCraft",
+    "Oracle Vector",
     "OpenType",
     "Essentials",
     "Essentials Classic",
@@ -930,7 +930,7 @@ fn menu_labels() -> Vec<(&'static str, &'static str, serde_json::Value)> {
 /// with every toggle flipped.
 fn toggled_labels() -> Vec<String> {
     use serde_json::json;
-    let mut app = crate::VectorcraftApp::new(vectorcraft_engine::Session::new(), crate::Services::default());
+    let mut app = crate::OracleVectorApp::new(oracle_vector_engine::Session::new(), crate::Services::default());
     app.run("file.new", json!({})).unwrap();
     app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 50, "height": 50})).unwrap();
     app.run("object.envelope.makeWithWarp", json!({})).unwrap();
@@ -989,7 +989,7 @@ fn menu_catalogs_translate_every_menu_label() {
     all.extend(crate::menus::CONTEXT_LABELS.iter().map(|l| l.to_string()));
     // The macOS menu bar's own labels, and its Settings submenu's Preferences pages.
     all.extend(crate::native_menu::MAC_LABELS.iter().map(|l| l.to_string()));
-    all.extend(vectorcraft_engine::cmd::prefscmds::PREF_CATEGORIES.iter().map(|l| l.to_string()));
+    all.extend(oracle_vector_engine::cmd::prefscmds::PREF_CATEGORIES.iter().map(|l| l.to_string()));
     all.sort();
     all.dedup();
     for code in KEEPS_MENU_NAMES {
@@ -1641,7 +1641,7 @@ fn cyrillic_glyphs_are_available_without_system_fonts() {
 fn a_language_saved_by_an_older_version_carries_over() {
     for (saved, want) in [("ja", "ja"), ("cs", "cs"), ("pt-br", "pt-br"), ("en", "auto"), ("xx", "auto")] {
         let ui: crate::state::UiState = serde_json::from_value(serde_json::json!({"language": saved})).unwrap();
-        let mut app = crate::VectorcraftApp::new(vectorcraft_engine::Session::new(), crate::Services::default());
+        let mut app = crate::OracleVectorApp::new(oracle_vector_engine::Session::new(), crate::Services::default());
         app.ui = ui;
         crate::prefs_dialog::restore(&mut app);
         assert_eq!(app.session.prefs.interface_language, want, "saved {saved}");
@@ -1650,7 +1650,7 @@ fn a_language_saved_by_an_older_version_carries_over() {
     // A preference already set wins over the old field.
     let ui: crate::state::UiState =
         serde_json::from_value(serde_json::json!({"language": "ja", "engine_prefs": {"interfaceLanguage": "cs"}})).unwrap();
-    let mut app = crate::VectorcraftApp::new(vectorcraft_engine::Session::new(), crate::Services::default());
+    let mut app = crate::OracleVectorApp::new(oracle_vector_engine::Session::new(), crate::Services::default());
     app.ui = ui;
     crate::prefs_dialog::restore(&mut app);
     assert_eq!(app.session.prefs.interface_language, "cs");
@@ -1702,15 +1702,15 @@ fn package_status_message_templates_parse() {
 
 /// Each language that translates status and error messages ([`COMPLETE_MESSAGES`]) has an `@msg`
 /// row for every message in the sources that reach the status bar, so a new one can't ship
-/// untranslated by accident (`VECTORCRAFT_I18N_DUMP_MESSAGES=<file>` lists them). A message listed
+/// untranslated by accident (`ORACLE_VECTOR_I18N_DUMP_MESSAGES=<file>` lists them). A message listed
 /// in `untranslated_messages.txt` passes whether or not it has rows
-/// (`VECTORCRAFT_I18N_DUMP_UNTRANSLATED=<file>` writes that file's header and the messages in the
+/// (`ORACLE_VECTOR_I18N_DUMP_UNTRANSLATED=<file>` writes that file's header and the messages in the
 /// sources that lack a row).
 #[test]
 fn complete_languages_translate_every_message() {
     let messages = message_literals();
     assert!(messages.len() > 300, "scan found only {} messages", messages.len());
-    if let Ok(path) = std::env::var("VECTORCRAFT_I18N_DUMP_MESSAGES") {
+    if let Ok(path) = std::env::var("ORACLE_VECTOR_I18N_DUMP_MESSAGES") {
         std::fs::write(path, messages.iter().map(|m| format!("{m}\n")).collect::<String>()).expect("write dump");
     }
     let listed: std::collections::HashSet<&str> = UNTRANSLATED_MESSAGES.lines().filter(|l| !l.is_empty() && !l.starts_with('#')).collect();
@@ -1724,7 +1724,7 @@ fn complete_languages_translate_every_message() {
         untranslated.extend(missing.iter().copied());
         unlisted.push((code, missing.into_iter().filter(|m| !listed.contains(m)).collect::<Vec<_>>()));
     }
-    if let Ok(path) = std::env::var("VECTORCRAFT_I18N_DUMP_UNTRANSLATED") {
+    if let Ok(path) = std::env::var("ORACLE_VECTOR_I18N_DUMP_UNTRANSLATED") {
         let header = UNTRANSLATED_MESSAGES.lines().take_while(|l| l.starts_with('#'));
         std::fs::write(path, header.chain(untranslated).map(|l| format!("{l}\n")).collect::<String>()).expect("write dump");
     }
@@ -1796,7 +1796,7 @@ fn width(p: &Value, cmd: &str, key: &str) -> Result<f64> {
 #[test]
 fn align_reflect_and_shear_param_errors_are_translated() {
     use serde_json::json;
-    let mut s = vectorcraft_engine::Session::new();
+    let mut s = oracle_vector_engine::Session::new();
     s.execute("file.new", &json!({})).unwrap();
     for x in [0, 50] {
         s.execute("shape.rectangle", &json!({"x": x, "y": 0, "width": 10, "height": 10})).unwrap();
@@ -1814,7 +1814,7 @@ fn align_reflect_and_shear_param_errors_are_translated() {
         ("object.shear", json!({"axis": "diagonal"})),
     ] {
         let e = s.execute(cmd, &p).unwrap_err();
-        let vectorcraft_engine::EngineError::BadParams { msg, .. } = &e else { panic!("{cmd} {p}: {e}") };
+        let oracle_vector_engine::EngineError::BadParams { msg, .. } = &e else { panic!("{cmd} {p}: {e}") };
         for code in COMPLETE_MESSAGES {
             let shown = message(Lang::from_code(code).unwrap(), &e.to_string());
             assert!(!shown.contains(msg.as_str()), "{code}: {shown}");
@@ -1828,10 +1828,10 @@ fn align_reflect_and_shear_param_errors_are_translated() {
 #[test]
 fn brush_move_param_error_is_translated() {
     use serde_json::json;
-    let mut s = vectorcraft_engine::Session::new();
+    let mut s = oracle_vector_engine::Session::new();
     s.execute("file.new", &json!({})).unwrap();
     let e = s.execute("brush.move", &json!({"name": "3 pt. Round", "type": "scatter"})).unwrap_err();
-    let vectorcraft_engine::EngineError::BadParams { msg, .. } = &e else { panic!("{e}") };
+    let oracle_vector_engine::EngineError::BadParams { msg, .. } = &e else { panic!("{e}") };
     for code in COMPLETE_MESSAGES.iter().chain(&["bg", "da", "id", "nl"]) {
         let shown = message(Lang::from_code(code).unwrap(), &e.to_string());
         assert!(!shown.contains(msg.as_str()) && !shown.contains("invalid parameters") && shown.contains("`brush.move`"), "{code}: {shown}");
@@ -1844,7 +1844,7 @@ fn brush_move_param_error_is_translated() {
 #[test]
 fn the_data_set_applied_nothing_warning_is_translated() {
     use serde_json::json;
-    let mut s = vectorcraft_engine::Session::new();
+    let mut s = oracle_vector_engine::Session::new();
     s.execute("file.new", &json!({})).unwrap();
     s.execute("dataset.import", &json!({"csv": "name,Name\nRow 7,Ann\n"})).unwrap();
     let v = s.execute("dataset.select", &json!({"name": "Row 7"})).unwrap();
@@ -1861,7 +1861,7 @@ fn the_data_set_applied_nothing_warning_is_translated() {
 #[test]
 fn blend_spine_param_errors_are_translated() {
     use serde_json::json;
-    use vectorcraft_engine::{EngineError, Session};
+    use oracle_vector_engine::{EngineError, Session};
     let mut s = Session::new();
     s.execute("file.new", &json!({})).unwrap();
     let rectangle =
@@ -1928,7 +1928,7 @@ fn blend_spine_param_errors_are_translated() {
 #[test]
 fn objects_on_path_refusals_are_translated() {
     use serde_json::json;
-    use vectorcraft_engine::Session;
+    use oracle_vector_engine::Session;
     let mut s = Session::new();
     s.execute("file.new", &json!({})).unwrap();
     let rectangle =
@@ -1946,7 +1946,7 @@ fn objects_on_path_refusals_are_translated() {
     s.execute("object.repeat.grid", &json!({})).unwrap();
     for (p, ids) in [(&member, &object), (&mask, &object), (&path, &source), (&path, &mask)] {
         let e = s.execute("object.objectsOnPath.attach", &json!({"path": p, "ids": [ids]})).unwrap_err();
-        let vectorcraft_engine::EngineError::BadParams { msg, .. } = &e else { panic!("{e}") };
+        let oracle_vector_engine::EngineError::BadParams { msg, .. } = &e else { panic!("{e}") };
         for code in COMPLETE_MESSAGES {
             let shown = message(Lang::from_code(code).unwrap(), &e.to_string());
             assert!(!shown.contains(msg.as_str()), "{code}: {shown}");
@@ -1959,10 +1959,10 @@ fn objects_on_path_refusals_are_translated() {
 #[test]
 fn legacy_ait_param_error_is_translated() {
     use serde_json::json;
-    let mut s = vectorcraft_engine::Session::new();
+    let mut s = oracle_vector_engine::Session::new();
     s.execute("file.new", &json!({})).unwrap();
     let e = s.execute("file.saveAsTemplate", &json!({"format": "ait", "aiVersion": "7"})).unwrap_err();
-    let vectorcraft_engine::EngineError::BadParams { msg, .. } = &e else { panic!("{e}") };
+    let oracle_vector_engine::EngineError::BadParams { msg, .. } = &e else { panic!("{e}") };
     for code in COMPLETE_MESSAGES {
         let shown = message(Lang::from_code(code).unwrap(), &e.to_string());
         assert!(!shown.contains(msg.as_str()), "{code}: {shown}");
@@ -1975,11 +1975,11 @@ fn legacy_ait_param_error_is_translated() {
 #[test]
 fn bristle_brush_name_limit_error_is_translated() {
     use serde_json::json;
-    let mut s = vectorcraft_engine::Session::new();
+    let mut s = oracle_vector_engine::Session::new();
     s.execute("file.new", &json!({})).unwrap();
     let name = "b".repeat(32);
     let e = s.execute("brush.new", &json!({"type": "bristle", "name": name})).unwrap_err();
-    let vectorcraft_engine::EngineError::BadParams { msg, .. } = &e else { panic!("{e}") };
+    let oracle_vector_engine::EngineError::BadParams { msg, .. } = &e else { panic!("{e}") };
     for code in COMPLETE_MESSAGES.iter().chain(&["bg"]) {
         let shown = message(Lang::from_code(code).unwrap(), &e.to_string());
         let kept = shown.contains(&format!("`{name}`")) && shown.contains("31") && shown.contains("32");
@@ -1993,8 +1993,8 @@ fn bristle_brush_name_limit_error_is_translated() {
 fn unknown_parameter_errors_are_translated() {
     use serde_json::json;
     for (cmd, p) in [("file.new", json!({"widht": 300})), ("select.all", json!({"zzz": 1})), ("shape.line", json!({"colour": "red"}))] {
-        let e = vectorcraft_engine::check_params(cmd, &p).unwrap_err();
-        let vectorcraft_engine::EngineError::BadParams { msg, .. } = &e else { panic!("{cmd} {p}: {e}") };
+        let e = oracle_vector_engine::check_params(cmd, &p).unwrap_err();
+        let oracle_vector_engine::EngineError::BadParams { msg, .. } = &e else { panic!("{cmd} {p}: {e}") };
         for code in COMPLETE_MESSAGES {
             let shown = message(Lang::from_code(code).unwrap(), &e.to_string());
             assert!(!shown.contains("unknown parameter") && shown.contains(cmd), "{code}: {shown} ({msg})");
@@ -2008,8 +2008,8 @@ fn unknown_parameter_errors_are_translated() {
 fn effect_color_param_error_is_translated() {
     use serde_json::json;
     let p = json!({"effect": "stylize.dropShadow", "params": {"color": "not-a-color"}});
-    let e = vectorcraft_engine::check_params("effect.apply", &p).unwrap_err();
-    let vectorcraft_engine::EngineError::BadParams { msg, .. } = &e else { panic!("{e}") };
+    let e = oracle_vector_engine::check_params("effect.apply", &p).unwrap_err();
+    let oracle_vector_engine::EngineError::BadParams { msg, .. } = &e else { panic!("{e}") };
     for code in COMPLETE_MESSAGES.iter().chain(&["bg"]) {
         let shown = message(Lang::from_code(code).unwrap(), &e.to_string());
         assert!(!shown.contains(msg.as_str()) && shown.contains("`color`") && shown.contains("effect.apply"), "{code}: {shown}");
@@ -2022,8 +2022,8 @@ fn effect_color_param_error_is_translated() {
 fn effect_channel_param_error_is_translated() {
     use serde_json::json;
     let p = json!({"effect": "adjust.levels", "params": {"channel": "alpha"}});
-    let e = vectorcraft_engine::check_params("effect.apply", &p).unwrap_err();
-    let vectorcraft_engine::EngineError::BadParams { msg, .. } = &e else { panic!("{e}") };
+    let e = oracle_vector_engine::check_params("effect.apply", &p).unwrap_err();
+    let oracle_vector_engine::EngineError::BadParams { msg, .. } = &e else { panic!("{e}") };
     for code in COMPLETE_MESSAGES.iter().chain(&["bg"]) {
         let shown = message(Lang::from_code(code).unwrap(), &e.to_string());
         assert!(!shown.contains(msg.as_str()) && shown.contains("`channel`") && shown.contains("effect.apply"), "{code}: {shown}");
@@ -2033,14 +2033,14 @@ fn effect_channel_param_error_is_translated() {
 /// The status bar's line for an EPS file whose PostScript stops on an error, opened partly or
 /// refused, and the refusal's dialog keep the error's name as PostScript spells it and show what
 /// it means in each language of [`COMPLETE_MESSAGES`] and in Bulgarian; each meaning in
-/// [`vectorcraft_eps::POSTSCRIPT_ERRORS`] has a row in those catalogs.
+/// [`oracle_vector_eps::POSTSCRIPT_ERRORS`] has a row in those catalogs.
 #[test]
 fn postscript_error_meanings_are_translated() {
     let languages = || COMPLETE_MESSAGES.iter().chain(&["bg"]).map(|code| (*code, Lang::from_code(code).unwrap()));
     let meaning = "a value has the wrong type for the operator";
     for (body, opens) in [("0 0 10 10 rectfill 1 (a) add", true), ("1 (a) add", false)] {
         let bytes = format!("%!PS-Adobe-3.0 EPSF-3.0\n%%BoundingBox: 0 0 100 100\n%%EndComments\n{body}\n%%EOF\n").into_bytes();
-        let mut app = crate::VectorcraftApp::new(vectorcraft_engine::Session::new(), crate::Services::default());
+        let mut app = crate::OracleVectorApp::new(oracle_vector_engine::Session::new(), crate::Services::default());
         app.services.read = Some(Box::new(move |_: &str| Ok(bytes.clone())));
         assert_eq!(crate::io::open_reporting(&mut app, "/in/a.eps").is_ok(), opens, "{}", app.ui.status);
         let mut shown_texts = vec![app.ui.status.clone()];
@@ -2057,7 +2057,7 @@ fn postscript_error_meanings_are_translated() {
         }
     }
     for (code, lang) in languages() {
-        let missing: Vec<_> = vectorcraft_eps::POSTSCRIPT_ERRORS.iter().filter(|(_, m)| message(lang, m) == *m).collect();
+        let missing: Vec<_> = oracle_vector_eps::POSTSCRIPT_ERRORS.iter().filter(|(_, m)| message(lang, m) == *m).collect();
         assert!(missing.is_empty(), "{code}: {missing:?}");
     }
 }
@@ -2096,15 +2096,15 @@ fn unread_layers_notes_are_translated() {
 #[test]
 fn select_key_param_error_is_translated() {
     use serde_json::json;
-    let mut s = vectorcraft_engine::Session::new();
+    let mut s = oracle_vector_engine::Session::new();
     s.execute("file.new", &json!({})).unwrap();
-    let rectangle = |s: &mut vectorcraft_engine::Session, x: u64| {
+    let rectangle = |s: &mut oracle_vector_engine::Session, x: u64| {
         s.execute("shape.rectangle", &json!({"x": x, "y": 0, "width": 10, "height": 10})).unwrap()["id"].clone()
     };
     let [a, b, unselected] = [0, 50, 100].map(|x| rectangle(&mut s, x));
     s.execute("select.set", &json!({"ids": [a, b]})).unwrap();
     let e = s.execute("select.key", &json!({"id": unselected})).unwrap_err();
-    let vectorcraft_engine::EngineError::BadParams { msg, .. } = &e else { panic!("{e}") };
+    let oracle_vector_engine::EngineError::BadParams { msg, .. } = &e else { panic!("{e}") };
     for code in COMPLETE_MESSAGES {
         let shown = message(Lang::from_code(code).unwrap(), &e.to_string());
         assert!(!shown.contains(msg.as_str()), "{code}: {shown}");
@@ -2119,8 +2119,8 @@ fn select_key_param_error_is_translated() {
 #[test]
 fn shared_param_check_errors_are_translated() {
     use serde_json::json;
-    use vectorcraft_engine::EngineError;
-    let mut s = vectorcraft_engine::Session::new();
+    use oracle_vector_engine::EngineError;
+    let mut s = oracle_vector_engine::Session::new();
     s.execute("file.new", &json!({})).unwrap();
     s.execute("shape.rectangle", &json!({"x": 0, "y": 0, "width": 10, "height": 10})).unwrap();
     s.execute("select.all", &json!({})).unwrap();
@@ -2331,12 +2331,12 @@ fn czech_render_site_follow_up() {
         ("All placeable files", "Všechny soubory pro umístění"),
         ("SVG Compressed", "Komprimované SVG"),
         ("PDF-compatible .ai", ".ai kompatibilní s PDF"),
-        ("VectorCraft Template", "Šablona VectorCraft"),
+        ("Oracle Vector Template", "Šablona Oracle Vector"),
     ] {
         assert_eq!(tr_ctx(cs(), "file-filter", source), expected);
         assert_eq!(tr_ctx(Lang::EN, "file-filter", source), source);
     }
-    for source in ["SVG", "PNG", "VectorCraft", "unregistered filter"] {
+    for source in ["SVG", "PNG", "Oracle Vector", "unregistered filter"] {
         assert_eq!(tr_ctx(cs(), "file-filter", source), source);
     }
     assert_eq!(tr_ctx(cs(), "diagnostics", "render"), "vykreslení");
@@ -2386,7 +2386,7 @@ const RENDER_SITE_ROWS: &[(&str, &str)] = &[
     ("file-filter", "Print presets"),
     ("file-filter", "SVG Compressed"),
     ("file-filter", "PDF-compatible .ai"),
-    ("file-filter", "VectorCraft Template"),
+    ("file-filter", "Oracle Vector Template"),
     ("file-filter", "Templates"),
     ("diagnostics", "render"),
     ("diagnostics", "ui"),
@@ -2459,12 +2459,12 @@ fn polish_reads_as_polish() {
 #[test]
 fn japanese_names_the_default_swatches() {
     let ja = Lang::from_code("ja").unwrap().catalog();
-    let (swatches, groups) = vectorcraft_color::default_swatches(vectorcraft_color::cms::Model::Rgb);
+    let (swatches, groups) = oracle_vector_color::default_swatches(oracle_vector_color::cms::Model::Rgb);
     let names = swatches
         .iter()
         .map(|s| s.name.clone())
         .chain(groups.iter().flat_map(|g| std::iter::once(g.name.clone()).chain(g.swatches.iter().map(|s| s.name.clone()))))
-        .chain([vectorcraft_color::swatch::REGISTRATION.to_string()]);
+        .chain([oracle_vector_color::swatch::REGISTRATION.to_string()]);
     let missing: Vec<String> = names.filter(|n| !n.starts_with("K=") && ja.contextual("swatch", n).is_none()).collect();
     assert!(missing.is_empty(), "{missing:?}");
     assert_eq!(ja.contextual("swatch", "White"), Some("ホワイト"));

@@ -4,14 +4,14 @@
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
 use proptest::prelude::*;
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::Appearance;
-use vectorcraft_geom::{PathData, Rect, shapes};
-use vectorcraft_svg::{ExportOptions, ObjectIds, Styling, export, import};
-use vectorcraft_testkit::fixtures::{self, DocBuilder, art_nodes};
-use vectorcraft_testkit::invariants::check_document;
-use vectorcraft_testkit::raster::{assert_similar, render_artboard};
-use vectorcraft_testkit::strategies::{arb_closed_shape, arb_ops, arb_path_data};
+use oracle_vector_color::{Color, Paint};
+use oracle_vector_doc::Appearance;
+use oracle_vector_geom::{PathData, Rect, shapes};
+use oracle_vector_svg::{ExportOptions, ObjectIds, Styling, export, import};
+use oracle_vector_testkit::fixtures::{self, DocBuilder, art_nodes};
+use oracle_vector_testkit::invariants::check_document;
+use oracle_vector_testkit::raster::{assert_similar, render_artboard};
+use oracle_vector_testkit::strategies::{arb_closed_shape, arb_ops, arb_path_data};
 
 fn all_options() -> Vec<ExportOptions> {
     let mut v = vec![];

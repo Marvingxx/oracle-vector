@@ -3,9 +3,9 @@
 
 use super::*;
 use kurbo::{Affine, Shape};
-use vectorcraft_doc::text::Kashida;
-use vectorcraft_doc::{CharStyle, JustificationOptions, Justify, SingleWordJustify, TextKind};
-use vectorcraft_geom::PathData;
+use oracle_vector_doc::text::Kashida;
+use oracle_vector_doc::{CharStyle, JustificationOptions, Justify, SingleWordJustify, TextKind};
+use oracle_vector_geom::PathData;
 
 fn db() -> &'static FontDb {
     FontDb::global()

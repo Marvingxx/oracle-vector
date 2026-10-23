@@ -1,9 +1,9 @@
 //! Drawing again only what an edit changed gives the pixels of drawing it all again.
 
 use super::*;
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::Appearance;
-use vectorcraft_geom::{Point, shapes};
+use oracle_vector_color::{Color, Paint};
+use oracle_vector_doc::Appearance;
+use oracle_vector_geom::{Point, shapes};
 
 const W: u32 = 160;
 const H: u32 = 120;
@@ -18,8 +18,8 @@ fn rect(d: &mut Document, r: Rect, fill: Color) -> Node {
     Node::path(id, shapes::rectangle(r), Appearance::basic(Paint::solid(fill), Paint::solid(Color::BLACK), 2.0))
 }
 
-fn shadow() -> vectorcraft_doc::Effect {
-    vectorcraft_doc::Effect {
+fn shadow() -> oracle_vector_doc::Effect {
+    oracle_vector_doc::Effect {
         id: "stylize.dropShadow".into(),
         params: serde_json::json!({"x": 6.0, "y": 6.0, "blur": 4.0, "opacity": 75.0}),
         visible: true,
@@ -148,7 +148,7 @@ fn adding_removing_and_restacking_change_those_objects() {
 fn a_part_of_a_frame_draws_a_cropped_blur_from_the_frames_raster() {
     let (mut d, _) = document();
     let mut back = rect(&mut d, Rect::new(0.0, 0.0, 110.0, 80.0), Color::rgb(0.1, 0.3, 0.9));
-    back.appearance.effects.push(vectorcraft_doc::Effect { id: "blur.gaussian".into(), params: serde_json::json!({"radius": 500.0}), visible: true });
+    back.appearance.effects.push(oracle_vector_doc::Effect { id: "blur.gaussian".into(), params: serde_json::json!({"radius": 500.0}), visible: true });
     let l = d.layers[0].id;
     d.insert(Some(l), 0, back).unwrap();
     let view = Affine::scale(2.0) * Affine::translate((-20.0, -15.0));
@@ -172,16 +172,16 @@ fn reshaping_the_path_of_type_on_a_path_changes_where_its_letters_were_and_are()
     let mut old = Document::new(110.0, 80.0);
     let l = old.layers[0].id;
     let on = |y: f64| {
-        let mut t = vectorcraft_doc::text::TextObject::point(
+        let mut t = oracle_vector_doc::text::TextObject::point(
             Point::ZERO,
             "Text along a path",
-            vectorcraft_doc::text::CharStyle { size: 14.0, ..Default::default() },
+            oracle_vector_doc::text::CharStyle { size: 14.0, ..Default::default() },
         );
         let line = kurbo::Line::new((10.0, 60.0), (90.0, y)).to_path(0.1);
-        t.kind = vectorcraft_doc::TextKind::OnPath { path: vectorcraft_geom::PathData::from_bezpath(&line), start: 0.0, end: None };
+        t.kind = oracle_vector_doc::TextKind::OnPath { path: oracle_vector_geom::PathData::from_bezpath(&line), start: 0.0, end: None };
         t.xf = Affine::IDENTITY;
-        // The engine lays out type that changed ([`vectorcraft_doc::TextObject::cached_bounds`]).
-        t.cached_bounds = Some(vectorcraft_text::layout(vectorcraft_text::FontDb::global(), &t).bounds);
+        // The engine lays out type that changed ([`oracle_vector_doc::TextObject::cached_bounds`]).
+        t.cached_bounds = Some(oracle_vector_text::layout(oracle_vector_text::FontDb::global(), &t).bounds);
         t
     };
     let text = old.insert(Some(l), 0, Node::new(NodeId(0), NodeKind::Text(Box::new(on(55.0))))).unwrap();
@@ -198,16 +198,16 @@ fn reshaping_the_path_of_type_on_a_path_changes_where_its_letters_were_and_are()
 fn moving_type_with_mitred_strokes_changes_where_its_spikes_reach() {
     let mut old = Document::new(110.0, 80.0);
     let l = old.layers[0].id;
-    let style = vectorcraft_doc::text::CharStyle {
+    let style = oracle_vector_doc::text::CharStyle {
         size: 30.0,
         stroke: Paint::solid(Color::BLACK),
         stroke_width: 10.0,
-        stroke_join: vectorcraft_doc::LineJoin::Miter,
+        stroke_join: oracle_vector_doc::LineJoin::Miter,
         stroke_miter_limit: 10.0,
         ..Default::default()
     };
-    let mut t = vectorcraft_doc::text::TextObject::point(Point::new(10.0, 50.0), "VAWV", style);
-    t.cached_bounds = Some(vectorcraft_text::layout(vectorcraft_text::FontDb::global(), &t).bounds);
+    let mut t = oracle_vector_doc::text::TextObject::point(Point::new(10.0, 50.0), "VAWV", style);
+    t.cached_bounds = Some(oracle_vector_text::layout(oracle_vector_text::FontDb::global(), &t).bounds);
     let text = old.insert(Some(l), 0, Node::new(NodeId(0), NodeKind::Text(Box::new(t)))).unwrap();
     let mut new = old.clone();
     new.node_mut(text).unwrap().transform(Affine::translate((9.0, 7.0)), false);
@@ -220,7 +220,7 @@ fn an_unchanged_document_changes_nothing_and_a_new_symbol_everything() {
     assert_eq!(redraw(&old, &old.clone()), Changed::Nothing);
     let mut new = old.clone();
     let art = Arc::new(rect(&mut new, Rect::new(0.0, 0.0, 5.0, 5.0), Color::BLACK));
-    new.symbols.push(vectorcraft_doc::Symbol { name: "Dot".into(), art });
+    new.symbols.push(oracle_vector_doc::Symbol { name: "Dot".into(), art });
     assert_eq!(redraw(&old, &new), Changed::Everything);
 }
 
@@ -230,7 +230,7 @@ fn an_unchanged_document_changes_nothing_and_a_new_symbol_everything() {
 fn an_edit_while_a_pattern_is_edited_changes_everything() {
     let (mut old, [loose, ..]) = document();
     let l = old.layers[0].id;
-    old.pattern_edit = Some(vectorcraft_doc::PatternEdit { pattern: "Tile".into(), layer: l, original: None });
+    old.pattern_edit = Some(oracle_vector_doc::PatternEdit { pattern: "Tile".into(), layer: l, original: None });
     let mut new = old.clone();
     new.node_mut(loose).unwrap().transform(Affine::translate((7.0, 3.0)), false);
     assert_eq!(changed(&old, &new), Changed::Everything);

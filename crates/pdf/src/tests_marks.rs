@@ -3,10 +3,10 @@
 use std::sync::Arc;
 
 use serde_json::json;
-use vectorcraft_color::{Color, Paint, Swatch};
-use vectorcraft_doc::marks::PrinterMarks;
-use vectorcraft_doc::{Appearance, Document, LayerColor, Node, NodeKind};
-use vectorcraft_geom::{Rect, shapes};
+use oracle_vector_color::{Color, Paint, Swatch};
+use oracle_vector_doc::marks::PrinterMarks;
+use oracle_vector_doc::{Appearance, Document, LayerColor, Node, NodeKind};
+use oracle_vector_geom::{Rect, shapes};
 
 use crate::*;
 
@@ -229,7 +229,7 @@ fn page_information_prints_the_time_of_the_export_not_the_creation_date() {
         });
         out
     };
-    let now = || vectorcraft_doc::metadata::output_time().unwrap();
+    let now = || oracle_vector_doc::metadata::output_time().unwrap();
     // Both print the minute they are written in: try again when the minute turns between them.
     for _ in 0..3 {
         let minute = now() / 60;

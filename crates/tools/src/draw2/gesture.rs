@@ -12,8 +12,8 @@
 //! vertical line through the press point.
 
 use serde_json::{Value, json};
-use vectorcraft_doc::NodeId;
-use vectorcraft_geom::Point;
+use oracle_vector_doc::NodeId;
+use oracle_vector_geom::Point;
 
 use super::{FEEDBACK, points_json, polyline};
 use crate::guides::DrawSnap;
@@ -134,13 +134,13 @@ impl GestureTool {
         };
         self.shift_next = Some(p);
         // The press point is on both lines: the points dragged before stay on theirs.
-        if (p - start).hypot() < vectorcraft_geom::EPS {
+        if (p - start).hypot() < oracle_vector_geom::EPS {
             return start;
         }
-        let d = vectorcraft_geom::constrain_angle_from(p - start, 90.0, cx.constrain_angle);
+        let d = oracle_vector_geom::constrain_angle_from(p - start, 90.0, cx.constrain_angle);
         // `line` is the line's angle, measured counterclockwise on screen as the Constrain Angle is measured.
         let line = (-d.y).atan2(d.x).to_degrees();
-        let on_line = |q: Point| start + vectorcraft_geom::constrain_angle_from(q - start, 180.0, line);
+        let on_line = |q: Point| start + oracle_vector_geom::constrain_angle_from(q - start, 180.0, line);
         for (q, raw) in self.points.iter_mut().skip(1).rev().zip(self.shift_raw.iter().rev()) {
             *q = on_line(*raw);
         }
@@ -471,7 +471,7 @@ impl Tool for GestureTool {
 mod tests {
     use super::*;
     use crate::testutil::*;
-    use vectorcraft_doc::Selection;
+    use oracle_vector_doc::Selection;
 
     fn drag(t: &mut GestureTool, cx: &ToolContext, pts: &[(f64, f64)], m: Mods) -> Vec<Vec<Action>> {
         let mut v = vec![t.pointer(cx, &PointerEvent::new(PointerKind::Down, pts[0].0, pts[0].1))];
@@ -718,11 +718,11 @@ mod tests {
         let (mut d, _) = doc_with_rect();
         let l = d.layers[0].id;
         let id = d.alloc_id();
-        let line = vectorcraft_geom::PathData::from_bezpath(&vectorcraft_geom::BezPath::from_vec(vec![
-            vectorcraft_geom::PathEl::MoveTo(Point::new(300.0, 300.0)),
-            vectorcraft_geom::PathEl::LineTo(Point::new(400.0, 300.0)),
+        let line = oracle_vector_geom::PathData::from_bezpath(&oracle_vector_geom::BezPath::from_vec(vec![
+            oracle_vector_geom::PathEl::MoveTo(Point::new(300.0, 300.0)),
+            oracle_vector_geom::PathEl::LineTo(Point::new(400.0, 300.0)),
         ]));
-        d.insert(Some(l), 1, vectorcraft_doc::Node::path(id, line, vectorcraft_doc::Appearance::default_art())).unwrap();
+        d.insert(Some(l), 1, oracle_vector_doc::Node::path(id, line, oracle_vector_doc::Appearance::default_art())).unwrap();
         let mut s = Selection::default();
         s.set([id]);
         let p = paint();

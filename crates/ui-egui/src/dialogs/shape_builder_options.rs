@@ -10,7 +10,7 @@ use serde_json::{Map, Value, json};
 
 use super::{DialogSpec, form, run_and_close};
 use crate::state::Dialog;
-use crate::{VectorcraftApp, widgets};
+use crate::{OracleVectorApp, widgets};
 
 /// The dialog kind of Shape Builder Tool Options.
 pub const KIND: &str = "shapeBuilderOptions";
@@ -24,23 +24,23 @@ const KEYS: [&str; 7] = ["openFilledAsClosed", "pickColorFrom", "cursorSwatchPre
 const LABEL_W: f32 = 110.0;
 
 fn heading(_: &Dialog) -> String {
-    let label = vectorcraft_tools::tool_info("shapeBuilder").map_or("", |t| t.label);
+    let label = oracle_vector_tools::tool_info("shapeBuilder").map_or("", |t| t.label);
     crate::i18n::fmt(tl!("{tool} Options"), &[("tool", tl!(label))])
 }
 
 /// Open the Shape Builder's options with their current values.
-pub fn open(app: &mut VectorcraftApp) -> Value {
+pub fn open(app: &mut OracleVectorApp) -> Value {
     let o = app.session.tool_options_of("shapeBuilder");
     let fields: Map<String, Value> = KEYS.iter().filter_map(|key| Some((key.to_string(), o.get(*key)?.clone()))).collect();
     app.ui.dialog = Some(Dialog { kind: KIND.into(), fields });
     json!({ "dialog": KIND })
 }
 
-fn body(_app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
+fn body(_app: &mut OracleVectorApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     form::check(ui, d, "gapDetection", tl!("Gap Detection"));
     ui.add_enabled_ui(d.bool("gapDetection"), |ui| {
         widgets::label_row(ui, tl!("Gap Length:"), LABEL_W, |ui| {
-            let lengths = vectorcraft_tools::builder::GAP_LENGTHS;
+            let lengths = oracle_vector_tools::builder::GAP_LENGTHS;
             let len = d.f64("gapLength", lengths[0]);
             let current = lengths.iter().position(|n| *n == len).unwrap_or(3);
             let labels = [tl!("Small"), tl!("Medium"), tl!("Large"), tl!("Custom")];
@@ -49,7 +49,7 @@ fn body(_app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
             }
             ui.add_enabled_ui(current == 3, |ui| {
                 if let Some(n) = widgets::plain_field(ui, "shape-builder-gap-length", len, "pt", 1, 64.0) {
-                    d.fields.insert("gapLength".into(), json!(n.clamp(0.0, vectorcraft_tools::builder::SHAPE_BUILDER_MAX_GAP)));
+                    d.fields.insert("gapLength".into(), json!(n.clamp(0.0, oracle_vector_tools::builder::SHAPE_BUILDER_MAX_GAP)));
                 }
             });
         });
@@ -78,7 +78,7 @@ fn body(_app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
 }
 
 /// OK: set the Shape Builder's options.
-fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn confirm(app: &mut OracleVectorApp, d: &Dialog) -> Result<Value, String> {
     let values: Map<String, Value> = KEYS.iter().filter_map(|k| Some((k.to_string(), d.fields.get(*k)?.clone()))).collect();
     run_and_close(app, "tool.setOption", json!({ "tool": "shapeBuilder", "values": values }))
 }
@@ -86,16 +86,16 @@ fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vectorcraft_engine::Session;
+    use oracle_vector_engine::Session;
 
-    fn app() -> VectorcraftApp {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    fn app() -> OracleVectorApp {
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 400, "height": 300})).unwrap();
         app
     }
 
     /// The labels the open dialog paints.
-    fn painted(app: &mut VectorcraftApp) -> String {
+    fn painted(app: &mut OracleVectorApp) -> String {
         crate::tests_labels::painted_text(app, |app, ui| super::super::show(app, ui.ctx()))
     }
 
@@ -135,7 +135,7 @@ mod tests {
         ] {
             assert!(text.contains(label), "{label} in {text}");
         }
-        // The defaults: VectorCraft's Shape Builder as it works without the dialog.
+        // The defaults: Oracle Vector's Shape Builder as it works without the dialog.
         let d = app.ui.dialog.as_mut().unwrap();
         assert_eq!(
             (d.bool("openFilledAsClosed"), d.str("pickColorFrom"), d.bool("cursorSwatchPreview"), d.str("selection"), d.bool("highlightFill")),
@@ -174,17 +174,17 @@ mod tests {
         app.run("shape.rectangle", json!({"x": 180, "y": 50, "width": 40, "height": 100})).unwrap();
         // A drag that goes up into the tall rectangle's top and back down; the bounds of each
         // object afterwards.
-        let drag = |app: &mut VectorcraftApp| {
+        let drag = |app: &mut OracleVectorApp| {
             app.run("select.all", json!({})).unwrap();
             app.select_tool("shapeBuilder");
             let view = app.view_info();
-            let ev = |kind, (x, y): (f64, f64)| vectorcraft_tools::PointerEvent::new(kind, x, y);
+            let ev = |kind, (x, y): (f64, f64)| oracle_vector_tools::PointerEvent::new(kind, x, y);
             let pts = [(120.0, 180.0), (200.0, 75.0), (280.0, 180.0)];
-            crate::canvas::dispatch(app, &ev(vectorcraft_tools::PointerKind::Down, pts[0]), view);
+            crate::canvas::dispatch(app, &ev(oracle_vector_tools::PointerKind::Down, pts[0]), view);
             for p in &pts[1..] {
-                crate::canvas::dispatch(app, &ev(vectorcraft_tools::PointerKind::Drag, *p), view);
+                crate::canvas::dispatch(app, &ev(oracle_vector_tools::PointerKind::Drag, *p), view);
             }
-            crate::canvas::dispatch(app, &ev(vectorcraft_tools::PointerKind::Up, pts[2]), view);
+            crate::canvas::dispatch(app, &ev(oracle_vector_tools::PointerKind::Up, pts[2]), view);
             let doc = &app.session.doc().unwrap().doc;
             let ids: Vec<_> = doc.layers[0].children().unwrap().iter().map(|n| n.id).collect();
             ids.iter().filter_map(|id| doc.bounds_of(&[*id], false)).map(|b| [b.x0, b.y0, b.x1, b.y1].map(f64::round)).collect::<Vec<_>>()

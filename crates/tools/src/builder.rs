@@ -1,8 +1,8 @@
 //! Shape Builder (Shift+M), Live Paint Bucket (K) and Live Paint Selection (Shift+L).
 //!
 //! The tools only emit commands (`shapeBuilder.merge`, `livePaint.fill`, `livePaint.strokeEdge`,
-//! `select.*`); the planar arrangement comes from `vectorcraft_pathops::shape_builder` (Shape
-//! Builder) and `vectorcraft_pathops::live_paint` (Live Paint).
+//! `select.*`); the planar arrangement comes from `oracle_vector_pathops::shape_builder` (Shape
+//! Builder) and `oracle_vector_pathops::live_paint` (Live Paint).
 //!
 //! **Live Paint groups** are ordinary groups (no special node kind): the group's name starts with
 //! [`LIVE_PAINT_PREFIX`]; its first child is a hidden group named [`SOURCES_NAME`] holding the
@@ -14,10 +14,10 @@
 use std::sync::Arc;
 
 use serde_json::{Value, json};
-use vectorcraft_color::{Paint, Swatch};
-use vectorcraft_doc::{Document, Node, NodeId, NodeKind};
-use vectorcraft_geom::{BezPath, FillRule, PathData, Point, Rect, Shape as _};
-use vectorcraft_pathops as po;
+use oracle_vector_color::{Paint, Swatch};
+use oracle_vector_doc::{Document, Node, NodeId, NodeKind};
+use oracle_vector_geom::{BezPath, FillRule, PathData, Point, Rect, Shape as _};
+use oracle_vector_pathops as po;
 
 use crate::{Action, Cursor, Mods, Overlay, PointerEvent, PointerKind, Tool, ToolContext, ToolKey, json_ids};
 
@@ -978,10 +978,10 @@ impl LivePaintSelectionTool {
 /// A highlight color option: `#rrggbb` or a layer color's name (any case).
 fn lp_color(v: &Value) -> Option<[u8; 3]> {
     let s = v.as_str()?.trim();
-    if let Some((_, c)) = vectorcraft_doc::LAYER_COLORS.iter().find(|(name, _)| name.eq_ignore_ascii_case(s)) {
+    if let Some((_, c)) = oracle_vector_doc::LAYER_COLORS.iter().find(|(name, _)| name.eq_ignore_ascii_case(s)) {
         return Some(*c);
     }
-    let [r, g, b, _] = vectorcraft_color::Color::from_hex(s)?.to_rgba8(1.0);
+    let [r, g, b, _] = oracle_vector_color::Color::from_hex(s)?.to_rgba8(1.0);
     Some([r, g, b])
 }
 
@@ -1061,8 +1061,8 @@ pub fn create(id: &str) -> Option<Box<dyn Tool>> {
 mod tests {
     use super::*;
     use crate::testutil::*;
-    use vectorcraft_doc::{Appearance, Selection};
-    use vectorcraft_geom::shapes;
+    use oracle_vector_doc::{Appearance, Selection};
+    use oracle_vector_geom::shapes;
 
     fn two_rects() -> (Document, NodeId, NodeId) {
         let mut d = Document::new(500.0, 500.0);

@@ -3,12 +3,12 @@
 
 use egui;
 use serde_json::{Map, Value, json};
-use vectorcraft_effects::{EffectInfo, PIXEL_EFFECTS};
+use oracle_vector_effects::{EffectInfo, PIXEL_EFFECTS};
 
 use super::{DialogSpec, effect, form};
 use crate::state::Dialog;
 use crate::theme::Tokens;
-use crate::{VectorcraftApp, widgets};
+use crate::{OracleVectorApp, widgets};
 
 /// Dialog kind for the Effect Gallery.
 pub const KIND: &str = "effectGallery";
@@ -41,7 +41,7 @@ struct StackEntry {
 }
 
 /// Open the gallery on the current selection.
-pub fn open(app: &mut VectorcraftApp, _p: &Value) -> Result<Value, String> {
+pub fn open(app: &mut OracleVectorApp, _p: &Value) -> Result<Value, String> {
     if app.session.active().is_none_or(|s| s.selection.is_empty()) {
         return Err(tl!("Select artwork to apply effects").into());
     }
@@ -56,20 +56,20 @@ pub fn open(app: &mut VectorcraftApp, _p: &Value) -> Result<Value, String> {
 fn effects_in_category(cat: usize) -> Vec<EffectInfo> {
     let path = CATEGORIES.get(cat).map(|(_, p)| *p).unwrap_or(CATEGORIES[0].1);
     let mut out: Vec<EffectInfo> =
-        vectorcraft_effects::effect_catalog().into_iter().filter(|e| e.menu == path && PIXEL_EFFECTS.contains(&e.id)).collect();
+        oracle_vector_effects::effect_catalog().into_iter().filter(|e| e.menu == path && PIXEL_EFFECTS.contains(&e.id)).collect();
     out.sort_by(|a, b| a.label.cmp(b.label));
     out
 }
 
 fn default_params(id: &str) -> Map<String, Value> {
-    match vectorcraft_effects::effect_info(id).map(|e| e.defaults) {
+    match oracle_vector_effects::effect_info(id).map(|e| e.defaults) {
         Some(Value::Object(m)) => m,
         _ => Map::new(),
     }
 }
 
 fn merged_params(id: &str, stored: &Map<String, Value>) -> Map<String, Value> {
-    match vectorcraft_effects::merged_params(id, &Value::Object(stored.clone())) {
+    match oracle_vector_effects::merged_params(id, &Value::Object(stored.clone())) {
         Value::Object(m) => m,
         _ => default_params(id),
     }
@@ -161,12 +161,12 @@ fn write_param_target(d: &mut Dialog, stack: &mut [StackEntry], stack_sel: usize
 }
 
 /// Reuse the live effect dialog's fields for `effect_id` and `params`.
-fn effect_param_fields(app: &mut VectorcraftApp, ui: &mut egui::Ui, effect_id: &str, params: &mut Map<String, Value>) {
+fn effect_param_fields(app: &mut OracleVectorApp, ui: &mut egui::Ui, effect_id: &str, params: &mut Map<String, Value>) {
     if effect_id.is_empty() {
         return;
     }
     let label =
-        vectorcraft_effects::effect_info(effect_id).map(|e| e.label.trim_end_matches('…').to_string()).unwrap_or_else(|| effect_id.to_string());
+        oracle_vector_effects::effect_info(effect_id).map(|e| e.label.trim_end_matches('…').to_string()).unwrap_or_else(|| effect_id.to_string());
     let mut fields = params.clone();
     fields.insert("__effect".into(), json!(effect_id));
     fields.insert("__label".into(), json!(label));
@@ -176,7 +176,7 @@ fn effect_param_fields(app: &mut VectorcraftApp, ui: &mut egui::Ui, effect_id: &
     if let Value::Object(m) = form::params(&temp) {
         *params = m;
     }
-    if let Value::Object(m) = vectorcraft_effects::upgrade_params(effect_id, &Value::Object(params.clone())) {
+    if let Value::Object(m) = oracle_vector_effects::upgrade_params(effect_id, &Value::Object(params.clone())) {
         *params = m;
     }
 }
@@ -198,7 +198,7 @@ fn stack_batch_params(stack: &[StackEntry]) -> Value {
 }
 
 /// Live canvas preview of the stack (`command.batch` would settle the dialog interaction each frame).
-fn preview_stack_on_canvas(app: &mut VectorcraftApp, stack: &[StackEntry]) {
+fn preview_stack_on_canvas(app: &mut OracleVectorApp, stack: &[StackEntry]) {
     if app.session.in_interaction() {
         let _ = app.session.cancel_interaction();
     }
@@ -216,7 +216,7 @@ fn preview_stack_on_canvas(app: &mut VectorcraftApp, stack: &[StackEntry]) {
     }
 }
 
-fn stack_preview_row(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog, stack: &[StackEntry]) {
+fn stack_preview_row(app: &mut OracleVectorApp, ui: &mut egui::Ui, d: &mut Dialog, stack: &[StackEntry]) {
     const LAST: &str = super::form::PREVIEWED;
     ui.add_space(8.0);
     let mut on = d.bool("preview");
@@ -244,10 +244,10 @@ fn stack_preview_row(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog
 }
 
 fn effect_label(id: &str) -> String {
-    vectorcraft_effects::effect_info(id).map(|e| tl!(e.label).trim_end_matches('…').to_string()).unwrap_or_else(|| id.to_string())
+    oracle_vector_effects::effect_info(id).map(|e| tl!(e.label).trim_end_matches('…').to_string()).unwrap_or_else(|| id.to_string())
 }
 
-fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
+fn body(app: &mut OracleVectorApp, ui: &mut egui::Ui, d: &mut Dialog) -> bool {
     let t = Tokens::get(ui.ctx());
     let cat = category_ix(d);
     let effects = effects_in_category(cat);
@@ -397,7 +397,7 @@ fn add_selected(d: &mut Dialog, id: &str) {
     set_stack_focus(d, true);
 }
 
-fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
+fn confirm(app: &mut OracleVectorApp, d: &Dialog) -> Result<Value, String> {
     let stack = stack_of(d);
     if stack.is_empty() {
         if app.session.in_interaction() {
@@ -420,11 +420,11 @@ fn confirm(app: &mut VectorcraftApp, d: &Dialog) -> Result<Value, String> {
 #[cfg(test)]
 mod tests {
     use serde_json::json;
-    use vectorcraft_engine::Session;
+    use oracle_vector_engine::Session;
 
-    use crate::VectorcraftApp;
+    use crate::OracleVectorApp;
 
-    fn frame(app: &mut VectorcraftApp) {
+    fn frame(app: &mut OracleVectorApp) {
         let ctx = egui::Context::default();
         crate::theme::install_fonts(&ctx);
         crate::theme::apply(&ctx, Default::default());
@@ -435,7 +435,7 @@ mod tests {
 
     #[test]
     fn stack_preview_is_one_interaction() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 200})).unwrap();
         let id = app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 40, "height": 40})).unwrap()["id"].as_u64().unwrap();
         app.run("ui.effectGalleryDialog", json!({})).unwrap();
@@ -445,12 +445,12 @@ mod tests {
         assert!(app.session.in_interaction(), "the stack previews on the canvas");
         crate::dialogs::cancel(&mut app);
         assert!(!app.session.in_interaction());
-        assert!(app.session.active().unwrap().doc.node(vectorcraft_doc::NodeId(id)).unwrap().appearance.effects.is_empty());
+        assert!(app.session.active().unwrap().doc.node(oracle_vector_doc::NodeId(id)).unwrap().appearance.effects.is_empty());
     }
 
     #[test]
     fn stack_ok_is_one_undo_step() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 200})).unwrap();
         let id = app.run("shape.rectangle", json!({"x": 10, "y": 10, "width": 40, "height": 40})).unwrap()["id"].as_u64().unwrap();
         app.run("ui.effectGalleryDialog", json!({})).unwrap();
@@ -467,7 +467,7 @@ mod tests {
         let steps = app.session.active().unwrap().history.undo.len();
         crate::dialogs::confirm(&mut app).unwrap();
         let st = app.session.active().unwrap();
-        let n = st.doc.node(vectorcraft_doc::NodeId(id)).unwrap();
+        let n = st.doc.node(oracle_vector_doc::NodeId(id)).unwrap();
         assert_eq!(n.appearance.effects.len(), 2);
         assert_eq!(n.appearance.effects[0].id, "artistic.cutout");
         assert_eq!(n.appearance.effects[0].params.get("levels").and_then(|v| v.as_i64()), Some(3));

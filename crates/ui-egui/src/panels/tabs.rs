@@ -5,10 +5,10 @@
 
 use egui::{Sense, Stroke, Ui, vec2};
 use serde_json::{Value, json};
-use vectorcraft_doc::{Node, NodeKind, ParaStyle, TabAlign, TabStop, TextKind};
+use oracle_vector_doc::{Node, NodeKind, ParaStyle, TabAlign, TabStop, TextKind};
 
 use super::{first_selected, pstate, set_pstate};
-use crate::VectorcraftApp;
+use crate::OracleVectorApp;
 use crate::theme::Tokens;
 use crate::widgets::{self, menu_item};
 
@@ -43,12 +43,12 @@ const RULER_LEFT: f32 = 10.0 + 4.0;
 /// The text object, the stops of the caret's paragraph while the Type tool edits text (else the
 /// first selected text object's first paragraph) and the ruler span in points (the frame width for
 /// area type).
-fn current(app: &VectorcraftApp) -> Option<(Node, Vec<TabStop>, f64)> {
+fn current(app: &OracleVectorApp) -> Option<(Node, Vec<TabStop>, f64)> {
     current_para(app).map(|(n, para, span)| (n, para.tabs, span))
 }
 
 /// As [`current`], with all the attributes of the paragraph whose stops the panel shows.
-fn current_para(app: &VectorcraftApp) -> Option<(Node, ParaStyle, f64)> {
+fn current_para(app: &OracleVectorApp) -> Option<(Node, ParaStyle, f64)> {
     let editing = super::character::text_editing(app);
     let n = match editing {
         Some((id, _, _)) => app.session.active()?.doc.node(id)?.clone(),
@@ -67,7 +67,7 @@ fn current_para(app: &VectorcraftApp) -> Option<(Node, ParaStyle, f64)> {
 /// Position Panel Above Text: float the panel just above text `n`, as wide as its ruler needs to
 /// put 0 on the text's left edge and its marks at the canvas zoom, so each stop sits over the
 /// column it sets (#729). `span`: the ruler's length in the text's points.
-fn above_text(app: &mut VectorcraftApp, ctx: &egui::Context, n: &Node, span: f64) -> Option<()> {
+fn above_text(app: &mut OracleVectorApp, ctx: &egui::Context, n: &Node, span: f64) -> Option<()> {
     let xf = crate::canvas::Xf::new(app.canvas_rect?, app.view()?);
     let on_screen = xf.rect_to_screen(n.geometric_bounds()?);
     // Screen points per point of the text: across the frame for area type (so a scaled frame
@@ -102,7 +102,7 @@ fn stops_json(stops: &[TabStop]) -> Value {
 }
 
 /// Run `text.tabs.set` with `stops` on the text the panel acts on. Returns false when it fails.
-fn apply(app: &mut VectorcraftApp, stops: &[TabStop]) -> bool {
+fn apply(app: &mut OracleVectorApp, stops: &[TabStop]) -> bool {
     if let Some((id, a, b)) = super::character::text_editing(app) {
         super::character::end_typing(app);
         app.run("text.tabs.set", json!({"stops": stops_json(stops), "ids": [id.0], "start": a, "end": b})).is_ok()
@@ -115,7 +115,7 @@ fn apply(app: &mut VectorcraftApp, stops: &[TabStop]) -> bool {
 /// stop within 1e-6 pt of `position` on the ruler, the stop `text.tabs.set` keeps of those it
 /// merges. Returns its index, or `None` when the stops are not set and `stops` and the selection
 /// stay as they were.
-fn apply_moved(app: &mut VectorcraftApp, ctx: &egui::Context, stops: &mut Vec<TabStop>, i: usize, position: f64) -> Option<usize> {
+fn apply_moved(app: &mut OracleVectorApp, ctx: &egui::Context, stops: &mut Vec<TabStop>, i: usize, position: f64) -> Option<usize> {
     let mut moved = stops.clone();
     moved.get_mut(i)?.position = position;
     moved.sort_by(|a, b| a.position.total_cmp(&b.position));
@@ -127,7 +127,7 @@ fn apply_moved(app: &mut VectorcraftApp, ctx: &egui::Context, stops: &mut Vec<Ta
     })
 }
 
-pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn show(app: &mut OracleVectorApp, ui: &mut Ui) {
     let t = Tokens::get(ui.ctx());
     let Some((node, mut stops, span)) = current(app) else {
         super::empty_state(ui, "pilcrow", tl!("No text selected"), tl!("Select a text object to set its tab stops."));
@@ -297,7 +297,7 @@ pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
     resp.on_hover_text(tl!("Click to add a tab stop, drag to move it, drag it off the ruler to delete it"));
 }
 
-pub fn menu(app: &mut VectorcraftApp, ui: &mut Ui) {
+pub fn menu(app: &mut OracleVectorApp, ui: &mut Ui) {
     let Some((_, para, _)) = current_para(app) else {
         ui.add_enabled(false, egui::Button::new(tl!("Select text")).frame(false));
         snap_to_unit_item(ui);
@@ -351,9 +351,9 @@ fn snap_to_unit_item(ui: &mut Ui) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vectorcraft_engine::Session;
+    use oracle_vector_engine::Session;
 
-    fn frame(app: &mut VectorcraftApp) {
+    fn frame(app: &mut OracleVectorApp) {
         let ctx = egui::Context::default();
         let mut out = ctx.run_ui(egui::RawInput::default(), |ui| {
             show(app, ui);
@@ -364,7 +364,7 @@ mod tests {
 
     #[test]
     fn panel_draws_empty_with_text_and_with_stops() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.session.execute("file.new", &json!({})).unwrap();
         frame(&mut app);
         app.session.execute("text.create", &json!({"x": 10, "y": 20, "text": "a\tb", "area": {"width": 300, "height": 100}})).unwrap();
@@ -385,7 +385,7 @@ mod tests {
     #[test]
     fn vertical_type_names_the_alignments_top_and_bottom_and_the_position_y() {
         use crate::widgets::accessibility_tests::{role_and_state, tree};
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.session.execute("file.new", &json!({})).unwrap();
         app.session.execute("text.create", &json!({"x": 10, "y": 20, "text": "a	b", "area": {"width": 300, "height": 100}})).unwrap();
         app.session.execute("text.tabs.set", &json!({"stops": [{"position": 50}]})).unwrap();
@@ -409,7 +409,7 @@ mod tests {
             ctx.global_style_mut(|s| s.interaction.tooltip_delay = 0.0);
             let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, vec2(400.0, 400.0));
             let mut time = 0.0;
-            let mut frame = |app: &mut VectorcraftApp, events: Vec<egui::Event>| {
+            let mut frame = |app: &mut OracleVectorApp, events: Vec<egui::Event>| {
                 time += 0.5;
                 let input = egui::RawInput { time: Some(time), screen_rect: Some(screen), events, ..Default::default() };
                 let mut out = ctx.run_ui(input, |ui| show(app, ui));
@@ -437,14 +437,14 @@ mod tests {
     /// (spaces kept, eight characters at most).
     #[test]
     fn leader_and_align_on_keep_what_is_typed_until_enter() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.session.execute("file.new", &json!({})).unwrap();
         app.session.execute("text.create", &json!({"x": 10, "y": 20, "text": "a	b", "area": {"width": 300, "height": 100}})).unwrap();
         app.session.execute("text.tabs.set", &json!({"stops": [{"position": 50, "align": "decimal"}]})).unwrap();
         let ctx = egui::Context::default();
         let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, vec2(320.0, 400.0));
         // One frame with `events` → the texts painted and where.
-        let frame = |app: &mut VectorcraftApp, events: Vec<egui::Event>| {
+        let frame = |app: &mut OracleVectorApp, events: Vec<egui::Event>| {
             let mut out = ctx.run_ui(egui::RawInput { screen_rect: Some(screen), events, ..Default::default() }, |ui| show(app, ui));
             out.textures_delta.clear();
             out.shapes
@@ -464,7 +464,7 @@ mod tests {
                 modifiers: Default::default(),
             })
         };
-        let stop = |app: &VectorcraftApp| current(app).unwrap().1[0].clone();
+        let stop = |app: &OracleVectorApp| current(app).unwrap().1[0].clone();
         for (label, typed, want) in [("Leader:", [". ", "_", "123456789"], ". _12345"), ("Align On:", [",", "", ""], ",")] {
             let texts = frame(&mut app, vec![]);
             let r = texts.iter().find(|(t, _)| t == label).unwrap_or_else(|| panic!("{label} in {texts:?}")).1;
@@ -493,14 +493,14 @@ mod tests {
     /// the pointer is past its threshold (farther from the press than the 5 px hit tolerance).
     #[test]
     fn dragging_a_stop_moves_it() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.session.execute("file.new", &json!({})).unwrap();
         app.session.execute("text.create", &json!({"x": 10, "y": 20, "text": "a	b", "area": {"width": 300, "height": 100}})).unwrap();
         app.session.execute("text.tabs.set", &json!({"stops": [{"position": 50}]})).unwrap();
         let ctx = egui::Context::default();
         let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, vec2(320.0, 400.0));
         // One frame with `events` → where the ruler's inch labels (9 pt) are painted.
-        let frame = |app: &mut VectorcraftApp, events: Vec<egui::Event>| {
+        let frame = |app: &mut OracleVectorApp, events: Vec<egui::Event>| {
             let mut out = ctx.run_ui(egui::RawInput { screen_rect: Some(screen), events, ..Default::default() }, |ui| show(app, ui));
             out.textures_delta.clear();
             out.shapes
@@ -537,7 +537,7 @@ mod tests {
 
     /// One frame of the panel with `events`, Shift held when `shift` → the ruler's labels (9 pt) and
     /// where they are painted, left to right.
-    fn ruler_frame(ctx: &egui::Context, app: &mut VectorcraftApp, events: Vec<egui::Event>, shift: bool) -> Vec<(String, egui::Pos2)> {
+    fn ruler_frame(ctx: &egui::Context, app: &mut OracleVectorApp, events: Vec<egui::Event>, shift: bool) -> Vec<(String, egui::Pos2)> {
         let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, vec2(400.0, 400.0));
         let modifiers = if shift { egui::Modifiers::SHIFT } else { egui::Modifiers::NONE };
         let events = std::iter::once(egui::Event::ModifiersChanged(modifiers)).chain(events).collect();
@@ -555,13 +555,13 @@ mod tests {
     }
 
     /// The labels the ruler shows in a frame of [`ruler_frame`].
-    fn ruler_labels(ctx: &egui::Context, app: &mut VectorcraftApp) -> Vec<String> {
+    fn ruler_labels(ctx: &egui::Context, app: &mut OracleVectorApp) -> Vec<String> {
         ruler_frame(ctx, app, vec![], false).into_iter().map(|(t, _)| t).collect()
     }
 
     /// Press on the ruler at `from` (points), move to `to` and release there, Shift held when
     /// `shift`. A label sits 2 px right of its tick, so the first two labels give the ruler's scale.
-    fn drag_on_ruler(ctx: &egui::Context, app: &mut VectorcraftApp, from: f64, to: f64, shift: bool) {
+    fn drag_on_ruler(ctx: &egui::Context, app: &mut OracleVectorApp, from: f64, to: f64, shift: bool) {
         let labels = ruler_frame(ctx, app, vec![], shift);
         let [(zero, a), (next, b), ..] = &labels[..] else { panic!("ruler labels {labels:?}") };
         assert_eq!(zero, "0");
@@ -584,7 +584,7 @@ mod tests {
     /// apart as on the canvas rulers.
     #[test]
     fn ruler_is_numbered_in_the_general_unit() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.session.execute("file.new", &json!({})).unwrap();
         app.session.execute("text.create", &json!({"x": 10, "y": 20, "text": "a	b", "area": {"width": 300, "height": 100}})).unwrap();
         let ctx = egui::Context::default();
@@ -600,10 +600,10 @@ mod tests {
     /// Chosen again, it turns off.
     #[test]
     fn snap_to_unit_puts_dragged_and_clicked_stops_on_the_nearest_tick() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.session.execute("file.new", &json!({})).unwrap();
         let ctx = egui::Context::default();
-        let row = |app: &mut VectorcraftApp| {
+        let row = |app: &mut OracleVectorApp| {
             let rows = menu_frame(&ctx, app, vec![]);
             rows.into_iter().find(|(t, _)| t.trim_start_matches(['✓', ' ']) == "Snap to Unit").unwrap_or_else(|| panic!("Snap to Unit"))
         };
@@ -612,7 +612,7 @@ mod tests {
         app.session.execute("text.create", &json!({"x": 10, "y": 20, "text": "a	b", "area": {"width": 300, "height": 100}})).unwrap();
         app.session.execute("text.tabs.set", &json!({"stops": [{"position": 50}]})).unwrap();
         assert_eq!(ruler_labels(&ctx, &mut app)[..2], ["0", "50"]);
-        let positions = |app: &VectorcraftApp| current(app).unwrap().1.iter().map(|s| s.position).collect::<Vec<_>>();
+        let positions = |app: &OracleVectorApp| current(app).unwrap().1.iter().map(|s| s.position).collect::<Vec<_>>();
         drag_on_ruler(&ctx, &mut app, 50.0, 13.4, false);
         assert_eq!(positions(&app), [15.0]);
         // A click at 33.4 pt adds a stop at 35.
@@ -635,7 +635,7 @@ mod tests {
     /// px) apart.
     #[test]
     fn a_snapped_click_onto_a_stop_selects_it() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.session.execute("file.new", &json!({})).unwrap();
         app.session.execute("document.setUnits", &json!({"units": "mm"})).unwrap();
         app.session.execute("text.create", &json!({"x": 10, "y": 20, "text": "a	b", "area": {"width": 224, "height": 100}})).unwrap();
@@ -645,7 +645,7 @@ mod tests {
         set_pstate(&ctx, "tabs-snap", true);
         let tick = 2.5 * 72.0 / 25.4;
         drag_on_ruler(&ctx, &mut app, 28.4, 28.4, false);
-        let positions = |app: &VectorcraftApp| current(app).unwrap().1.iter().map(|s| s.position).collect::<Vec<_>>();
+        let positions = |app: &OracleVectorApp| current(app).unwrap().1.iter().map(|s| s.position).collect::<Vec<_>>();
         assert_eq!(positions(&app).len(), 2);
         assert!((positions(&app)[0] - 4.0 * tick).abs() < 1e-9, "{:?}", positions(&app));
         set_pstate(&ctx, "tabs-sel", 1usize);
@@ -660,12 +660,12 @@ mod tests {
     /// With Snap to Unit off, Shift held during the drag puts the stop on the ruler's nearest tick.
     #[test]
     fn shift_drag_snaps_a_stop_to_the_nearest_tick() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.session.execute("file.new", &json!({})).unwrap();
         app.session.execute("text.create", &json!({"x": 10, "y": 20, "text": "a	b", "area": {"width": 300, "height": 100}})).unwrap();
         app.session.execute("text.tabs.set", &json!({"stops": [{"position": 50}]})).unwrap();
         let ctx = egui::Context::default();
-        let position = |app: &VectorcraftApp| current(app).unwrap().1[0].position;
+        let position = |app: &OracleVectorApp| current(app).unwrap().1[0].position;
         drag_on_ruler(&ctx, &mut app, 50.0, 13.4, false);
         assert!((position(&app) - 13.4).abs() < 1.0, "{}", position(&app));
         let from = position(&app);
@@ -680,7 +680,7 @@ mod tests {
     }
 
     /// One frame of the panel with `events` → the texts painted and where.
-    fn panel_frame(ctx: &egui::Context, app: &mut VectorcraftApp, events: Vec<egui::Event>) -> Vec<(String, egui::Rect)> {
+    fn panel_frame(ctx: &egui::Context, app: &mut OracleVectorApp, events: Vec<egui::Event>) -> Vec<(String, egui::Rect)> {
         let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, vec2(400.0, 400.0));
         let mut out = ctx.run_ui(egui::RawInput { screen_rect: Some(screen), events, ..Default::default() }, |ui| show(app, ui));
         out.textures_delta.clear();
@@ -697,7 +697,7 @@ mod tests {
     /// where it was dropped.
     #[test]
     fn a_stop_dragged_past_another_stays_selected() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.session.execute("file.new", &json!({})).unwrap();
         app.session.execute("text.create", &json!({"x": 10, "y": 20, "text": "a	b", "area": {"width": 300, "height": 100}})).unwrap();
         app.session.execute("text.tabs.set", &json!({"stops": [{"position": 30}, {"position": 50}]})).unwrap();
@@ -716,12 +716,12 @@ mod tests {
     /// the moved stop stays selected. A position typed in the X field keeps its hundredths of a point.
     #[test]
     fn the_ruler_places_and_moves_stops_on_whole_points() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.session.execute("file.new", &json!({})).unwrap();
         app.session.execute("text.create", &json!({"x": 10, "y": 20, "text": "a	b", "area": {"width": 300, "height": 100}})).unwrap();
         app.session.execute("text.tabs.set", &json!({"stops": [{"position": 50}]})).unwrap();
         let ctx = egui::Context::default();
-        let positions = |app: &VectorcraftApp| current(app).unwrap().1.iter().map(|s| s.position).collect::<Vec<_>>();
+        let positions = |app: &OracleVectorApp| current(app).unwrap().1.iter().map(|s| s.position).collect::<Vec<_>>();
         // A click at 33.4 pt adds a stop at 33 pt and selects it.
         drag_on_ruler(&ctx, &mut app, 33.4, 33.4, false);
         assert_eq!(positions(&app), [33.0, 50.0]);
@@ -748,14 +748,14 @@ mod tests {
     /// stops cannot take (past 100,000 pt) leaves the stops and the selection as they were.
     #[test]
     fn an_x_typed_past_the_next_stop_keeps_the_stop_selected() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.session.execute("file.new", &json!({})).unwrap();
         app.session.execute("text.create", &json!({"x": 10, "y": 20, "text": "a	b", "area": {"width": 300, "height": 100}})).unwrap();
         app.session.execute("text.tabs.set", &json!({"stops": [{"position": 30}, {"position": 50}]})).unwrap();
         let ctx = egui::Context::default();
         let key = |key, modifiers| egui::Event::Key { key, physical_key: None, pressed: true, repeat: false, modifiers };
         // Click the X field showing `shown`, type `typed` over it and press Enter → the texts painted next.
-        let type_x = |app: &mut VectorcraftApp, shown: &str, typed: &str| {
+        let type_x = |app: &mut OracleVectorApp, shown: &str, typed: &str| {
             let texts = panel_frame(&ctx, app, vec![]);
             let at = texts.iter().find(|(t, _)| t == shown).unwrap_or_else(|| panic!("{shown} in {texts:?}")).1.center();
             let button =
@@ -767,7 +767,7 @@ mod tests {
             panel_frame(&ctx, app, vec![key(egui::Key::Enter, egui::Modifiers::NONE)]);
             panel_frame(&ctx, app, vec![])
         };
-        let positions = |app: &VectorcraftApp| current(app).unwrap().1.iter().map(|s| s.position).collect::<Vec<_>>();
+        let positions = |app: &OracleVectorApp| current(app).unwrap().1.iter().map(|s| s.position).collect::<Vec<_>>();
         set_pstate(&ctx, "tabs-sel", 0usize);
         let texts = type_x(&mut app, "30 pt", "70");
         assert_eq!(positions(&app), [50.0, 70.0]);
@@ -789,7 +789,7 @@ mod tests {
 
     /// One frame of the panel with `events` → the stops' stems on the ruler, left to right, with
     /// their colors.
-    fn stems_frame(ctx: &egui::Context, app: &mut VectorcraftApp, events: Vec<egui::Event>) -> Vec<(f32, egui::Color32)> {
+    fn stems_frame(ctx: &egui::Context, app: &mut OracleVectorApp, events: Vec<egui::Event>) -> Vec<(f32, egui::Color32)> {
         let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, vec2(400.0, 400.0));
         let mut out = ctx.run_ui(egui::RawInput { screen_rect: Some(screen), events, ..Default::default() }, |ui| show(app, ui));
         out.textures_delta.clear();
@@ -806,7 +806,7 @@ mod tests {
     /// shows the stops and the selected stop as they were.
     #[test]
     fn a_refused_x_leaves_the_ruler_as_it_was() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.session.execute("file.new", &json!({})).unwrap();
         app.session.execute("text.create", &json!({"x": 10, "y": 20, "text": "a	b", "area": {"width": 300, "height": 100}})).unwrap();
         app.session.execute("text.tabs.set", &json!({"stops": [{"position": 30}, {"position": 50}]})).unwrap();
@@ -829,7 +829,7 @@ mod tests {
     }
 
     /// One frame of the panel menu with `events` → the rows' texts and where they are painted.
-    fn menu_frame(ctx: &egui::Context, app: &mut VectorcraftApp, events: Vec<egui::Event>) -> Vec<(String, egui::Rect)> {
+    fn menu_frame(ctx: &egui::Context, app: &mut OracleVectorApp, events: Vec<egui::Event>) -> Vec<(String, egui::Rect)> {
         let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, vec2(320.0, 400.0));
         let mut out = ctx.run_ui(egui::RawInput { screen_rect: Some(screen), events, ..Default::default() }, |ui| menu(app, ui));
         out.textures_delta.clear();
@@ -843,7 +843,7 @@ mod tests {
     }
 
     /// Click the panel menu's row `label`, which shows no check mark.
-    fn choose(ctx: &egui::Context, app: &mut VectorcraftApp, label: &str) {
+    fn choose(ctx: &egui::Context, app: &mut OracleVectorApp, label: &str) {
         let rows = menu_frame(ctx, app, vec![]);
         let (text, r) = rows.iter().find(|(t, _)| t.trim_start_matches(['✓', ' ']) == label).unwrap_or_else(|| panic!("{label} in {rows:?}"));
         assert!(!text.contains('✓'), "{label} shows a check mark");
@@ -858,12 +858,12 @@ mod tests {
     /// ruler, and Clear All Tabs removes every stop.
     #[test]
     fn panel_menu_repeats_deletes_and_clears_tab_stops() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.session.execute("file.new", &json!({})).unwrap();
         app.session.execute("text.create", &json!({"x": 10, "y": 20, "text": "a	b", "area": {"width": 300, "height": 100}})).unwrap();
         app.session.execute("text.tabs.set", &json!({"stops": [{"position": 30}, {"position": 50, "leader": "."}]})).unwrap();
         let ctx = egui::Context::default();
-        let positions = |app: &VectorcraftApp| current(app).unwrap().1.iter().map(|s| s.position).collect::<Vec<_>>();
+        let positions = |app: &OracleVectorApp| current(app).unwrap().1.iter().map(|s| s.position).collect::<Vec<_>>();
         // Repeat Tab with the second stop selected: 20 copies of it, 20 pt apart (its distance from
         // the first stop), leader and all.
         set_pstate(&ctx, "tabs-sel", 1usize);
@@ -886,13 +886,13 @@ mod tests {
     /// left indent, from the paragraph the caret is in while the Type tool edits text.
     #[test]
     fn repeat_tab_measures_the_first_stop_from_the_left_indent() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.session.execute("file.new", &json!({})).unwrap();
         app.session.execute("text.create", &json!({"x": 10, "y": 20, "text": "a	b\nc	d", "area": {"width": 300, "height": 100}})).unwrap();
         app.session.execute("text.setFormat", &json!({"leftIndent": 20})).unwrap();
         app.session.execute("text.tabs.set", &json!({"stops": [{"position": 50}]})).unwrap();
         let ctx = egui::Context::default();
-        let positions = |app: &VectorcraftApp| current(app).unwrap().1.iter().map(|s| s.position).collect::<Vec<_>>();
+        let positions = |app: &OracleVectorApp| current(app).unwrap().1.iter().map(|s| s.position).collect::<Vec<_>>();
         // 30 pt from the indent at 20: copies at 80, 110, ...
         set_pstate(&ctx, "tabs-sel", 0usize);
         choose(&ctx, &mut app, "Repeat Tab");
@@ -904,11 +904,11 @@ mod tests {
         assert_eq!(positions(&app)[..4], [5.0, 20.0, 35.0, 50.0]);
         // The Type tool's caret in the second paragraph, indented 40 pt: its stop at 50 repeats
         // every 10 pt, and the first paragraph keeps its stop.
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.run("file.new", json!({})).unwrap();
         app.session.select_tool("type", Default::default()).unwrap();
         let id = app.run("text.create", json!({"x": 10, "y": 20, "text": "a	b\nc	d"})).unwrap()["id"].clone();
-        app.session.apply_actions(vec![vectorcraft_tools::Action::Notify("text.editNew".into())]).unwrap();
+        app.session.apply_actions(vec![oracle_vector_tools::Action::Notify("text.editNew".into())]).unwrap();
         app.run("text.setFormat", json!({"id": id, "leftIndent": 20})).unwrap();
         app.run("text.setFormat", json!({"id": id, "start": 4, "end": 7, "leftIndent": 40})).unwrap();
         app.run("text.tabs.set", json!({"id": id, "stops": [{"position": 50}]})).unwrap();
@@ -923,7 +923,7 @@ mod tests {
     /// Delete Tab removes that one next.
     #[test]
     fn delete_tab_after_the_last_stop_deletes_the_stop_the_ruler_shows_selected() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.session.execute("file.new", &json!({})).unwrap();
         app.session.execute("text.create", &json!({"x": 10, "y": 20, "text": "a	b", "area": {"width": 300, "height": 100}})).unwrap();
         app.session.execute("text.tabs.set", &json!({"stops": [{"position": 30}, {"position": 50}]})).unwrap();
@@ -939,7 +939,7 @@ mod tests {
     /// edge and a stop's mark over the column it sets, at any zoom (#729).
     #[test]
     fn above_text_puts_the_ruler_over_the_text_at_the_zoom() {
-        let mut app = VectorcraftApp::new(Session::new(), Default::default());
+        let mut app = OracleVectorApp::new(Session::new(), Default::default());
         app.session.execute("file.new", &json!({"width": 600, "height": 400})).unwrap();
         app.session.execute("text.create", &json!({"x": 40, "y": 200, "text": "a	b", "area": {"width": 300, "height": 100}})).unwrap();
         app.canvas_rect = Some(egui::Rect::from_min_size(egui::pos2(50.0, 40.0), vec2(1000.0, 700.0)));

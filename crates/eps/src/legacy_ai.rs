@@ -61,20 +61,20 @@
 use std::fmt::Write;
 use std::sync::Arc;
 
-use vectorcraft_color::cms::Cms;
-use vectorcraft_color::{BlendMode, Color, Gradient, GradientKind, GradientPaint, Paint};
-use vectorcraft_doc::{
+use oracle_vector_color::cms::Cms;
+use oracle_vector_color::{BlendMode, Color, Gradient, GradientKind, GradientPaint, Paint};
+use oracle_vector_doc::{
     AppearanceItem, AreaOptions, CharPosition, CharStyle, Document, FillLayer, ImageObject, Justify, LAYER_COLORS, LayerColor, LineCap, LineJoin,
     Node, NodeKind, ParaDirection, ParaStyle, PathEffect, StrokeLayer, TextKind, TextObject,
 };
-use vectorcraft_effects::stroke;
-use vectorcraft_geom::{Affine, AnchorKind, BezPath, FillRule, PathData, Point, Rect, Shape, SubPath, Vec2};
+use oracle_vector_effects::stroke;
+use oracle_vector_geom::{Affine, AnchorKind, BezPath, FillRule, PathData, Point, Rect, Shape, SubPath, Vec2};
 
 use crate::{latin, ps};
 
 /// How deep symbols and live objects may nest in one another (deeper art is left out). Groups and
 /// layers need no limit of their own: a document is never deeper than
-/// [`vectorcraft_doc::MAX_DEPTH`].
+/// [`oracle_vector_doc::MAX_DEPTH`].
 const MAX_NEST: u32 = 8;
 /// Largest image written (pixels).
 const MAX_IMAGE_PIXELS: u64 = 1 << 26;
@@ -99,7 +99,7 @@ const STROKES: &str =
 const IMAGE_ALPHA: &str = "transparent image pixels are written over white";
 const LIVE: &str = "symbols, blends, envelopes, meshes, repeats, placed documents and intertwines are written as their art";
 /// The warning for an image left out because it can't be decoded: the note raster exports give
-/// (`vectorcraft-engine`'s `rasterfx::undecoded_warning`).
+/// (`oracle-vector-engine`'s `rasterfx::undecoded_warning`).
 const UNDECODED: &str = "an image couldn't be decoded and is missing from the picture";
 const LARGE_IMAGE: &str = "an image that is empty or too large for legacy .ai was left out";
 const ELLIPTICAL: &str = "elliptical radial gradients are written circular";
@@ -174,10 +174,10 @@ pub fn export_legacy_ai(doc: &Document, o: &LegacyAiOptions) -> Result<LegacyAiO
     let mut s = String::new();
     s.push_str(PS_HEADER);
     s.push('\n');
-    let _ = writeln!(s, "%%Creator: VectorCraft {}", env!("CARGO_PKG_VERSION"));
+    let _ = writeln!(s, "%%Creator: Oracle Vector {}", env!("CARGO_PKG_VERSION"));
     let _ = writeln!(s, "%%Title: {}", latin_string(&title));
     if let Some(t) = o.created {
-        let [y, mo, d, h, mi, _] = vectorcraft_doc::metadata::civil(t);
+        let [y, mo, d, h, mi, _] = oracle_vector_doc::metadata::civil(t);
         let _ = writeln!(s, "%%CreationDate: ({mo}/{d}/{y:04}) ({h:02}:{mi:02})");
     }
     let _ = writeln!(s, "%%BoundingBox: {} {} {} {}", art.x0.floor() as i64, art.y0.floor() as i64, art.x1.ceil() as i64, art.y1.ceil() as i64);
@@ -252,9 +252,9 @@ fn fonts(s: &mut String, fonts: &[(String, bool)]) {
 
 /// The prolog's procedure set, as `%%DocumentSuppliedResources` names it: a file that has it is
 /// read from its program when its layers are asked for ([`crate::import_with`]).
-pub(crate) const PROCSET: &str = "VectorCraft_Legacy 1 0";
+pub(crate) const PROCSET: &str = "Oracle Vector_Legacy 1 0";
 
-/// The prolog: a procedure set of this writer's own (`VectorCraft_Legacy 1 0`), in a dictionary
+/// The prolog: a procedure set of this writer's own (`Oracle Vector_Legacy 1 0`), in a dictionary
 /// (`VCLegacy`) the setup begins and the trailer ends (§1.2: the prolog holds definitions only,
 /// the setup activates them, the trailer deactivates them). It gives each operator the script
 /// uses its meaning in PostScript, so that the file prints and previews as a PostScript program,
@@ -265,7 +265,7 @@ pub(crate) const PROCSET: &str = "VectorCraft_Legacy 1 0";
 /// that follow `XI`. Gradients fill with the colour set before them (the writer sets the first
 /// stop's), and type marks nothing: apps that read the format draw both. The page trailer's
 /// `annotatepage` (§3, Script Setup: `gsave annotatepage grestore showpage`) marks nothing.
-const PROLOG: &str = "%%BeginResource: procset VectorCraft_Legacy 1 0
+const PROLOG: &str = "%%BeginResource: procset Oracle Vector_Legacy 1 0
 /VCLegacy 96 dict def
 VCLegacy begin
 /bd {bind def} bind def
@@ -451,7 +451,7 @@ impl<'a> Writer<'a> {
         Self {
             doc,
             to_art,
-            cms: vectorcraft_color::cms::active(),
+            cms: oracle_vector_color::cms::active(),
             body: String::new(),
             gradients: vec![],
             spots: vec![],
@@ -701,7 +701,7 @@ impl<'a> Writer<'a> {
             | NodeKind::Intertwine { .. } => {
                 self.warn(LIVE);
                 if self.nest < MAX_NEST {
-                    let g = vectorcraft_effects::expand_live_deep(Some(self.doc), n);
+                    let g = oracle_vector_effects::expand_live_deep(Some(self.doc), n);
                     self.nest += 1;
                     if let Some(children) = g.children() {
                         self.group(children, false, locked);
@@ -733,7 +733,7 @@ impl<'a> Writer<'a> {
     fn clip_group(&mut self, children: &[Arc<Node>], locked: bool) {
         let Some((clip, rest)) = children.split_first() else { return };
         // Nothing to clip by hides the clipped art.
-        let Some((outline, rule)) = vectorcraft_effects::clip_outline(clip) else { return };
+        let Some((outline, rule)) = oracle_vector_effects::clip_outline(clip) else { return };
         let paint = clip.clip_paint();
         self.lock(locked);
         self.line("q");
@@ -949,7 +949,7 @@ impl<'a> Writer<'a> {
         };
         pt(s, first.p);
         s.push_str("m\n");
-        let segment = |s: &mut String, a: &vectorcraft_geom::Anchor, b: &vectorcraft_geom::Anchor| {
+        let segment = |s: &mut String, a: &oracle_vector_geom::Anchor, b: &oracle_vector_geom::Anchor| {
             let straight = a.h_out == a.p && b.h_in == b.p;
             let smooth = b.kind == AnchorKind::Smooth;
             if straight {
@@ -1149,10 +1149,10 @@ impl<'a> Writer<'a> {
             self.warn(TYPE_ATTRIBUTES);
         }
         // Area type that Shrink Text to Fit scales down is written in the styles it draws in.
-        let fitted = matches!((&t.kind, t.area.fit), (TextKind::Area { .. }, vectorcraft_doc::AreaFit::ShrinkText { .. }))
-            .then(|| vectorcraft_text::layout(vectorcraft_text::FontDb::global(), t).fit_scale)
+        let fitted = matches!((&t.kind, t.area.fit), (TextKind::Area { .. }, oracle_vector_doc::AreaFit::ShrinkText { .. }))
+            .then(|| oracle_vector_text::layout(oracle_vector_text::FontDb::global(), t).fit_scale)
             .filter(|f| *f != 1.0)
-            .map(|f| vectorcraft_text::scaled(t, f));
+            .map(|f| oracle_vector_text::scaled(t, f));
         let t = fitted.as_ref().unwrap_or(t);
         let m = self.to_art * t.xf * Affine::new([1.0, 0.0, 0.0, -1.0, 0.0, 0.0]);
         let (kind, path, start) = match &t.kind {
@@ -1263,7 +1263,7 @@ impl<'a> Writer<'a> {
     /// Type as its glyphs' outlines: a group of a compound path for each run, with the run's fill
     /// and stroke.
     fn outlines(&mut self, t: &TextObject) {
-        let layout = vectorcraft_text::layout(vectorcraft_text::FontDb::global(), t);
+        let layout = oracle_vector_text::layout(oracle_vector_text::FontDb::global(), t);
         let scale = t.xf.determinant().abs().sqrt();
         self.line("u");
         for (i, run) in t.runs.iter().enumerate() {
@@ -1284,8 +1284,8 @@ impl<'a> Writer<'a> {
                 s
             });
             let items: Vec<AppearanceItem> = fill.map(AppearanceItem::Fill).into_iter().chain(stroke.map(AppearanceItem::Stroke)).collect();
-            let mut n = Node::path(vectorcraft_doc::NodeId(0), path.clone(), vectorcraft_doc::Appearance::default());
-            n.appearance = vectorcraft_doc::Appearance { items, ..vectorcraft_doc::Appearance::default() }.into();
+            let mut n = Node::path(oracle_vector_doc::NodeId(0), path.clone(), oracle_vector_doc::Appearance::default());
+            n.appearance = oracle_vector_doc::Appearance { items, ..oracle_vector_doc::Appearance::default() }.into();
             self.shape(&n, &path, FillRule::NonZero);
         }
         self.line("U");
@@ -1396,7 +1396,7 @@ fn lost_attributes(t: &TextObject) -> bool {
 /// The font type in style `st` is set in: its PostScript name, whether it's TrueType, and its
 /// ascent and descent (ems). A font that isn't installed is named after its family and style.
 fn font_of(st: &CharStyle) -> (String, bool, f64, f64) {
-    let db = vectorcraft_text::FontDb::global();
+    let db = oracle_vector_text::FontDb::global();
     match db.face_version(&st.font_family, &st.font_style, st.font_version.as_deref()) {
         Some(face) => {
             let (ascent, descent) = face.vertical_metrics();

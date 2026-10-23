@@ -1,16 +1,16 @@
 //! Effect menu commands (live effects) and Object → Expand Appearance.
 //!
 //! Effects are stored on the object's appearance (`appearance.effects`) and evaluated at render
-//! time by `vectorcraft-effects` (re-exported by the renderer). The commands edit the objects'
+//! time by `oracle-vector-effects` (re-exported by the renderer). The commands edit the objects'
 //! own stacks, groups and layers included (layers through `ids`), or with `target: "contents"`
 //! the objects inside them (see `appearance`).
 
 use std::sync::Arc;
 
 use serde_json::{Value, json};
-use vectorcraft_doc::{Document, Effect, Node, NodeKind, StrokeLayer};
-use vectorcraft_geom::{FillRule, PathData};
-use vectorcraft_render::effects;
+use oracle_vector_doc::{Document, Effect, Node, NodeKind, StrokeLayer};
+use oracle_vector_geom::{FillRule, PathData};
+use oracle_vector_render::effects;
 
 use super::appearance::{ItemTarget, appearance_targets, index_param, item_target, item_target_at};
 use super::expand::has_seeded;
@@ -443,7 +443,7 @@ fn load_texture(params: &mut Value, cmd: &str) -> Result<()> {
 fn expandable(n: &Node) -> bool {
     match &n.kind {
         NodeKind::Path { clipping: true, .. } | NodeKind::Path { guide: true, .. } => false,
-        NodeKind::Path { .. } | NodeKind::Compound { .. } => !n.appearance.is_basic() || vectorcraft_brush::has_brush(n),
+        NodeKind::Path { .. } | NodeKind::Compound { .. } => !n.appearance.is_basic() || oracle_vector_brush::has_brush(n),
         NodeKind::Group { children, .. } | NodeKind::Layer { children, .. } => {
             !n.appearance.items.is_empty() || !n.appearance.effects.is_empty() || children.iter().any(|c| expandable(c))
         }
@@ -493,7 +493,7 @@ fn expand_pieces(
     d: &mut Document,
     m: &mut Node,
     all: bool,
-    brushes: &[vectorcraft_brush::Brush],
+    brushes: &[oracle_vector_brush::Brush],
     stroke_art: effects::StrokeArt,
 ) -> std::collections::HashMap<NodeId, Vec<Listed>> {
     let id = m.id;
@@ -529,7 +529,7 @@ fn repeats_an_id(n: &Node, seen: &std::collections::HashSet<NodeId>) -> bool {
 type Listed = (NodeId, usize);
 
 /// [`expanded_node`] of `c` in place. Returns what the expansion lists, by places in the walk of `c`.
-fn expand_in_place(d: &mut Document, c: &mut Node, brushes: &[vectorcraft_brush::Brush]) -> Vec<Listed> {
+fn expand_in_place(d: &mut Document, c: &mut Node, brushes: &[oracle_vector_brush::Brush]) -> Vec<Listed> {
     let mut listed = vec![];
     if let Some(e) = expanded_node(d, c.clone(), brushes, &mut listed) {
         *c = e;
@@ -553,7 +553,7 @@ fn fresh_ids_listed(d: &mut Document, c: &mut Node, seen: &mut std::collections:
 /// Expand Appearance of `id` (and, recursively, of a group's or layer's members): every fill and
 /// stroke becomes an object of its own (strokes outlined, brushes as their art), geometry effects
 /// are baked, raster effects become an embedded image, and the object keeps its transparency.
-pub(crate) fn expand_node(d: &mut Document, id: NodeId, brushes: &[vectorcraft_brush::Brush], out: &mut Vec<NodeId>) {
+pub(crate) fn expand_node(d: &mut Document, id: NodeId, brushes: &[oracle_vector_brush::Brush], out: &mut Vec<NodeId>) {
     let Some(n) = d.node(id).cloned() else { return };
     let mut listed = vec![];
     let m = expanded_node(d, n, brushes, &mut listed);
@@ -568,7 +568,7 @@ pub(crate) fn expand_node(d: &mut Document, id: NodeId, brushes: &[vectorcraft_b
 /// [`expand_node`] of `n`, which need not be in `d`: `n` with its appearance expanded, `None` when
 /// it has nothing to expand. `out` gets the objects whose appearance expands, by places in the walk
 /// of the expanded `n`, `n`'s first when its own does.
-fn expanded_node(d: &mut Document, mut n: Node, brushes: &[vectorcraft_brush::Brush], out: &mut Vec<Listed>) -> Option<Node> {
+fn expanded_node(d: &mut Document, mut n: Node, brushes: &[oracle_vector_brush::Brush], out: &mut Vec<Listed>) -> Option<Node> {
     let id = n.id;
     if !expandable(&n) {
         return None;
@@ -686,9 +686,9 @@ fn expanded_node(d: &mut Document, mut n: Node, brushes: &[vectorcraft_brush::Br
 
 fn expand_appearance(s: &mut Session, p: &Value) -> Result<Value> {
     let roots = appearance_targets(s, p)?;
-    let failed = vectorcraft_render::decode_failures();
+    let failed = oracle_vector_render::decode_failures();
     let ids = s.edit("Expand Appearance", |d, _| {
-        let brushes = vectorcraft_brush::library(d);
+        let brushes = oracle_vector_brush::library(d);
         let mut out = vec![];
         for id in &roots {
             expand_node(d, *id, &brushes, &mut out);
@@ -713,8 +713,8 @@ mod lighting_presets_tests;
 #[cfg(test)]
 mod tests {
     use serde_json::json;
-    use vectorcraft_doc::NodeKind;
-    use vectorcraft_render::effects;
+    use oracle_vector_doc::NodeKind;
+    use oracle_vector_render::effects;
 
     use crate::{NodeId, Session};
 
@@ -725,7 +725,7 @@ mod tests {
         (s, NodeId(r["id"].as_u64().unwrap()))
     }
 
-    fn node(s: &Session, id: NodeId) -> vectorcraft_doc::Node {
+    fn node(s: &Session, id: NodeId) -> oracle_vector_doc::Node {
         s.doc().unwrap().doc.node(id).cloned().unwrap()
     }
 
@@ -740,11 +740,11 @@ mod tests {
         let before = effects_for_test(&s, id);
         assert_eq!(node(&s, id).path_data(), Some(&source));
         let doc = &s.doc().unwrap().doc;
-        let restored = vectorcraft_format::load(&vectorcraft_format::save(doc, false)).unwrap();
+        let restored = oracle_vector_format::load(&oracle_vector_format::save(doc, false)).unwrap();
         assert_eq!(restored.node(id).unwrap().path_data(), Some(&source));
         assert_eq!(effects::revolve_art(restored.node(id).unwrap()).unwrap(), before);
         let pdf = s.execute("document.serialize", &json!({"format":"pdf"})).unwrap();
-        let bytes = vectorcraft_format::base64_decode(pdf["dataBase64"].as_str().unwrap()).unwrap();
+        let bytes = oracle_vector_format::base64_decode(pdf["dataBase64"].as_str().unwrap()).unwrap();
         assert!(bytes.starts_with(b"%PDF"));
         assert!(s.execute("effect.apply", &json!({"effect":"threeD.revolve","ids":[id.0],"item":null})).is_err());
         assert!(s.execute("effect.duplicate", &json!({"index":0,"ids":[id.0],"item":null})).is_err());
@@ -771,7 +771,7 @@ mod tests {
             let art = effects::solid_art(&node(&s, id)).unwrap();
             assert_eq!(node(&s, id).path_data(), Some(&source), "{effect}: the source stays editable");
             let doc = &s.doc().unwrap().doc;
-            let restored = vectorcraft_format::load(&vectorcraft_format::save(doc, false)).unwrap();
+            let restored = oracle_vector_format::load(&oracle_vector_format::save(doc, false)).unwrap();
             assert_eq!(effects::solid_art(restored.node(id).unwrap()).unwrap(), art, "{effect}: reopens the same");
             // One 3D effect per object, whichever kind.
             for other in ["threeD.revolve", "threeD.extrude", "threeD.rotate"] {
@@ -861,7 +861,7 @@ mod tests {
         assert_eq!(params(&s), json!({"overlapVariation": 3, "spacingVariation": 1}));
     }
 
-    fn effects_for_test(s: &Session, id: NodeId) -> vectorcraft_doc::Node {
+    fn effects_for_test(s: &Session, id: NodeId) -> oracle_vector_doc::Node {
         effects::revolve_art(&node(s, id)).unwrap()
     }
 
@@ -879,7 +879,7 @@ mod tests {
         let mut gradients = 0;
         effects_for_test(&s, id).walk(&mut |face| {
             gradients += face.appearance.items.iter().filter(|item| {
-                matches!(item, vectorcraft_doc::AppearanceItem::Fill(fill) if matches!(fill.paint, vectorcraft_doc::color::Paint::Gradient(_)))
+                matches!(item, oracle_vector_doc::AppearanceItem::Fill(fill) if matches!(fill.paint, oracle_vector_doc::color::Paint::Gradient(_)))
             }).count();
         });
         assert!(gradients > 0, "commands use smooth vector shading by default");
@@ -887,7 +887,7 @@ mod tests {
         let smooth = node(&s, id);
         assert_eq!(smooth.path_data(), Some(&source));
         assert_ne!(effects_for_test(&s, id), effects::revolve_art(&initial).unwrap());
-        let restored = vectorcraft_format::load(&vectorcraft_format::save(&s.doc().unwrap().doc, false)).unwrap();
+        let restored = oracle_vector_format::load(&oracle_vector_format::save(&s.doc().unwrap().doc, false)).unwrap();
         assert_eq!(effects::revolve_art(restored.node(id).unwrap()), Some(effects_for_test(&s, id)));
         s.execute("effect.expandAppearance", &json!({"ids":[id.0]})).unwrap();
         assert!(!effects::has_revolve(&node(&s, id)));
@@ -912,7 +912,7 @@ mod tests {
         .unwrap();
         let uncapped = node(&s, id);
         assert_eq!(uncapped.appearance.effects[0].params["cap"], json!(false));
-        let count = |n: &vectorcraft_doc::Node| n.children().unwrap()[0].children().unwrap().len();
+        let count = |n: &oracle_vector_doc::Node| n.children().unwrap()[0].children().unwrap().len();
         let open_count = count(&effects_for_test(&s, id));
         s.execute("effect.setParams", &json!({"index":0,"ids":[id.0],"item":null,"params":{"cap":true}})).unwrap();
         let capped = node(&s, id);
@@ -921,11 +921,11 @@ mod tests {
         assert_eq!(capped.path_data(), Some(&source));
         assert!(s.execute("effect.setParams", &json!({"index":0,"ids":[id.0],"item":null,"params":{"cap":"yes"}})).is_err());
         assert_eq!(node(&s, id), capped, "a bad boolean does not mutate the document");
-        let restored = vectorcraft_format::load(&vectorcraft_format::save(&s.doc().unwrap().doc, false)).unwrap();
+        let restored = oracle_vector_format::load(&oracle_vector_format::save(&s.doc().unwrap().doc, false)).unwrap();
         assert_eq!(restored.node(id).unwrap().appearance.effects[0].params["cap"], json!(true));
         assert_eq!(effects::revolve_art(restored.node(id).unwrap()), Some(art.clone()));
         let pdf = s.execute("document.serialize", &json!({"format":"pdf"})).unwrap();
-        assert!(vectorcraft_format::base64_decode(pdf["dataBase64"].as_str().unwrap()).unwrap().starts_with(b"%PDF"));
+        assert!(oracle_vector_format::base64_decode(pdf["dataBase64"].as_str().unwrap()).unwrap().starts_with(b"%PDF"));
         s.execute("effect.expandAppearance", &json!({"ids":[id.0]})).unwrap();
         assert_eq!(count(&node(&s, id)), count(&art));
         assert!(!effects::has_revolve(&node(&s, id)));
@@ -943,9 +943,9 @@ mod tests {
         let id = NodeId(r["id"].as_u64().unwrap());
         s.execute("effect.apply", &json!({"effect":"threeD.revolve","ids":[id.0],"item":null})).unwrap();
         let live = node(&s, id);
-        let restored = vectorcraft_format::load(&vectorcraft_format::save(&s.doc().unwrap().doc, false)).unwrap();
+        let restored = oracle_vector_format::load(&oracle_vector_format::save(&s.doc().unwrap().doc, false)).unwrap();
         assert_eq!(restored.node(id).unwrap().appearance.effects[0].params["expandVisibleOnly"], json!(true));
-        let count = |n: &vectorcraft_doc::Node| n.children().unwrap()[0].children().unwrap().len();
+        let count = |n: &oracle_vector_doc::Node| n.children().unwrap()[0].children().unwrap().len();
         s.execute("effect.expandAppearance", &json!({"ids":[id.0]})).unwrap();
         let visible = count(&node(&s, id));
         s.execute("edit.undo", &json!({})).unwrap();
@@ -1086,7 +1086,7 @@ mod tests {
         let g = NodeId(r["ids"][0].as_u64().unwrap());
         let gn = node(&s, g);
         assert_eq!(gn.children().unwrap().iter().map(|c| c.id).collect::<Vec<_>>(), [a, b], "stacking order kept");
-        assert!(vectorcraft_render::effects::has_pathfinder(&gn));
+        assert!(oracle_vector_render::effects::has_pathfinder(&gn));
         assert_eq!(s.doc().unwrap().selection.objects, [g]);
         // Live: one united shape, so expanding leaves a single path.
         s.execute("effect.expandAppearance", &json!({})).unwrap();
@@ -1111,14 +1111,14 @@ mod tests {
         let glyphs = effects::outline_text(&node(&s, t)).unwrap();
         let b = glyphs.geometric_bounds().unwrap();
         assert!(b.x0 > 105.0 && b.y0 > 105.0 && b.x1 < 195.0 && b.y1 < 195.0, "the type lies inside the square: {b:?}");
-        let area = |n: &vectorcraft_doc::Node| effects::member_shapes(n).iter().map(|(p, r)| vectorcraft_pathops::area(p, *r)).sum::<f64>();
+        let area = |n: &oracle_vector_doc::Node| effects::member_shapes(n).iter().map(|(p, r)| oracle_vector_pathops::area(p, *r)).sum::<f64>();
         let glyph_area = area(&glyphs);
         s.execute("select.set", &json!({"ids": [a.0, t.0]})).unwrap();
         let g = NodeId(s.execute("object.group", &json!({})).unwrap()["id"].as_u64().unwrap());
         s.execute("effect.apply", &json!({"effect": "pathfinder.subtract"})).unwrap();
         // Live: the renderer leaves the glyph's place in the square empty.
         let doc = s.doc().unwrap().doc.clone();
-        let img = vectorcraft_render::Renderer::new().render(&doc, 400, 400, vectorcraft_geom::Affine::IDENTITY, &Default::default());
+        let img = oracle_vector_render::Renderer::new().render(&doc, 400, 400, oracle_vector_geom::Affine::IDENTITY, &Default::default());
         let empty = (105..195).flat_map(|y| (105..195).map(move |x| (x, y))).filter(|&(x, y)| img.pixel(x, y)[3] == 0).count();
         assert!(empty as f64 > glyph_area / 2.0, "{empty} empty pixels for a glyph area of {glyph_area}");
         // Expanded: the group holds the square minus the glyph.
@@ -1136,7 +1136,7 @@ mod tests {
         s.execute("effect.apply", &json!({"effect": "pathfinder.subtract"})).unwrap();
         // Live: the renderer shows only the back square minus the front one.
         let doc = s.doc().unwrap().doc.clone();
-        let img = vectorcraft_render::Renderer::new().render(&doc, 400, 400, vectorcraft_geom::Affine::IDENTITY, &Default::default());
+        let img = oracle_vector_render::Renderer::new().render(&doc, 400, 400, oracle_vector_geom::Affine::IDENTITY, &Default::default());
         assert!(img.pixel(125, 150)[3] > 0);
         assert_eq!(img.pixel(200, 150)[3], 0);
         s.execute("effect.expandAppearance", &json!({})).unwrap();
@@ -1148,7 +1148,7 @@ mod tests {
     }
     #[test]
     fn expand_appearance_gives_each_copy_of_a_transform_its_own_gradient() {
-        use vectorcraft_color::{Color, Gradient, GradientKind, GradientPaint, GradientStop, Paint};
+        use oracle_vector_color::{Color, Gradient, GradientKind, GradientPaint, GradientStop, Paint};
         let (mut s, id) = session_with_rect();
         let stops = vec![GradientStop::new(0.0, Color::rgb(1.0, 0.0, 0.0)), GradientStop::new(1.0, Color::rgb(0.0, 0.0, 1.0))];
         let ramp = Paint::Gradient(Box::new(GradientPaint::new(Gradient { kind: GradientKind::Linear, stops })));

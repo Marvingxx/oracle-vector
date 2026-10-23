@@ -5,9 +5,9 @@
 use std::sync::Arc;
 use std::sync::mpsc::{Receiver, Sender, channel};
 
-use vectorcraft_doc::Document;
-use vectorcraft_geom::Affine;
-use vectorcraft_render::{RenderOptions, Rendered, Renderer};
+use oracle_vector_doc::Document;
+use oracle_vector_geom::Affine;
+use oracle_vector_render::{RenderOptions, Rendered, Renderer};
 
 use crate::CacheKey;
 
@@ -27,7 +27,7 @@ pub struct Done {
     pub opts: RenderOptions,
     pub img: Rendered,
     pub ms: f64,
-    /// [`vectorcraft_render::FrameStats::moved`] of the frame.
+    /// [`oracle_vector_render::FrameStats::moved`] of the frame.
     pub moved: usize,
 }
 
@@ -46,7 +46,7 @@ impl Worker {
         let (tx, jobs) = channel::<Job>();
         let (done_tx, rx) = channel::<Done>();
         std::thread::Builder::new()
-            .name("vectorcraft-render".into())
+            .name("oracle-vector-render".into())
             .spawn(move || {
                 let mut r = Renderer::new();
                 while let Ok(mut job) = jobs.recv() {

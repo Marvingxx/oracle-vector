@@ -3,7 +3,7 @@
 //! document is never changed.
 
 use serde_json::{Value, json};
-use vectorcraft_geom::{Point, Vec2};
+use oracle_vector_geom::{Point, Vec2};
 
 use super::CYAN;
 use crate::{Action, Cursor, Mods, Overlay, PointerEvent, PointerKind, Tool, ToolContext};
@@ -39,7 +39,7 @@ impl Tool for MeasureTool {
             PointerKind::Drag | PointerKind::Up if self.dragging => {
                 if let Some((a, _)) = self.line {
                     let b = if ev.mods.shift {
-                        a + vectorcraft_geom::constrain_angle(ev.pos - a, 45.0)
+                        a + oracle_vector_geom::constrain_angle(ev.pos - a, 45.0)
                     } else {
                         crate::guides::snap_draw(cx, ev.pos, &[]).0
                     };
@@ -88,7 +88,7 @@ impl Tool for MeasureTool {
 mod tests {
     use super::*;
     use crate::testutil::*;
-    use vectorcraft_doc::Selection;
+    use oracle_vector_doc::Selection;
 
     #[test]
     fn horizontal_drag_reports_positive_zero_angle() {

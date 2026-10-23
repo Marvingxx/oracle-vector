@@ -1,6 +1,6 @@
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::{Appearance, Document, Node, NodeId, NodeKind, StrokeLayer};
-use vectorcraft_geom::{BezPath, Point, Rect, shapes};
+use oracle_vector_color::{Color, Paint};
+use oracle_vector_doc::{Appearance, Document, Node, NodeId, NodeKind, StrokeLayer};
+use oracle_vector_geom::{BezPath, Point, Rect, shapes};
 
 use super::*;
 
@@ -20,7 +20,7 @@ fn calli(angle: f64, roundness: f64, size: f64) -> Brush {
 }
 
 fn bounds(nodes: &[Node]) -> Rect {
-    nodes.iter().fold(None, |a, n| vectorcraft_geom::union_opt(a, n.geometric_bounds())).unwrap()
+    nodes.iter().fold(None, |a, n| oracle_vector_geom::union_opt(a, n.geometric_bounds())).unwrap()
 }
 
 fn near(a: f64, b: f64, tol: f64) -> bool {
@@ -81,7 +81,7 @@ fn closed_calligraphic_makes_a_ring() {
     let out = stroke_pieces(&Document::new(1.0, 1.0), &calli(0.0, 100.0, 6.0), &bp, &stroke(1.0));
     let pd = out[0].path_data().unwrap();
     assert_eq!(pd.subpaths.len(), 2);
-    let poly_area = |sp: &vectorcraft_geom::SubPath| {
+    let poly_area = |sp: &oracle_vector_geom::SubPath| {
         let a = &sp.anchors;
         (0..a.len()).map(|i| a[i].p.x * a[(i + 1) % a.len()].p.y - a[(i + 1) % a.len()].p.x * a[i].p.y).sum::<f64>() / 2.0
     };
@@ -310,7 +310,7 @@ fn tints_colorization_uses_stroke_colour() {
 
 /// Point type at (0, 0) whose characters are painted `fill` and `stroke` (1 pt wide).
 fn type_art(fill: Paint, stroke: Paint) -> Node {
-    use vectorcraft_doc::{CharStyle, TextObject};
+    use oracle_vector_doc::{CharStyle, TextObject};
     let style = CharStyle { fill, stroke, stroke_width: 1.0, ..CharStyle::default() };
     Node::new(NodeId(0), NodeKind::Text(Box::new(TextObject::point(Point::new(0.0, 0.0), "Ag", style))))
 }
@@ -443,7 +443,7 @@ fn half_width(nodes: &[Node], x0: f64, x1: f64) -> f64 {
 }
 
 fn pressed(points: Vec<(f64, f64)>) -> StrokeLayer {
-    StrokeLayer { pressure: Some(vectorcraft_doc::PressureProfile { points }), ..stroke(1.0) }
+    StrokeLayer { pressure: Some(oracle_vector_doc::PressureProfile { points }), ..stroke(1.0) }
 }
 
 /// #852: with Size on Pressure the nib goes from size − variation at the lightest pressure to
@@ -658,17 +658,17 @@ fn hue_shift_without_a_key_takes_the_most_used_art_color() {
 /// is left out, a pattern paint whose tile is brushed becomes no paint, and plain ones stay.
 #[test]
 fn pieces_leave_out_what_draws_a_brushed_stroke_by_name() {
-    use vectorcraft_doc::{PatternDef, Symbol};
+    use oracle_vector_doc::{PatternDef, Symbol};
     let mut doc = Document::new(100.0, 100.0);
     let mut brushed = rect_art(10.0, 4.0);
-    brushed.appearance.items.push(vectorcraft_doc::AppearanceItem::Stroke(StrokeLayer { brush: Some("s".into()), ..stroke(1.0) }));
+    brushed.appearance.items.push(oracle_vector_doc::AppearanceItem::Stroke(StrokeLayer { brush: Some("s".into()), ..stroke(1.0) }));
     for (name, art) in [("plain", rect_art(10.0, 4.0)), ("brushed", brushed)] {
         doc.symbols.push(Symbol { name: name.into(), art: std::sync::Arc::new(art.clone()) });
         doc.patterns.push(PatternDef::new(name, vec![std::sync::Arc::new(art)]));
     }
-    let instance = |symbol: &str| Node::new(NodeId(0), NodeKind::SymbolInstance { symbol: symbol.into(), xf: vectorcraft_geom::Affine::IDENTITY });
+    let instance = |symbol: &str| Node::new(NodeId(0), NodeKind::SymbolInstance { symbol: symbol.into(), xf: oracle_vector_geom::Affine::IDENTITY });
     let painted = |pattern: &str| {
-        let fill = Paint::Pattern { pattern: pattern.into(), xf: vectorcraft_geom::Affine::IDENTITY };
+        let fill = Paint::Pattern { pattern: pattern.into(), xf: oracle_vector_geom::Affine::IDENTITY };
         Node::path(NodeId(0), shapes::rectangle(Rect::new(0.0, 0.0, 10.0, 4.0)), Appearance::basic(fill, Paint::None, 0.0))
     };
     let art = Node::group(NodeId(0), [instance("plain"), instance("brushed"), painted("plain"), painted("brushed")].map(std::sync::Arc::new).into());
@@ -684,6 +684,6 @@ fn pieces_leave_out_what_draws_a_brushed_stroke_by_name() {
         assert_eq!(symbols, ["plain"]);
         let fills: Vec<Paint> =
             children.iter().filter(|c| c.path_data().is_some()).filter_map(|c| c.appearance.fill().map(|f| f.paint.clone())).collect();
-        assert_eq!(fills, [Paint::Pattern { pattern: "plain".into(), xf: vectorcraft_geom::Affine::IDENTITY }, Paint::None]);
+        assert_eq!(fills, [Paint::Pattern { pattern: "plain".into(), xf: oracle_vector_geom::Affine::IDENTITY }, Paint::None]);
     }
 }

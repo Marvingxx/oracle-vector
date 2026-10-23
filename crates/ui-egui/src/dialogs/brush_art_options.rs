@@ -20,12 +20,12 @@ use std::sync::Arc;
 
 use egui::{Color32, Sense, Stroke, pos2, vec2};
 use serde_json::{Map, Value, json};
-use vectorcraft_brush::{ArtBrush, ArtScale, Brush, BrushKind, Colorization, Direction, PatternBrush, PatternFit, Scatter, Variation};
-use vectorcraft_color::{Color, Paint};
-use vectorcraft_doc::{Appearance, Document, Node, NodeId};
+use oracle_vector_brush::{ArtBrush, ArtScale, Brush, BrushKind, Colorization, Direction, PatternBrush, PatternFit, Scatter, Variation};
+use oracle_vector_color::{Color, Paint};
+use oracle_vector_doc::{Appearance, Document, Node, NodeId};
 
 use super::brush_options::{clamped, mode_key, stroke_preview};
-use crate::VectorcraftApp;
+use crate::OracleVectorApp;
 use crate::state::Dialog;
 use crate::theme::Tokens;
 use crate::widgets;
@@ -132,7 +132,7 @@ pub(super) fn fields(b: &Brush, def: Value, f: &mut Map<String, Value>) {
         }
         BrushKind::Calligraphic(_) | BrushKind::Bristle(_) => {}
     }
-    let colors = vectorcraft_brush::art_colors(b.art());
+    let colors = oracle_vector_brush::art_colors(b.art());
     let colorization = b.kind.colorization();
     let key = match colorization {
         Colorization::HueShift { key } => key,
@@ -200,7 +200,7 @@ pub(super) fn params(d: &Dialog) -> Value {
 
 // ---------- body ----------
 
-pub(super) fn body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) {
+pub(super) fn body(app: &mut OracleVectorApp, ui: &mut egui::Ui, d: &mut Dialog) {
     match d.str("__type").as_str() {
         "scatter" => scatter_body(ui, d),
         "art" => art_body(ui, d),
@@ -443,7 +443,7 @@ fn tip_sample(ui: &mut egui::Ui, def: &Value, ty: &str, method: Colorization, na
 }
 
 /// A document of `w` × `h` showing brush definition `def` (of type `ty`) with colorization
-/// `method`, drawn by [`vectorcraft_brush::stroke_pieces`] along a gentle S-curve stroked
+/// `method`, drawn by [`oracle_vector_brush::stroke_pieces`] along a gentle S-curve stroked
 /// [`TIP_STROKE`] 1 pt wide, and scaled to fit, centered.
 pub(super) fn tip_doc(def: &Value, ty: &str, method: Colorization, w: f64, h: f64) -> Option<Document> {
     let mut def = match def {
@@ -455,10 +455,10 @@ pub(super) fn tip_doc(def: &Value, ty: &str, method: Colorization, w: f64, h: f6
     def.insert("colorization".into(), serde_json::to_value(method).ok()?);
     let brush: Brush = serde_json::from_value(Value::Object(def)).ok()?;
     let ap = Appearance::basic(Paint::None, Paint::solid(TIP_STROKE), 1.0);
-    let mut bp = vectorcraft_geom::BezPath::new();
+    let mut bp = oracle_vector_geom::BezPath::new();
     bp.move_to((0.0, 20.0));
     bp.curve_to((35.0, 6.0), (65.0, 34.0), (100.0, 20.0));
-    let pieces = vectorcraft_brush::stroke_pieces(&Document::new(w, h), &brush, &bp, ap.stroke()?);
+    let pieces = oracle_vector_brush::stroke_pieces(&Document::new(w, h), &brush, &bp, ap.stroke()?);
     tile_doc(&Node::group(NodeId(0), pieces.into_iter().map(Arc::new).collect()), w, h)
 }
 
@@ -471,9 +471,9 @@ fn tile_doc(art: &Node, w: f64, h: f64) -> Option<Document> {
     }
     let mut doc = Document::new(w, h);
     let mut n = doc.reid(art);
-    let xf = vectorcraft_geom::Affine::translate((w / 2.0, h / 2.0))
-        * vectorcraft_geom::Affine::scale(k)
-        * vectorcraft_geom::Affine::translate(-b.center().to_vec2());
+    let xf = oracle_vector_geom::Affine::translate((w / 2.0, h / 2.0))
+        * oracle_vector_geom::Affine::scale(k)
+        * oracle_vector_geom::Affine::translate(-b.center().to_vec2());
     n.transform(xf, true);
     let l = doc.layers.first()?.id;
     doc.insert(Some(l), 0, n).ok()?;
@@ -481,14 +481,14 @@ fn tile_doc(art: &Node, w: f64, h: f64) -> Option<Document> {
 }
 
 /// Key Color eyedropper: sample the next click on the art into this dialog's `keyColor`.
-fn key_color_eyedropper(app: &mut VectorcraftApp) {
+fn key_color_eyedropper(app: &mut OracleVectorApp) {
     let back = app.session.tool_id();
     app.select_tool("eyedropper");
     app.session.set_tool_option("brushKeyColor", &json!(true));
     app.session.set_tool_option("stop", &json!(back));
 }
 
-fn colorization_body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog) {
+fn colorization_body(app: &mut OracleVectorApp, ui: &mut egui::Ui, d: &mut Dialog) {
     widgets::section_header(ui, tl!("Colorization"));
     let methods = [tl!("None"), tl!("Tints"), tl!("Tints and Shades"), tl!("Hue Shift")];
     let cur = d.str("colorization");
@@ -530,11 +530,11 @@ fn colorization_body(app: &mut VectorcraftApp, ui: &mut egui::Ui, d: &mut Dialog
 }
 
 /// Apply a sampled colour to the open Brush Options dialog (`brushKeyColor` tool request).
-pub(super) fn apply_key_color_sample(app: &mut VectorcraftApp, color: &Value) {
+pub(super) fn apply_key_color_sample(app: &mut OracleVectorApp, color: &Value) {
     let Some(d) = app.ui.dialog.as_mut().filter(|d| d.kind == super::brush_options::KIND) else { return };
     if d.str("colorization") != "hueShift" {
         return;
     }
-    let Some(c) = vectorcraft_engine::cmd::color_value(color) else { return };
+    let Some(c) = oracle_vector_engine::cmd::color_value(color) else { return };
     d.fields.insert("keyColor".into(), serde_json::to_value(c).unwrap_or_default());
 }

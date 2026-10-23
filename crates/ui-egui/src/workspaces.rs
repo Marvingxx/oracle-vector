@@ -14,7 +14,7 @@ use serde_json::{Value, json};
 
 use crate::state::{Dialog, DockTab, FloatingFlyout, FloatingPanels, UiState};
 use crate::theme::Tokens;
-use crate::{VectorcraftApp, widgets};
+use crate::{OracleVectorApp, widgets};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "camelCase")]
@@ -138,7 +138,7 @@ pub fn builtins() -> Vec<Workspace> {
 /// Preferences › Devices › Enable Touch Workspace (#394): on, a touch screen switches to the Touch
 /// workspace; off, or when no touch screen is reported, the workspace before that switch is
 /// restored if Touch was entered automatically.
-pub fn sync_touch_workspace(app: &mut VectorcraftApp, touch_screen: bool) {
+pub fn sync_touch_workspace(app: &mut OracleVectorApp, touch_screen: bool) {
     let auto = app.session.prefs.touch_workspace && touch_screen;
     if auto {
         if app.ui.workspace != TOUCH {
@@ -357,7 +357,7 @@ pub fn menu_items() -> Vec<crate::menus::Item> {
 }
 
 /// The app-bar workspace switcher's menu.
-pub fn popup(app: &mut VectorcraftApp, ui: &mut egui::Ui) {
+pub fn popup(app: &mut OracleVectorApp, ui: &mut egui::Ui) {
     ui.set_min_width(210.0);
     ui.set_max_width(240.0);
     let mut clicked: Option<(&'static str, Value)> = None;
@@ -389,7 +389,7 @@ pub fn popup(app: &mut VectorcraftApp, ui: &mut egui::Ui) {
 
 // ---------- commands ----------
 
-pub fn run_command(app: &mut VectorcraftApp, id: &str, p: &Value) -> Option<Result<Value, String>> {
+pub fn run_command(app: &mut OracleVectorApp, id: &str, p: &Value) -> Option<Result<Value, String>> {
     let s = |k: &str| p.get(k).and_then(Value::as_str).map(str::to_string);
     let r = match id {
         "window.workspace" => switch(&mut app.ui, &s("name").unwrap_or_default()).map(|name| json!({"workspace": name})),
@@ -415,7 +415,7 @@ pub fn run_command(app: &mut VectorcraftApp, id: &str, p: &Value) -> Option<Resu
 }
 
 /// OK in New Workspace / Manage Workspaces.
-pub fn confirm(app: &mut VectorcraftApp) -> Result<Value, String> {
+pub fn confirm(app: &mut OracleVectorApp) -> Result<Value, String> {
     let Some(d) = app.ui.dialog.clone() else { return Err("no dialog open".into()) };
     let r = match d.kind.as_str() {
         "newWorkspace" => save_as(&mut app.ui, &d.str("name")).map(|_| Value::Null),
@@ -427,7 +427,7 @@ pub fn confirm(app: &mut VectorcraftApp) -> Result<Value, String> {
     r
 }
 
-pub fn show(app: &mut VectorcraftApp, ctx: &egui::Context) {
+pub fn show(app: &mut OracleVectorApp, ctx: &egui::Context) {
     let Some(mut d) = app.ui.dialog.clone() else { return };
     let t = Tokens::get(ctx);
     let (mut ok, mut cancel) = (false, false);
@@ -698,10 +698,10 @@ mod tests {
 
     #[test]
     fn touch_workspace_preference_switches_and_restores() {
-        use crate::{Services, VectorcraftApp};
-        use vectorcraft_engine::Session;
+        use crate::{Services, OracleVectorApp};
+        use oracle_vector_engine::Session;
 
-        let mut app = VectorcraftApp::new(Session::new(), Services::default());
+        let mut app = OracleVectorApp::new(Session::new(), Services::default());
         app.ui.workspace = "Typography".into();
         app.session.prefs.touch_workspace = true;
         sync_touch_workspace(&mut app, true);

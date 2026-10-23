@@ -1,6 +1,6 @@
 # Plug-ins: the WebAssembly plug-in API (ABI v1)
 
-VectorCraft does not host native plug-ins built for other illustration apps: that needs unsafe FFI into
+Oracle Vector does not host native plug-ins built for other illustration apps: that needs unsafe FFI into
 arbitrary machine code and cannot work in the browser build. Instead, plug-ins are **WebAssembly modules**
 run in a sandbox. One `.wasm` file works on macOS, Windows, Linux and the web. The design follows PhotoCraft's
 plug-in API (same sandbox, same manifest and parameter schema), extended for vector documents.
@@ -26,7 +26,7 @@ This page is the contract for plug-in authors and the reference for the host (`c
 | `plugin.list` | `{}` | `{"plugins": [{id, name, version, kind, author, description, params, paramsSchema, effect?, format?, extensions?, size, source}], "folder": report}` |
 | `plugin.info` | `{"id"}` | One plug-in: the `plugin.list` entry plus `manifest`, `defaults` and `lastError` (a live effect's last failure). |
 | `plugin.run` | `{"id", "params"?: {…}, "ids"?: [...]}` (plug-in params may also be top-level keys) | Runs an object filter on the selection (or `ids`). One undo step; the result is selected. |
-| `plugin.install` | `{"path": "/x/y.wasm"}` (desktop) or `{"dataBase64": "…", "name"?}`, `"replace": bool = true` | Validates and installs a module; returns its `plugin.list` entry. The desktop app and `vectorcraft-cli` keep it in the `Plug-ins` folder next to the preferences, so it is installed again after a restart (#2541). |
+| `plugin.install` | `{"path": "/x/y.wasm"}` (desktop) or `{"dataBase64": "…", "name"?}`, `"replace": bool = true` | Validates and installs a module; returns its `plugin.list` entry. The desktop app and `oracle-vector-cli` keep it in the `Plug-ins` folder next to the preferences, so it is installed again after a restart (#2541). |
 | `plugin.remove` | `{"id"}` | Uninstalls, and deletes it from the `Plug-ins` folder. |
 | `plugin.reload` | `{"path"?: "folder"}` (default: the preference folder) | Installs every `*.wasm` in a folder; a bad module is reported and skipped. |
 
@@ -59,7 +59,7 @@ the object is drawn as if the effect weren't there, and the record is kept for w
 
 The host is [`wasmi`](https://github.com/wasmi-labs/wasmi), a pure-Rust WebAssembly interpreter
 (MIT OR Apache-2.0). It builds for `wasm32-unknown-unknown` too, so plug-ins also run in the web build. Limits
-(`vectorcraft_plugins::Limits`, defaults):
+(`oracle_vector_plugins::Limits`, defaults):
 
 | Limit | Default | On violation |
 |---|---|---|
@@ -165,7 +165,7 @@ object: its geometry (`type`, `path`, `fillRule`, `bounds`) and its `fills` and 
 from before these give geometry only). The paints are read only: an effect may draw as wide as a stroke or use a
 fill's colour to decide its shape, but it changes only the geometry.
 
-An **exporter** gets something else: the document as a native `.vectorcraft` file's JSON, as `document.save` writes it
+An **exporter** gets something else: the document as a native `.oracle-vector` file's JSON, as `document.save` writes it
 but without indentation (the format is documented in [`crates/format/src/lib.rs`](../crates/format/src/lib.rs)). That is every layer, object,
 appearance and effect record, artboard, swatch and symbol, so an exporter reads whatever the document holds; it checks
 `version`, since a later host may write a newer one. Images of 8 KiB or more are listed in `images` with their MIME
@@ -192,7 +192,7 @@ type and `blob` but without their data, which follows the JSON in a saved file; 
 ```
 
 - `type`: `"path"` or `"compound"` (a compound path: `path` holds its members' subpaths, painted as one).
-- `path`: VectorCraft's own path form. Each subpath is a run of anchors; `p` is the anchor, `in` / `out` its handles
+- `path`: Oracle Vector's own path form. Each subpath is a run of anchors; `p` is the anchor, `in` / `out` its handles
   (absent: no handle), `kind` `"Smooth"` when the handles stay collinear. Coordinates are points, y down.
 - `fills`, `strokes`: the object's fills and strokes in paint order (bottom first); `null` is no paint. A stroke has its
   `paint`, `width` in points, `join` (`"miter"`, `"round"` or `"bevel"`), `cap` (`"butt"`, `"round"` or `"square"`)
@@ -275,7 +275,7 @@ crates/plugins/example/build.sh      # cargo build --release --target wasm32-unk
 The script also refreshes `crates/plugins/tests/fixtures/desaturate.wasm`, the test fixture built from that source.
 The crate is not a workspace member. Any language that targets core WebAssembly works (C, Zig, AssemblyScript,
 WAT…), as long as the module has no imports: in Rust, `std` on `wasm32-unknown-unknown` is fine as long as it never
-touches WASI. `vectorcraft_plugins::wat::module` is the skeleton of a plug-in in WebAssembly text, which the tests
+touches WASI. `oracle_vector_plugins::wat::module` is the skeleton of a plug-in in WebAssembly text, which the tests
 build their plug-ins from; `wat::echo_exporter` is an exporter whose file is its input or its parameters (with a
 base64 encoder written out in WebAssembly text), which the tests read back what the host hands a plug-in with, and
 `wat::when_given` a plug-in whose output depends on whether its input or parameters hold a given text, which shows in a
