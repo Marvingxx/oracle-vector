@@ -5,7 +5,7 @@ use std::process::{Command, Stdio};
 
 use serde_json::{Value, json};
 
-const BIN: &str = env!("CARGO_BIN_EXE_oracle_vector-cli");
+const BIN: &str = env!("CARGO_BIN_EXE_oracle-vector-cli");
 
 /// Returns the path of `name` in `oracle-vector-cli-test-<pid>` in the temp folder. The first call removes
 /// that folder and creates it again empty.

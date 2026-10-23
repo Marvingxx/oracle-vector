@@ -8,7 +8,7 @@ use std::process::{Child, ChildStdin, ChildStdout, Command, Stdio};
 use serde_json::{Value, json};
 use oracle_vector_testkit::raster::Image;
 
-const BIN: &str = env!("CARGO_BIN_EXE_oracle_vector-cli");
+const BIN: &str = env!("CARGO_BIN_EXE_oracle-vector-cli");
 
 struct Mcp {
     child: Child,

@@ -7,7 +7,7 @@
 use std::process::{Command, Output, Stdio};
 use std::time::{Duration, Instant};
 
-const BIN: &str = env!("CARGO_BIN_EXE_oracle_vector");
+const BIN: &str = env!("CARGO_BIN_EXE_oracle-vector");
 
 /// Runs the desktop binary without a display, so a regression fails instead of opening a window.
 fn run(args: &[&str], env: &[(&str, &str)]) -> Output {
