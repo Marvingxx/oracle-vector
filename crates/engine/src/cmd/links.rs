@@ -349,7 +349,12 @@ type FileRead = (LinkInfo, RasterImage);
 /// The file at `f` read for a link like `base` (its image decoded).
 fn read_image(f: &mut Found, base: &LinkInfo) -> Result<FileRead> {
     let bytes = f.read()?;
-    Ok((f.link(&bytes, base), fileio::raster_image(&bytes)?))
+    // An Oracle Edit document shows the picture Oracle Edit draws of it; the link follows the file.
+    let image = match crate::oracle_files::foreign_picture(&f.path) {
+        Some(picture) => fileio::raster_image(&picture?)?,
+        None => fileio::raster_image(&bytes)?,
+    };
+    Ok((f.link(&bytes, base), image))
 }
 
 /// A linked file read for the objects that show it.

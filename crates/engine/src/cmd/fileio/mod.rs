@@ -733,8 +733,12 @@ pub const RTF_EXTS: &[&str] = &["rtf"];
 /// Word documents: File → Place sets them as area type with their formatting.
 pub const DOCX_EXTS: &[&str] = &["docx"];
 
-/// Every extension File → Place reads: [`OPEN_EXTS`], [`TEXT_EXTS`], [`RTF_EXTS`] and
-/// [`DOCX_EXTS`].
+/// Documents of the other Oracle apps File → Place reads, drawn by them (`oracle_files`): Oracle
+/// Edit's `.pcraft`. Placed, not opened.
+pub const ORACLE_EXTS: &[&str] = &["pcraft"];
+
+/// Every extension File → Place reads: [`OPEN_EXTS`], [`ORACLE_EXTS`], [`TEXT_EXTS`], [`RTF_EXTS`]
+/// and [`DOCX_EXTS`].
 pub const PLACE_EXTS: &[&str] = &[
     "oracle-vector",
     "drawcraft",
@@ -767,6 +771,7 @@ pub const PLACE_EXTS: &[&str] = &[
     "af",
     "afdesign",
     "afpub",
+    "pcraft",
     "txt",
     "rtf",
     "docx",

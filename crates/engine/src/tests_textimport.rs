@@ -469,8 +469,8 @@ fn malformed_docx_fails_cleanly() {
 
 #[test]
 fn place_reads_what_open_reads_and_text_files() {
-    use cmd::fileio::{DOCX_EXTS, OPEN_EXTS, PLACE_EXTS, RTF_EXTS, TEXT_EXTS};
-    assert_eq!(PLACE_EXTS, [OPEN_EXTS, TEXT_EXTS, RTF_EXTS, DOCX_EXTS].concat());
+    use cmd::fileio::{DOCX_EXTS, OPEN_EXTS, ORACLE_EXTS, PLACE_EXTS, RTF_EXTS, TEXT_EXTS};
+    assert_eq!(PLACE_EXTS, [OPEN_EXTS, ORACLE_EXTS, TEXT_EXTS, RTF_EXTS, DOCX_EXTS].concat());
     let filters: Vec<_> = cmd::fileio::place_filters().collect();
     assert_eq!((filters.first(), filters.last()), (Some(&("All placeable files", PLACE_EXTS)), Some(&("Word", DOCX_EXTS))));
     assert_eq!(filters.get(filters.len() - 3..), Some(&[("Text", TEXT_EXTS), ("RTF", RTF_EXTS), ("Word", DOCX_EXTS)][..]));

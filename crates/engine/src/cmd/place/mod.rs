@@ -142,6 +142,17 @@ pub(crate) fn pt_per_px(ppi: Option<(f64, f64)>) -> (f64, f64) {
 fn load(p: &Value, cmd: &str, board: Option<Rect>) -> Result<Loaded> {
     let src = fileio::source(p, cmd)?;
     let name = fileio::file_name(src.name);
+    // An Oracle Edit document: the picture Oracle Edit draws of it, linked to the document itself.
+    if let Some(path) = src.path
+        && let Some(picture) = crate::oracle_files::foreign_picture(path)
+        && let Some(format) = fileio::format("png")
+    {
+        let img = fileio::raster_image(&picture?)?;
+        let (sx, sy) = pt_per_px(img.ppi);
+        let natural = Rect::new(0.0, 0.0, img.width as f64 * sx, img.height as f64 * sy);
+        let link = Some(super::links::link_info(path, &src.bytes));
+        return Ok(Loaded { name, format, art: Art::Image(img), natural, warnings: vec![], link, board: None });
+    }
     // An Affinity file is recognised by its signature, whatever its name says.
     if fileio::TEXT_EXTS.contains(&fileio::extension(src.name).as_str()) && !oracle_vector_affinity::is_affinity(&src.bytes) {
         let text = text::import(&src.bytes, text::TextOptions::parse(p, cmd)?, cmd)?;

@@ -10,6 +10,7 @@ pub mod cmd;
 pub mod file_access;
 pub mod guard;
 pub mod inspect;
+pub mod oracle_files;
 pub mod journal;
 pub mod link_watch;
 pub mod namematch;

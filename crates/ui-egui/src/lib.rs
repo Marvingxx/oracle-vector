@@ -36,6 +36,8 @@ pub mod i18n;
 pub mod icon_data;
 pub mod icons;
 pub mod io;
+#[cfg(not(target_arch = "wasm32"))]
+pub mod library_send;
 pub mod menus;
 pub mod native_menu;
 pub mod opening;
@@ -1432,8 +1434,13 @@ impl OracleVectorApp {
     /// modifiers egui holds (`i.modifiers`), so a synthetic key, button or wheel turn holds its own
     /// for the frames it spans (a drag's moves included); the keyboard's come back after.
     pub fn raw_input_hook(&mut self, raw: &mut egui::RawInput) {
+        // Files dropped on the Oracle Library window go into the library, not onto the artboard;
+        // assets dragged out of it arrive as dropped files.
         #[cfg(not(target_arch = "wasm32"))]
-        self.oracle_library.inject_drops(raw);
+        {
+            self.oracle_library.claim_drops(raw, None);
+            self.oracle_library.inject_drops(raw);
+        }
         // The native menu's key equivalents become the input their keys make, ahead of what came
         // after them (see `native_menu`).
         let keys = self.services.native_menu.as_mut().map(native_menu::NativeMenu::take_keys).unwrap_or_default();

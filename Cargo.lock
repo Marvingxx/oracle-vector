@@ -3060,8 +3060,18 @@ dependencies = [
  "image",
  "log",
  "oracle-library",
+ "oracle-suite-link",
  "resvg",
  "rfd",
+ "winsafe",
+]
+
+[[package]]
+name = "oracle-suite-link"
+version = "0.1.0"
+dependencies = [
+ "dirs",
+ "log",
 ]
 
 [[package]]
@@ -3221,6 +3231,7 @@ dependencies = [
  "image",
  "kurbo 0.13.1",
  "log",
+ "oracle-suite-link",
  "oracle-vector-affinity",
  "oracle-vector-brush",
  "oracle-vector-cad",
