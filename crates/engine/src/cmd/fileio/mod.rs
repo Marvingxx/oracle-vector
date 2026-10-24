@@ -734,8 +734,8 @@ pub const RTF_EXTS: &[&str] = &["rtf"];
 pub const DOCX_EXTS: &[&str] = &["docx"];
 
 /// Documents of the other Oracle apps File → Place reads, drawn by them (`oracle_files`): Oracle
-/// Edit's `.pcraft`. Placed, not opened.
-pub const ORACLE_EXTS: &[&str] = &["pcraft"];
+/// Edit's `.oracle-edit` (`.pcraft` before the rename). Placed, not opened.
+pub const ORACLE_EXTS: &[&str] = &["oracle-edit", "pcraft"];
 
 /// Every extension File → Place reads: [`OPEN_EXTS`], [`ORACLE_EXTS`], [`TEXT_EXTS`], [`RTF_EXTS`]
 /// and [`DOCX_EXTS`].
@@ -771,6 +771,7 @@ pub const PLACE_EXTS: &[&str] = &[
     "af",
     "afdesign",
     "afpub",
+    "oracle-edit",
     "pcraft",
     "txt",
     "rtf",

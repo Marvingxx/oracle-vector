@@ -42,7 +42,7 @@ mod tests {
     use super::*;
 
     /// File types and wording a raster image editor's packaging carries (lowercase).
-    const RASTER_EDITOR: &[&str] = &["pcraft", "psd", "psb", "qoi", "photo", "rastergraphics", "image editor"];
+    const RASTER_EDITOR: &[&str] = &["oracle-edit", "pcraft", "psd", "psb", "qoi", "photo", "rastergraphics", "image editor"];
 
     fn text_files(dir: &Path, out: &mut Vec<(String, String)>) {
         for e in std::fs::read_dir(dir).unwrap().flatten() {

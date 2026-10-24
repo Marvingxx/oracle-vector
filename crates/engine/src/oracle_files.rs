@@ -1,7 +1,7 @@
 //! Documents of the other Oracle apps in Oracle Vector, without an export step.
 //!
-//! An Oracle Edit `.pcraft` is placed as the picture Oracle Edit draws of it (PNG): a linked image
-//! whose link is the `.pcraft` itself, so the link watch sees it change when Oracle Edit saves it
+//! An Oracle Edit `.oracle-edit` is placed as the picture Oracle Edit draws of it (PNG): a linked image
+//! whose link is the `.oracle-edit` itself, so the link watch sees it change when Oracle Edit saves it
 //! and Update Links reads it again through a new drawing. The drawing is
 //! `oracle_suite_link::render`, cached per version of the file.
 
@@ -10,7 +10,7 @@ use crate::EngineError;
 use crate::Result;
 
 /// Whether `name` (a path or file name) is a document another Oracle app draws as a picture for
-/// Oracle Vector (an Oracle Edit `.pcraft`).
+/// Oracle Vector (an Oracle Edit `.oracle-edit`, or `.pcraft` from before the rename).
 #[cfg(not(target_arch = "wasm32"))]
 pub fn is_foreign_picture(name: &str) -> bool {
     oracle_suite_link::oracle_format(std::path::Path::new(name)).is_some_and(|f| f.app == oracle_suite_link::App::Edit)
@@ -21,7 +21,7 @@ pub fn is_foreign_picture(_name: &str) -> bool {
     false
 }
 
-/// For an Oracle Edit `.pcraft` at `path`: the picture (PNG) Oracle Edit draws of it. `None` for
+/// For an Oracle Edit `.oracle-edit` at `path`: the picture (PNG) Oracle Edit draws of it. `None` for
 /// any other file (and on the web, where no app can draw).
 #[cfg(not(target_arch = "wasm32"))]
 pub fn foreign_picture(path: &str) -> Option<Result<Vec<u8>>> {
@@ -45,7 +45,7 @@ mod tests {
 
     use crate::Session;
 
-    /// Oracle Edit saving a `w`×`h` picture of `rgb` as the `.pcraft` at `doc` (a real save).
+    /// Oracle Edit saving a `w`×`h` picture of `rgb` as the `.oracle-edit` at `doc` (a real save).
     fn save_in_edit(doc: &std::path::Path, w: u32, h: u32, rgb: [u8; 3]) -> Option<()> {
         let cli = oracle_suite_link::App::Edit.cli()?;
         let png = doc.with_extension("png");
@@ -57,12 +57,13 @@ mod tests {
 
     #[test]
     fn an_edit_document_places_linked_and_follows_its_saves() {
+        assert!(super::is_foreign_picture("C:/photos/Retouche.ORACLE-EDIT"));
         assert!(super::is_foreign_picture("C:/photos/Retouche.PCRAFT"));
         assert!(!super::is_foreign_picture("logo.oracle-vector"));
         let dir = std::env::temp_dir().join(format!("oracle-vector-pcraft-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
-        let doc = dir.join("photo.pcraft");
+        let doc = dir.join("photo.oracle-edit");
         if save_in_edit(&doc, 30, 20, [211, 28, 59]).is_none() {
             return;
         }
@@ -72,7 +73,7 @@ mod tests {
         let links = s.execute("links.list", &json!({})).unwrap();
         let link = &links["links"][0];
         assert_eq!(link["status"], "ok", "{links}");
-        assert!(link["path"].as_str().unwrap().ends_with("photo.pcraft"), "{links}");
+        assert!(link["path"].as_str().unwrap().ends_with("photo.oracle-edit"), "{links}");
         // The link watch has seen the file once (the app looks every two seconds)…
         s.execute("links.updateChanged", &json!({})).unwrap();
         // …then Oracle Edit saves it again, another size: read again through a new drawing.

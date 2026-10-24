@@ -207,7 +207,7 @@ pub(crate) fn open_file(app: &mut OracleVectorApp, p: &Value, reveal: bool) -> R
         crate::dialogs::settle(app);
         return Ok(json!({ "path": path }));
     }
-    // Another Oracle app's document (an Oracle Edit `.pcraft`): opened in that app; saving it there
+    // Another Oracle app's document (an Oracle Edit `.oracle-edit`): opened in that app; saving it there
     // updates the image here (the link watch).
     #[cfg(not(target_arch = "wasm32"))]
     if !reveal && oracle_vector_engine::oracle_files::is_foreign_picture(&path) {

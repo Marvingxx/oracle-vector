@@ -10,7 +10,7 @@
 //! Levels: `info` for Oracle Vector's own crates, `warn` for everything else (wgpu and naga are
 //! chatty). `RUST_LOG` replaces that with env_logger-style directives: `debug`,
 //! `warn,oracle_vector_render=trace`, `wgpu_core=info`. A directive ending in `*` matches every
-//! target that starts with it (`oracle-vector*=debug`).
+//! target that starts with it (`oracle_vector*=debug`).
 //!
 //! Records logged before the settings directory is known are kept (up to [`MAX_PENDING`]) and
 //! written once the file is attached. Writing never panics: a file that can't be created or
@@ -36,7 +36,7 @@ pub const MAX_FILE_BYTES: u64 = 16 * 1024 * 1024;
 /// Records kept in memory until the log file is attached.
 pub const MAX_PENDING: usize = 512;
 /// The built-in filter when `RUST_LOG` is unset or empty.
-pub const DEFAULT_FILTER: &str = "warn,oracle-vector*=info";
+pub const DEFAULT_FILTER: &str = "warn,oracle_vector*=info";
 
 /// Per-target level filter parsed from env_logger-style directives.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -315,7 +315,7 @@ mod tests {
     #[test]
     fn the_default_filter_shows_oracle_vector_info_and_other_crates_warnings() {
         let f = Filter::parse(DEFAULT_FILTER);
-        assert_eq!(f.level_for("oracle-vector"), LevelFilter::Info);
+        assert_eq!(f.level_for("oracle_vector"), LevelFilter::Info);
         assert_eq!(f.level_for("oracle_vector::window"), LevelFilter::Info);
         assert_eq!(f.level_for("oracle_vector_engine::guard"), LevelFilter::Info);
         assert_eq!(f.level_for("oracle_vector_ui_egui::io"), LevelFilter::Info);
@@ -335,14 +335,14 @@ mod tests {
         // A module name is matched at `::` boundaries, not as a bare prefix.
         assert_eq!(f.level_for("wgpu_core_extra"), LevelFilter::Info);
         // A trailing `*` is a prefix.
-        assert_eq!(Filter::parse("oracle-vector*=debug").level_for("oracle_vector_text::shape"), LevelFilter::Debug);
-        assert_eq!(Filter::parse("oracle-vector*=debug").level_for("eframe"), LevelFilter::Error);
+        assert_eq!(Filter::parse("oracle_vector*=debug").level_for("oracle_vector_text::shape"), LevelFilter::Debug);
+        assert_eq!(Filter::parse("oracle_vector*=debug").level_for("eframe"), LevelFilter::Error);
         // A bare target name sets that target to the most verbose level, as env_logger does.
         assert_eq!(Filter::parse("naga").level_for("naga::front"), LevelFilter::Trace);
         assert_eq!(Filter::parse("naga").level_for("eframe"), LevelFilter::Error);
         // Levels are case-insensitive and surrounding blanks are ignored.
-        assert_eq!(Filter::parse(" WARN , oracle-vector = Debug ").level_for("oracle-vector"), LevelFilter::Debug);
-        assert_eq!(Filter::parse(" WARN , oracle-vector = Debug ").level_for("eframe"), LevelFilter::Warn);
+        assert_eq!(Filter::parse(" WARN , oracle_vector = Debug ").level_for("oracle_vector"), LevelFilter::Debug);
+        assert_eq!(Filter::parse(" WARN , oracle_vector = Debug ").level_for("eframe"), LevelFilter::Warn);
     }
 
     #[test]
@@ -355,29 +355,29 @@ mod tests {
             "=",
             "==",
             "=debug",
-            "oracle-vector=",
+            "oracle_vector=",
             "nonsense=loud",
             "🦀=info",
             "*",
             "*=",
             "=*",
             "a=b=c",
-            "warn,,oracle-vector=DEBUG",
+            "warn,,oracle_vector=DEBUG",
             "\0",
             "é::ü=trace",
             &long,
             &many,
         ] {
             let f = Filter::parse(spec);
-            for target in ["", "oracle-vector", "🦀", "a::b", "*"] {
+            for target in ["", "oracle_vector", "🦀", "a::b", "*"] {
                 let _ = f.level_for(target);
             }
             let _ = f.max();
         }
-        assert_eq!(Filter::parse("warn,,oracle-vector=DEBUG").level_for("oracle-vector"), LevelFilter::Debug);
+        assert_eq!(Filter::parse("warn,,oracle_vector=DEBUG").level_for("oracle_vector"), LevelFilter::Debug);
         // An unknown level is skipped: that target keeps the default.
         assert_eq!(Filter::parse("nonsense=loud").level_for("nonsense"), LevelFilter::Error);
-        assert_eq!(Filter::parse("oracle-vector=").level_for("oracle-vector"), LevelFilter::Error);
+        assert_eq!(Filter::parse("oracle_vector=").level_for("oracle_vector"), LevelFilter::Error);
         assert_eq!(Filter::parse("=debug").max(), LevelFilter::Error);
         assert_eq!(Filter::parse("🦀=info").level_for("🦀::claw"), LevelFilter::Info);
     }
@@ -414,8 +414,8 @@ mod tests {
     #[test]
     fn a_line_carries_time_level_thread_target_and_message() {
         assert_eq!(
-            format_line("2026-10-08T07:59:17.728Z", log::Level::Info, "main", "oracle-vector", "rendering with Mesa (Vulkan, IntegratedGpu)"),
-            "2026-10-08T07:59:17.728Z INFO  [main] oracle-vector: rendering with Mesa (Vulkan, IntegratedGpu)\n"
+            format_line("2026-10-08T07:59:17.728Z", log::Level::Info, "main", "oracle_vector", "rendering with Mesa (Vulkan, IntegratedGpu)"),
+            "2026-10-08T07:59:17.728Z INFO  [main] oracle_vector: rendering with Mesa (Vulkan, IntegratedGpu)\n"
         );
         // A multi-line message keeps its lines; the record still ends in one newline.
         assert!(format_line("t", log::Level::Error, "w", "x", "a\nb\n").ends_with("x: a\nb\n"));
@@ -522,17 +522,17 @@ mod tests {
         let record = |level, target: &'static str, msg: &'static str| {
             logger.log(&log::Record::builder().level(level).target(target).args(format_args!("{msg}")).build());
         };
-        record(log::Level::Info, "oracle-vector", "before the settings directory");
+        record(log::Level::Info, "oracle_vector", "before the settings directory");
         record(log::Level::Info, "wgpu_core::device", "too chatty");
         let path = logger.attach_dir(&dir).expect("attach");
         assert_eq!(path, dir.join(LOG_FILE));
         record(log::Level::Warn, "wgpu_hal::vulkan", "a real warning");
         record(log::Level::Error, "oracle_vector_engine::guard", "recovered from a panic: boom");
-        record(log::Level::Debug, "oracle-vector", "below info");
+        record(log::Level::Debug, "oracle_vector", "below info");
         let text = read(&path);
         let lines: Vec<&str> = text.lines().collect();
         assert_eq!(lines.len(), 3, "{text}");
-        assert!(lines[0].contains(" INFO  [") && lines[0].ends_with("oracle-vector: before the settings directory"), "{text}");
+        assert!(lines[0].contains(" INFO  [") && lines[0].ends_with("oracle_vector: before the settings directory"), "{text}");
         assert!(lines[1].ends_with("wgpu_hal::vulkan: a real warning"), "{text}");
         assert!(lines[2].contains(" ERROR [") && lines[2].ends_with("oracle_vector_engine::guard: recovered from a panic: boom"), "{text}");
         assert!(logger.enabled(&log::Metadata::builder().level(log::Level::Info).target("oracle_vector_ui_egui").build()));
@@ -555,7 +555,7 @@ mod tests {
                 std::thread::spawn(move || {
                     for i in 0..100 {
                         l.log(
-                            &log::Record::builder().level(log::Level::Info).target("oracle-vector").args(format_args!("thread {t} record {i}")).build(),
+                            &log::Record::builder().level(log::Level::Info).target("oracle_vector").args(format_args!("thread {t} record {i}")).build(),
                         );
                     }
                 })
@@ -566,7 +566,7 @@ mod tests {
         }
         let text = read(&path);
         assert_eq!(text.lines().count(), 800);
-        assert!(text.lines().all(|l| l.contains(" oracle-vector: thread ")), "{text}");
+        assert!(text.lines().all(|l| l.contains(" oracle_vector: thread ")), "{text}");
         let _ = std::fs::remove_dir_all(&dir);
     }
 
@@ -597,8 +597,8 @@ mod tests {
         .join();
         assert!(logger.sink.is_poisoned());
         let path = logger.attach_dir(&dir).expect("attach");
-        logger.log(&log::Record::builder().level(log::Level::Warn).target("oracle-vector").args(format_args!("after the poison")).build());
-        assert!(read(&path).contains("oracle-vector: after the poison"));
+        logger.log(&log::Record::builder().level(log::Level::Warn).target("oracle_vector").args(format_args!("after the poison")).build());
+        assert!(read(&path).contains("oracle_vector: after the poison"));
         let _ = std::fs::remove_dir_all(&dir);
     }
 }
