@@ -63,6 +63,9 @@ pub const PREVIEW_MAX: u32 = 256;
 pub const EXTENSION: &str = "oracle-vector";
 /// Extension and format name from before the project was renamed (DrawCraft): still opened.
 pub const LEGACY_EXTENSION: &str = "drawcraft";
+/// Extension and format name from before the Oracle rename (VectorCraft): still opened, and
+/// rewritten in today's format by the next save.
+pub const FORMER_EXTENSION: &str = "vectorcraft";
 /// Most bytes the JSON of a compressed file may unpack to (a guard against decompression bombs,
 /// as are [`MAX_BLOB`] and [`MAX_BLOBS`]). A compressed save refuses a document past any of them,
 /// so every file Oracle Vector writes reads back.
@@ -78,7 +81,7 @@ const MAX_UNPACKED: u64 = 512 << 20;
 
 /// Is `ext` (without the dot, any case) a native document extension?
 pub fn is_native_ext(ext: &str) -> bool {
-    ext.eq_ignore_ascii_case(EXTENSION) || ext.eq_ignore_ascii_case(LEGACY_EXTENSION)
+    ext.eq_ignore_ascii_case(EXTENSION) || ext.eq_ignore_ascii_case(LEGACY_EXTENSION) || ext.eq_ignore_ascii_case(FORMER_EXTENSION)
 }
 
 /// Does the file name or path end in a native document extension?
@@ -502,7 +505,7 @@ pub struct NativeFile {
 pub struct FileInfo {
     /// The file's format version (see [`VERSION`]).
     pub version: u32,
-    /// Written under the project's former name (`"format": "drawcraft"`).
+    /// Written under one of the project's former names (`"format": "drawcraft"` or `"vectorcraft"`).
     pub legacy: bool,
 }
 
@@ -526,7 +529,7 @@ pub fn load_file(bytes: &[u8]) -> Result<NativeFile, FormatError> {
         let why = if e.to_string().contains("recursion limit") { format!("its objects are nested too deep ({e})") } else { e.to_string() };
         FormatError::NotOracleVector(why)
     })?;
-    if f.format != EXTENSION && f.format != LEGACY_EXTENSION {
+    if f.format != EXTENSION && f.format != LEGACY_EXTENSION && f.format != FORMER_EXTENSION {
         return Err(FormatError::NotOracleVector(format!("format is `{}`", f.format)));
     }
     if f.version > VERSION {
@@ -576,7 +579,7 @@ pub fn load_file(bytes: &[u8]) -> Result<NativeFile, FormatError> {
     // limit: the walk recurses).
     doc.keep_scripts_in_range();
     let profiles = f.profiles.into_iter().filter_map(|(name, icc)| Some((name, bytes_of(&icc)?))).collect();
-    Ok(NativeFile { doc, depth_notes, info: FileInfo { version: f.version, legacy: f.format == LEGACY_EXTENSION }, profiles })
+    Ok(NativeFile { doc, depth_notes, info: FileInfo { version: f.version, legacy: f.format == LEGACY_EXTENSION || f.format == FORMER_EXTENSION }, profiles })
 }
 
 /// The members of a native file besides its document (which is skipped, not decoded).
