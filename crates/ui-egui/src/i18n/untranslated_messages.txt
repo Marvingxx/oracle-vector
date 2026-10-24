@@ -216,6 +216,7 @@ Text options: {e}
 `{name}` is a tint of `{base}`: edit `{base}` (a tint swatch only takes a new name)
 `{name}` is a working space: choose another with edit.colorSettings first
 `{name}` is built in and stays
+`{name}` isn't a brand library
 `{name}` takes a paint of its own kind (colour, gradient or pattern)
 `{name}`: Minimum must not exceed Desired, nor Desired Maximum
 `{n}` can't be deleted

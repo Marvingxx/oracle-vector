@@ -5384,3 +5384,5 @@ axis	Y Axis	Άξονας Y
 @msg	Sent to {name}	Στάλθηκε στο {name}
 @msg	the document couldn't be stored in the Oracle Library	Δεν ήταν δυνατή η αποθήκευση του εγγράφου στη βιβλιοθήκη Oracle
 	Send to Oracle Motion	Αποστολή στο Oracle Motion
+	Update Brand Colors	Ενημέρωση χρωμάτων επωνυμίας
+	Brands	Επωνυμίες

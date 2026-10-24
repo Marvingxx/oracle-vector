@@ -5048,3 +5048,5 @@ axis	Y Axis	Asse Y
 @msg	Sent to {name}	Inviato a {name}
 @msg	the document couldn't be stored in the Oracle Library	Impossibile salvare il documento nella libreria Oracle
 	Send to Oracle Motion	Invia a Oracle Motion
+	Update Brand Colors	Aggiorna colori del marchio
+	Brands	Marchi

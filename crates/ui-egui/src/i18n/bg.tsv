@@ -5388,3 +5388,5 @@ axis	Y Axis	Y ос
 @msg	Sent to {name}	Изпратено към {name}
 @msg	the document couldn't be stored in the Oracle Library	Документът не можа да бъде записан в библиотеката Oracle
 	Send to Oracle Motion	Изпращане към Oracle Motion
+	Update Brand Colors	Обновяване на цветовете на марката
+	Brands	Марки

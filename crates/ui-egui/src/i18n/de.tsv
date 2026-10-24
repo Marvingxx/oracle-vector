@@ -5014,3 +5014,5 @@ axis	Y Axis	Y-Achse
 @msg	Sent to {name}	An {name} gesendet
 @msg	the document couldn't be stored in the Oracle Library	Das Dokument konnte nicht in der Oracle-Bibliothek gespeichert werden
 	Send to Oracle Motion	An Oracle Motion senden
+	Update Brand Colors	Markenfarben aktualisieren
+	Brands	Marken

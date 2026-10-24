@@ -5110,3 +5110,5 @@ axis	Y Axis	Y 軸
 @msg	Sent to {name}	{name} に送りました
 @msg	the document couldn't be stored in the Oracle Library	ドキュメントを Oracle ライブラリに保存できませんでした
 	Send to Oracle Motion	Oracle Motion に送る
+	Update Brand Colors	ブランドカラーを更新
+	Brands	ブランド

@@ -5431,3 +5431,5 @@ axis	Y Axis	Axe Y
 @msg	Sent to {name}	Envoyé vers {name}
 @msg	the document couldn't be stored in the Oracle Library	Le document n'a pas pu être rangé dans la Bibliothèque Oracle
 	Send to Oracle Motion	Envoyer vers Oracle Motion
+	Update Brand Colors	Mettre à jour les couleurs de la marque
+	Brands	Marques

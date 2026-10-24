@@ -5404,3 +5404,5 @@ axis	Y Axis	Sumbu Y
 @msg	Sent to {name}	Terkirim ke {name}
 @msg	the document couldn't be stored in the Oracle Library	Dokumen tidak dapat disimpan ke Pustaka Oracle
 	Send to Oracle Motion	Kirim ke Oracle Motion
+	Update Brand Colors	Perbarui Warna Merek
+	Brands	Merek

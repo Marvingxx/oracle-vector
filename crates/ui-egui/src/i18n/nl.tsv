@@ -5447,3 +5447,5 @@ axis	Y Axis	Y-as
 @msg	Sent to {name}	Verstuurd naar {name}
 @msg	the document couldn't be stored in the Oracle Library	Het document kon niet in de Oracle-bibliotheek worden opgeslagen
 	Send to Oracle Motion	Naar Oracle Motion sturen
+	Update Brand Colors	Merkkleuren bijwerken
+	Brands	Merken

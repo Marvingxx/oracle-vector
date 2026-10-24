@@ -40,6 +40,8 @@ pub mod io;
 pub mod library_send;
 #[cfg(not(target_arch = "wasm32"))]
 pub mod send_to;
+#[cfg(not(target_arch = "wasm32"))]
+pub mod brand_swatches;
 pub mod menus;
 pub mod native_menu;
 pub mod opening;
@@ -1358,6 +1360,9 @@ impl OracleVectorApp {
         // What the other Oracle apps sent (Send to): placed, linked.
         #[cfg(not(target_arch = "wasm32"))]
         crate::send_to::poll(self, ctx);
+        // The brands of Oracle Brand Kit, as swatch libraries kept up to date.
+        #[cfg(not(target_arch = "wasm32"))]
+        crate::brand_swatches::poll(self, ctx);
         // The Oracle Library window; what is dragged out of it arrives as dropped files.
         #[cfg(not(target_arch = "wasm32"))]
         self.oracle_library.ui(ctx, i18n::current().code() == "fr");

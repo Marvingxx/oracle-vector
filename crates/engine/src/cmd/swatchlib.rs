@@ -77,6 +77,15 @@ pub fn specs() -> Vec<CommandSpec> {
             load
         ),
         cmd!(
+            "swatch.library.updateBrand",
+            "Update Brand Colors",
+            [],
+            None,
+            "{library: id or name of a brand library (category \"brand\": a brand of Oracle Brand Kit)} bring the document's colour group of that brand (\"Marque · <brand>\", made by swatch.library.add) up to date: each of its swatches named as a brand colour takes the brand's colour (fills, strokes and tints linked to it follow), and the brand's colours the group lacks are added to it, as one undo step. A document without the group is left as it is → {library, updated: [names], added: [names]}",
+            has_doc,
+            update_brand
+        ),
+        cmd!(
             "swatch.library.copyToUser",
             "Copy to User Defined",
             ["Window", "Swatch Libraries"],
@@ -131,6 +140,48 @@ impl LibraryFile for SwatchLibrary {
 
 /// The extensions of library files [`palette_io::read_bytes`] reads.
 pub const LIBRARY_EXTS: &[&str] = &["vcswatches", "gpl", "ase", "acb"];
+
+/// The start of a brand's colour group name: `Marque · Maison Été` (as in Oracle Edit).
+pub const BRAND_GROUP: &str = "Marque · ";
+
+/// The swatch library of a brand of Oracle Brand Kit: its colours (name, `#RRGGBB`) as global
+/// swatches in one colour group named after the brand, so adding the library to a document makes
+/// that group ([`update_brand`] keeps it up to date). Colours that aren't hex values are left out.
+pub fn brand_library(name: &str, colors: &[(String, String)]) -> SwatchLibrary {
+    let mut swatches: Vec<Swatch> = Vec::new();
+    for (n, hex) in colors {
+        let Some(color) = oracle_vector_color::Color::from_hex(hex) else { continue };
+        let n = if n.trim().is_empty() { hex.trim().to_string() } else { n.trim().to_string() };
+        // Names are unique in a library.
+        let mut unique = n.clone();
+        let mut i = 2;
+        while swatches.iter().any(|w| w.name == unique) {
+            unique = format!("{n} {i}");
+            i += 1;
+        }
+        swatches.push(Swatch { name: unique, paint: Paint::solid(color), global: true, spot: false });
+    }
+    SwatchLibrary { name: name.to_string(), swatches: vec![], groups: vec![SwatchGroup { name: format!("{BRAND_GROUP}{name}"), swatches }] }
+}
+
+impl Libraries<SwatchLibrary> {
+    /// The brands of Oracle Brand Kit, as libraries `(project id, library)` ([`brand_library`]):
+    /// listed first among these libraries, under category "brand" with ids `brand/<project id>`,
+    /// in place of the brands set before. Returns whether anything changed.
+    pub fn set_brands(&mut self, brands: Vec<(String, SwatchLibrary)>) -> bool {
+        let fresh: Vec<Extra<SwatchLibrary>> = brands
+            .into_iter()
+            .map(|(id, lib)| Extra { info: LibraryInfo { id: format!("brand/{id}"), name: lib.name.clone(), category: "brand" }, path: None, lib: Arc::new(lib) })
+            .collect();
+        let old: Vec<&Extra<SwatchLibrary>> = self.extra.iter().filter(|e| e.info.category == "brand").collect();
+        if old.len() == fresh.len() && old.iter().zip(&fresh).all(|(a, b)| a.info == b.info && a.lib == b.lib) {
+            return false;
+        }
+        self.extra.retain(|e| e.info.category != "brand");
+        self.extra.splice(0..0, fresh);
+        true
+    }
+}
 
 /// A library file the save commands write ([`Libraries::write`]).
 pub(crate) enum FileData {
@@ -366,7 +417,7 @@ pub(crate) fn stem(name: &str) -> &str {
 pub struct LibraryInfo {
     pub id: String,
     pub name: String,
-    /// "builtIn", "gradients", "user" or "loaded".
+    /// "builtIn", "gradients", "brand", "user" or "loaded".
     pub category: &'static str,
 }
 
@@ -628,6 +679,50 @@ fn add(s: &mut Session, p: &Value) -> Result<Value> {
         out["applied"] = json!(name);
     }
     Ok(out)
+}
+
+fn update_brand(s: &mut Session, p: &Value) -> Result<Value> {
+    const C: &str = "swatch.library.updateBrand";
+    let (info, lib) = library_param(s, p, C)?;
+    if info.category != "brand" {
+        let name = &info.name;
+        return Err(bad(C, format!("`{name}` isn't a brand library")));
+    }
+    let Some(group) = lib.groups.first() else { return Ok(json!({"library": info.id, "updated": [], "added": []})) };
+    let d = &s.doc()?.doc;
+    let Some(have) = d.swatch_groups.iter().find(|g| g.name == group.name) else {
+        return Ok(json!({"library": info.id, "updated": [], "added": []}));
+    };
+    let mut changed: Vec<(String, String)> = vec![];
+    let mut missing: Vec<String> = vec![];
+    for w in &group.swatches {
+        let Some(color) = w.paint.color() else { continue };
+        match have.swatches.iter().find(|x| x.name == w.name) {
+            // A swatch the designer turned into something else (a gradient, a tint) is theirs.
+            Some(x) => {
+                if let Paint::Solid { color: now, swatch: None, .. } = &x.paint
+                    && *now != color
+                {
+                    changed.push((w.name.clone(), color.to_hex()));
+                }
+            }
+            None if d.swatch(&w.name).is_none() => missing.push(w.name.clone()),
+            None => {}
+        }
+    }
+    if changed.is_empty() && missing.is_empty() {
+        return Ok(json!({"library": info.id, "updated": [], "added": []}));
+    }
+    let undo_before = s.doc()?.history.undo.len();
+    for (name, hex) in &changed {
+        s.execute("swatch.edit", &json!({"name": name, "color": hex}))?;
+    }
+    let mut added = json!([]);
+    if !missing.is_empty() {
+        added = s.execute("swatch.library.add", &json!({"library": info.id, "names": missing}))?["added"].clone();
+    }
+    squash(s, undo_before, "Update Brand Colors");
+    Ok(json!({"library": info.id, "updated": changed.iter().map(|(n, _)| n).collect::<Vec<_>>(), "added": added}))
 }
 
 fn reset_defaults(s: &mut Session, p: &Value) -> Result<Value> {

@@ -568,3 +568,42 @@ fn gradient_libraries_are_listed_and_gradient_swatches_rename_and_take_new_gradi
     run(&mut s, "swatch.edit", json!({"name": "Red", "paint": {"color": "#00ff00"}}));
     assert_eq!(doc(&s).swatch("Red").unwrap().paint.color().map(|c| c.to_hex()), Some("#00ff00".into()));
 }
+
+/// A brand of Oracle Brand Kit is a swatch library whose colour group a document takes, then keeps
+/// up to date: a colour changed in the brand recolours the art linked to it, a new one is added.
+#[test]
+fn a_brand_library_keeps_the_documents_brand_colours_up_to_date() {
+    use crate::cmd::swatchlib::brand_library;
+    let mut s = session();
+    let brand = |red: &str, extra: bool| {
+        let mut colors = vec![("Rouge Été".to_string(), red.to_string()), ("Nuit".to_string(), "#101820".to_string())];
+        if extra {
+            colors.push(("Sable".to_string(), "#e8d9b5".to_string()));
+        }
+        brand_library("Maison Été", &colors)
+    };
+    assert!(s.swatch_libraries.set_brands(vec![("p-1".into(), brand("#d31c3b", false))]));
+    assert!(!s.swatch_libraries.set_brands(vec![("p-1".into(), brand("#d31c3b", false))]), "the same brands: nothing changed");
+    let list = s.execute("swatch.library.list", &json!({})).unwrap();
+    assert!(list["libraries"].as_array().unwrap().iter().any(|l| l["id"] == "brand/p-1" && l["category"] == "brand" && l["name"] == "Maison Été"), "{list}");
+    s.execute("swatch.library.add", &json!({"library": "brand/p-1"})).unwrap();
+    let group = |s: &Session| s.doc().unwrap().doc.swatch_groups.iter().find(|g| g.name == "Marque · Maison Été").cloned().unwrap();
+    assert_eq!(group(&s).swatches.len(), 2);
+    assert!(group(&s).swatches.iter().all(|w| w.global));
+    s.execute("shape.rectangle", &json!({"x": 10, "y": 10, "width": 50, "height": 40})).unwrap();
+    s.execute("paint.setFill", &json!({"swatch": "Rouge Été"})).unwrap();
+    // The brand's red changes in Brand Kit and it gets a new colour.
+    s.swatch_libraries.set_brands(vec![("p-1".into(), brand("#1c3bd3", true))]);
+    let undo = s.doc().unwrap().history.undo.len();
+    let r = s.execute("swatch.library.updateBrand", &json!({"library": "Maison Été"})).unwrap();
+    assert_eq!(r["updated"], json!(["Rouge Été"]));
+    assert_eq!(r["added"], json!(["Sable"]));
+    assert_eq!(s.doc().unwrap().history.undo.len(), undo + 1, "one undo step");
+    assert_eq!(group(&s).swatches.iter().find(|w| w.name == "Rouge Été").unwrap().paint.color().unwrap().to_hex().to_ascii_lowercase(), "#1c3bd3");
+    let fill = s.execute("paint.proxies", &json!({})).unwrap()["fill"].to_string().to_ascii_lowercase();
+    assert!(!fill.contains("d31c3b"), "the art linked to the swatch follows: {fill}");
+    // Up to date: nothing to do.
+    let r = s.execute("swatch.library.updateBrand", &json!({"library": "brand/p-1"})).unwrap();
+    assert_eq!((r["updated"].clone(), r["added"].clone()), (json!([]), json!([])));
+    assert!(s.execute("swatch.library.updateBrand", &json!({"library": "web-safe-216"})).is_err(), "only brand libraries");
+}

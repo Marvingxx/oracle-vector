@@ -5028,3 +5028,5 @@ axis	Y Axis	Вісь Y
 @msg	Sent to {name}	Надіслано до {name}
 @msg	the document couldn't be stored in the Oracle Library	Не вдалося зберегти документ у бібліотеці Oracle
 	Send to Oracle Motion	Надіслати до Oracle Motion
+	Update Brand Colors	Оновити кольори бренду
+	Brands	Бренди
