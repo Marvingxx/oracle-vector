@@ -34,7 +34,7 @@
 <br>
 
 <p align="center">
-  <img src="docs/images/shot-1-neon.png" alt="Oracle Vector editing the Neon Drive poster: the title is selected, the Appearance panel shows the settings of its live Outer Glow, and the Properties panel shows its character settings" width="100%">
+  <img src="docs/images/shot-1-neon.png" alt="Oracle Vector (French interface) with the Neon Drive poster open: the tools on the left, the canvas, and the Properties panel on the right" width="100%">
   <br><sub><b>Neon Drive</b>: a Pathfinder-cut sun, live Outer Glow on the type and grid, and clipping masks · <code>examples/neon-drive.oracle-vector</code></sub>
 </p>
 
@@ -55,31 +55,27 @@
 <table>
 <tr>
 <td width="50%" valign="top">
-  <img src="docs/images/shot-2-ribbons.png" alt="Three live blend ribbons clipped to the artboard, one selected with its key paths showing; the Layers panel lists the clip group, the blends and the selected blend's two key paths" width="100%">
-  <p align="center"><sub><b>Live Blends and Layers</b>: editable key paths, smooth colour, every object a row</sub></p>
-</td>
-<td width="50%" valign="top">
-  <img src="docs/images/shot-4-bezier.png" alt="Direct Selection tool showing anchor points and Bézier handles on a crescent built with Pathfinder, with the contextual task bar below it" width="100%">
-  <p align="center"><sub><b>Pen and Direct Selection</b>: real Bézier anchors and handles, plus a contextual task bar</sub></p>
+  <img src="docs/images/shot-2-ribbons.png" alt="Oracle Vector with the Live Blends example: three blended ribbons on a dark artboard" width="100%">
+  <p align="center"><sub><b>Live Blends</b>: editable key paths and smooth colour</sub></p>
 </td>
 </tr>
 <tr>
 <td width="50%" valign="top">
-  <img src="docs/images/shot-6-revolve.png" alt="A still life of a vase, a bowl, a sphere and a bottle made with 3D Revolve; the vase is selected and the Revolve dialog shows its rotation, cap and view settings beside the rotation gizmo" width="100%">
+  <img src="docs/images/shot-6-revolve.png" alt="Oracle Vector with a still life of a vase, a bowl, a sphere and a bottle made with 3D Revolve" width="100%">
   <p align="center"><sub><b>3D Revolve</b>: smooth vector shading, caps and a rotation gizmo · <code>examples/still-life.oracle-vector</code></sub></p>
 </td>
 <td width="50%" valign="top">
-  <img src="docs/images/shot-7-dimensions.png" alt="A bracket drawing in the light theme with linear, angular, diameter and radius dimensions; the Dimension tool is active and the Properties panel shows the selected dimension's units, precision and style" width="100%">
+  <img src="docs/images/shot-7-dimensions.png" alt="Oracle Vector with a bracket drawing and its linear, angular, diameter and radius dimensions" width="100%">
   <p align="center"><sub><b>Dimension tool</b>: lengths, angles and radii that follow the art they measure · <code>examples/bracket-drawing.oracle-vector</code></sub></p>
 </td>
 </tr>
 <tr>
 <td width="50%" valign="top">
-  <img src="docs/images/shot-5-perspective.png" alt="Two lit building facades drawn on the left and right planes of a two-point perspective grid at sunset, with the Perspective Selection tool and the Plane Switching Widget" width="100%">
+  <img src="docs/images/shot-5-perspective.png" alt="Oracle Vector with lit building facades drawn on a two-point perspective grid at sunset" width="100%">
   <p align="center"><sub><b>Perspective Grid</b>: art attached to its planes stays editable in perspective · <code>examples/perspective-city.oracle-vector</code></sub></p>
 </td>
 <td width="50%" valign="top">
-  <img src="docs/images/shot-3-sheet.png" alt="Four artboards in the light UI theme: Pathfinder, Gradient Mesh, radial Repeat and Envelope Distort" width="100%">
+  <img src="docs/images/shot-3-sheet.png" alt="Oracle Vector with the feature sheet: the Pathfinder artboard (a crescent moon and stars) beside the Gradient Mesh one" width="100%">
   <p align="center"><sub><b>Multiple artboards, light theme</b>: Pathfinder · Gradient Mesh · live radial Repeat · Envelope Distort · <code>examples/feature-sheet.oracle-vector</code></sub></p>
 </td>
 </tr>

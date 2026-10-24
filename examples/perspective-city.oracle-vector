@@ -1,11 +1,12 @@
 {
-  "format": "vectorcraft",
+  "format": "oracle-vector",
   "version": 4,
-  "generator": "VectorCraft 0.11.0",
+  "generator": "Oracle Vector 0.17.0",
   "document": {
     "version": 1,
     "title": "perspective-city",
     "units": "Pixels",
+    "rulers": "global",
     "color_mode": "Rgb",
     "artboards": [
       {
@@ -8179,15 +8180,6 @@
       "copyrightUrl": "",
       "created": 1791399497,
       "modified": 1792118977
-    },
-    "last_view": {
-      "name": "",
-      "center": {
-        "x": 800.0,
-        "y": 540.0
-      },
-      "zoom": 0.66,
-      "rotation": 0.0
     }
   },
   "images": {}

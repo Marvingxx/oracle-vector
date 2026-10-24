@@ -317,7 +317,6 @@ Generated-in-code art is original and has no file to list. This covers the defau
 | `docs/images/shot-1-neon.png` | Oracle Vector contributors | Screenshot of Oracle Vector itself (Oracle Vector/Lucide UI icons only), editing `examples/neon-drive.oracle-vector` | MIT OR Apache-2.0 |  |
 | `docs/images/shot-2-ribbons.png` | Oracle Vector contributors | Screenshot of Oracle Vector itself, editing `examples/ribbons.oracle-vector` | MIT OR Apache-2.0 |  |
 | `docs/images/shot-3-sheet.png` | Oracle Vector contributors | Screenshot of Oracle Vector itself, editing `examples/feature-sheet.oracle-vector` | MIT OR Apache-2.0 |  |
-| `docs/images/shot-4-bezier.png` | Oracle Vector contributors | Screenshot of Oracle Vector itself, editing `examples/feature-sheet.oracle-vector` | MIT OR Apache-2.0 |  |
 | `docs/images/shot-5-perspective.png` | Oracle Vector contributors | Screenshot of Oracle Vector itself, editing `examples/perspective-city.oracle-vector` | MIT OR Apache-2.0 |  |
 | `docs/images/shot-6-revolve.png` | Oracle Vector contributors | Screenshot of Oracle Vector itself, editing `examples/still-life.oracle-vector` | MIT OR Apache-2.0 |  |
 | `docs/images/shot-7-dimensions.png` | Oracle Vector contributors | Screenshot of Oracle Vector itself, editing `examples/bracket-drawing.oracle-vector` | MIT OR Apache-2.0 |  |

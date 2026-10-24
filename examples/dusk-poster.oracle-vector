@@ -1,11 +1,12 @@
 {
-  "format": "vectorcraft",
+  "format": "oracle-vector",
   "version": 4,
-  "generator": "VectorCraft 0.11.0",
+  "generator": "Oracle Vector 0.17.0",
   "document": {
     "version": 1,
     "title": "Dusk Poster",
     "units": "Points",
+    "rulers": "global",
     "color_mode": "Rgb",
     "artboards": [
       {
