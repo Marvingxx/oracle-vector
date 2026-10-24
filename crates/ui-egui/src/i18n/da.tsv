@@ -12,7 +12,6 @@
 	About Oracle Vector	Om Oracle Vector
 	Align to Path	Justér til kurve
 	Cut Path at Selected Anchor Points	Klip kurve ved valgte ankerpunkter
-	Join Our Discord	Slut dig til vores Discord
 	Language	Sprog
 	UI Brightness	Lysstyrke i brugerfladen
 	Dark	Mørk
@@ -651,8 +650,6 @@
 	Save Swatch Library…	Gem bibliotek med farveprøver…
 	Symbol Libraries	Symbolbiblioteker
 	Help	Hjælp
-	ArtCraft Website	ArtCrafts websted
-	Oracle Vector on getartcraft.com	Oracle Vector på getartcraft.com
 	Oracle Vector on GitHub	Oracle Vector på GitHub
 	Search Commands…	Søg i kommandoer…
 	Oracle Vector Help…	Hjælp til Oracle Vector…
@@ -1827,8 +1824,8 @@ lighting	Light	Lys
 	Select All Bound Objects	Markér alle bundne objekter
 	Multiple objects	Flere objekter
 	Graphics: {adapter}	Grafik: {adapter}
-	Part of ArtCraft. MIT OR Apache-2.0. Fonts: Source Sans 3, Inter, JetBrains Mono (OFL). Icons: Lucide (ISC) + Oracle Vector.	Del af ArtCraft. MIT OR Apache-2.0. Skrifttyper: Source Sans 3, Inter, JetBrains Mono (OFL). Ikoner: Lucide (ISC) + Oracle Vector.
-	Part of ArtCraft. MIT OR Apache-2.0. Fonts: Source Sans 3, Inter, JetBrains Mono, Noto Sans SC (OFL). Icons: Lucide (ISC) + Oracle Vector.	Del af ArtCraft. MIT OR Apache-2.0. Skrifttyper: Source Sans 3, Inter, JetBrains Mono, Noto Sans SC (OFL). Ikoner: Lucide (ISC) + Oracle Vector.
+	Part of Oracle. MIT OR Apache-2.0. Fonts: Source Sans 3, Inter, JetBrains Mono (OFL). Icons: Lucide (ISC) + Oracle Vector.	Del af Oracle. MIT OR Apache-2.0. Skrifttyper: Source Sans 3, Inter, JetBrains Mono (OFL). Ikoner: Lucide (ISC) + Oracle Vector.
+	Part of Oracle. MIT OR Apache-2.0. Fonts: Source Sans 3, Inter, JetBrains Mono, Noto Sans SC (OFL). Icons: Lucide (ISC) + Oracle Vector.	Del af Oracle. MIT OR Apache-2.0. Skrifttyper: Source Sans 3, Inter, JetBrains Mono, Noto Sans SC (OFL). Ikoner: Lucide (ISC) + Oracle Vector.
 	Version {version} — open-source vector illustration in pure Rust.	Version {version} — open source-vektorillustration i ren Rust.
 	Align to Page	Justér til side
 	Smooth Color	Jævn farve
@@ -3537,10 +3534,6 @@ effect	Regular	Regular
 	Recent Files	Seneste filer
 	Vector illustration — fast, open, scriptable.	Vektorillustration — hurtig, åben, scriptbar.
 	Welcome to Oracle Vector	Velkommen til Oracle Vector
-	ArtCraft website	ArtCraft-websted
-	Discord	Discord
-	Join our Discord	Deltag i vores Discord
-	Join the ArtCraft community on Discord (discord.gg/artcraft)	Deltag i ArtCraft-fællesskabet på Discord (discord.gg/artcraft)
 	Source code on GitHub	Kildekode på GitHub
 	All Tools	Alle værktøjer
 	Draw	Tegn

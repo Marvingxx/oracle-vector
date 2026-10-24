@@ -238,8 +238,6 @@
 	Artboard {number}	Mesa de trabajo {number}
 	Artboard:	Mesa de trabajo:
 	Artboards	Mesas de trabajo
-	ArtCraft Website	Sitio web de ArtCraft
-	ArtCraft website	Sitio web de ArtCraft
 	Artwork Colors	Colores de la ilustración
 	As Multiple Assets	Como varios recursos
 	As Single Asset	Como un solo recurso
@@ -761,7 +759,6 @@
 	Discard Recovered Documents	Descartar documentos recuperados
 	Discard White Overprint in Output	Descartar sobreimpresión de blanco en la salida
 	Discarded {} recovered document(s)	Se descartaron {} documento(s) recuperado(s)
-	Discord	Discord
 	Discretionary Hyphen	Guion discrecional
 	Discretionary Ligatures	Ligaduras discrecionales
 	Display All Blacks Accurately	Mostrar todos los negros con precisión
@@ -1564,9 +1561,6 @@
 	Italian	Italiano
 	Japanese	Japonés
 	Join	Unir
-	Join Our Discord	Únete a nuestro Discord
-	Join our Discord	Únete a nuestro Discord
-	Join the ArtCraft community on Discord (discord.gg/artcraft)	Únete a la comunidad de ArtCraft en Discord (discord.gg/artcraft)
 	Join the lines of each paragraph	Unir las líneas de cada párrafo
 	Join Tool	Herramienta Unir
 	Justification…	Justificación…
@@ -2237,7 +2231,7 @@
 	Paragraph Style Options	Opciones de estilo de párrafo
 	Paragraph Styles	Estilos de párrafo
 	Paragraph Symbol	Símbolo de párrafo
-	Part of ArtCraft. MIT OR Apache-2.0. Fonts: Source Sans 3, Inter, JetBrains Mono (OFL). Icons: Lucide (ISC) + Oracle Vector.	Parte de ArtCraft. MIT OR Apache-2.0. Fuentes: Source Sans 3, Inter, JetBrains Mono (OFL). Iconos: Lucide (ISC) + Oracle Vector.
+	Part of Oracle. MIT OR Apache-2.0. Fonts: Source Sans 3, Inter, JetBrains Mono (OFL). Icons: Lucide (ISC) + Oracle Vector.	Parte de Oracle. MIT OR Apache-2.0. Fuentes: Source Sans 3, Inter, JetBrains Mono (OFL). Iconos: Lucide (ISC) + Oracle Vector.
 	Password	Contraseña
 	Paste	Pegar
 	Paste in Back	Pegar detrás
@@ -3509,7 +3503,6 @@
 	Vector illustration — fast, open, scriptable.	Ilustración vectorial: rápida, abierta y programable.
 	Oracle Vector didn't quit normally last time. These documents had unsaved changes:	Oracle Vector no se cerró correctamente la última vez. Estos documentos tenían cambios sin guardar:
 	Oracle Vector Help…	Ayuda de Oracle Vector…
-	Oracle Vector on getartcraft.com	Oracle Vector en getartcraft.com
 	Oracle Vector on GitHub	Oracle Vector en GitHub
 	Vectors	Vectores
 	Version {version} — open-source vector illustration in pure Rust.	Versión {version}: ilustración vectorial de código abierto en Rust puro.

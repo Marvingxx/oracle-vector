@@ -13,7 +13,7 @@
 
 <p align="center">
   A fast, open-source vector illustration workflow. It runs natively on
-  macOS, Windows, Linux and FreeBSD, and in the browser via WebAssembly. Built by the ArtCraft team.
+  macOS, Windows, Linux and FreeBSD, and in the browser via WebAssembly.
 </p>
 
 <p align="center">
@@ -173,7 +173,7 @@ cargo xtask ci                                            # fmt, clippy, tests, 
 
 For text and custom letter shapes, see [Typography and Custom Lettering](docs/typography-lettering.md).
 
-Japanese fonts come from [storytold/craft-fonts](https://github.com/storytold/craft-fonts), an optional
+Japanese fonts come from [storytold/craft-fonts](https://github.com/Marvingxx/craft-fonts), an optional
 build input (releases always use it): `CRAFT_FONTS_DIR="$PWD/../craft-fonts" cargo run --release -p oracle-vector` (an absolute path).
 Without it, Japanese text uses the installed system fonts. See [`docs/development.md`](docs/development.md#fonts-craft-fonts-optional-build-input).
 
@@ -316,24 +316,27 @@ Oracle Vector is part of **Oracle**, a personal creative suite, free and local:
 | **Oracle Brand Kit** · **Oracle Mockup Studio** | Brand identities and client deliveries · 2D mockups | [oracle-brand](https://github.com/Marvingxx/oracle-brand) |
 | **Oracle Brand Guide** | Brand guidelines and page layout | [oracle-guide](https://github.com/Marvingxx/oracle-guide) |
 
-Oracle Vector started as a fork of [VectorCraft](https://github.com/storytold/vectorcraft) by the ArtCraft
-team (MIT OR Apache-2.0), taken on 22 October 2026 and developed separately since. It is not
-affiliated with or endorsed by ArtCraft.
+
+## Sources
+
+Oracle Vector is built on [VectorCraft](https://github.com/storytold/vectorcraft) by storytold (MIT OR
+Apache-2.0), taken on 22 October 2026 and developed separately since; its code, rewritten or not, keeps
+that licence and the original notices (`NOTICE`, `LICENSE-*`). Every other source (fonts, icons,
+libraries, images) is listed with its author and licence in the attribution file.
 
 ## License and credits
 
 Oracle Vector is dual-licensed under [MIT](LICENSE-MIT) or [Apache-2.0](LICENSE-APACHE), at your option.
-Copyright (c) 2026 ArtCraft Team and the Oracle Vector contributors. Required notices are in [NOTICE](NOTICE).
+Required notices are in [NOTICE](NOTICE).
 
 Bundled fonts, icons, images and other assets keep their own open licenses; each one is listed
 with its author, source and license in [ASSETS.md](ASSETS.md). Release builds also embed the
-fonts of [craft-fonts](https://github.com/storytold/craft-fonts/blob/main/ATTRIBUTION.md) (Japanese,
+fonts of [craft-fonts](https://github.com/Marvingxx/craft-fonts/blob/main/ATTRIBUTION.md) (Japanese,
 Simplified Chinese and Arabic faces; SIL Open Font License 1.1).
 
 The app icon (an engraved dragon on Oracle Vector red, `#e8573f`) is the owner's original artwork; its
 palette and files are in [`assets/app-icon/`](assets/app-icon/README.md).
 
 The Oracle name and logo in [`docs/brand/`](docs/brand/) are the project's brand marks and are not
-covered by this license (see [`docs/brand/LICENSE-brand.txt`](docs/brand/LICENSE-brand.txt)). The
-ArtCraft marks of the original project have been removed, as its brand license asks of forks.
+covered by this license (see [`docs/brand/LICENSE-brand.txt`](docs/brand/LICENSE-brand.txt)).
 

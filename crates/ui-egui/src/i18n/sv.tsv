@@ -227,8 +227,6 @@
 	Artboard {number}	Rityta {number}
 	Artboard:	Rityta:
 	Artboards	Ritytor
-	ArtCraft Website	ArtCrafts webbplats
-	ArtCraft website	ArtCrafts webbplats
 	Artwork Colors	Färger i grafiken
 	As Multiple Assets	Som flera tillgångar
 	As Single Asset	Som en enda tillgång
@@ -748,7 +746,6 @@
 	Discard Recovered Documents	Släng återställda dokument
 	Discard White Overprint in Output	Släng vit övertryckning i utdata
 	Discarded {} recovered document(s)	Slängde {} återställda dokument
-	Discord	Discord
 	Discretionary Hyphen	Mjukt bindestreck
 	Discretionary Ligatures	Valfria ligaturer
 	Display All Blacks Accurately	Visa alla svarta korrekt
@@ -1531,9 +1528,6 @@
 	Italian	Italienska
 	Japanese	Japanska
 	Join	Foga samman
-	Join Our Discord	Gå med i vår Discord
-	Join our Discord	Gå med i vår Discord
-	Join the ArtCraft community on Discord (discord.gg/artcraft)	Gå med i ArtCraft-gemenskapen på Discord (discord.gg/artcraft)
 	Join the lines of each paragraph	Foga samman raderna i varje stycke
 	Join Tool	Sammanfogningsverktyg
 	Justification…	Justering…
@@ -2186,7 +2180,7 @@
 	Paragraph Style Options	Alternativ för styckestil
 	Paragraph Styles	Styckestilar
 	Paragraph Symbol	Styckesymbol
-	Part of ArtCraft. MIT OR Apache-2.0. Fonts: Source Sans 3, Inter, JetBrains Mono (OFL). Icons: Lucide (ISC) + Oracle Vector.	Del av ArtCraft. MIT OR Apache-2.0. Typsnitt: Source Sans 3, Inter, JetBrains Mono (OFL). Ikoner: Lucide (ISC) + Oracle Vector.
+	Part of Oracle. MIT OR Apache-2.0. Fonts: Source Sans 3, Inter, JetBrains Mono (OFL). Icons: Lucide (ISC) + Oracle Vector.	Del av Oracle. MIT OR Apache-2.0. Typsnitt: Source Sans 3, Inter, JetBrains Mono (OFL). Ikoner: Lucide (ISC) + Oracle Vector.
 	Password	Lösenord
 	Paste	Klistra in
 	Paste in Back	Klistra in bakom
@@ -3443,7 +3437,6 @@
 	Vector illustration — fast, open, scriptable.	Vektorillustration – snabb, öppen, skriptbar.
 	Oracle Vector didn't quit normally last time. These documents had unsaved changes:	Oracle Vector avslutades inte normalt förra gången. De här dokumenten hade osparade ändringar:
 	Oracle Vector Help…	Oracle Vector-hjälp…
-	Oracle Vector on getartcraft.com	Oracle Vector på getartcraft.com
 	Oracle Vector on GitHub	Oracle Vector på GitHub
 	Vectors	Vektorer
 	Version {version} — open-source vector illustration in pure Rust.	Version {version} – vektorillustration med öppen källkod i ren Rust.
@@ -4870,7 +4863,7 @@ lighting	Light	Ljus
 	PDF/X-4:2010	PDF/X-4:2010
 	PRs	PR:er
 	Page Cover 1640×624	Sidomslag 1640×624
-	Part of ArtCraft. MIT OR Apache-2.0. Fonts: Source Sans 3, Inter, JetBrains Mono, Noto Sans SC (OFL). Icons: Lucide (ISC) + Oracle Vector.	Del av ArtCraft. MIT OR Apache-2.0. Typsnitt: Source Sans 3, Inter, JetBrains Mono, Noto Sans SC (OFL). Ikoner: Lucide (ISC) + Oracle Vector.
+	Part of Oracle. MIT OR Apache-2.0. Fonts: Source Sans 3, Inter, JetBrains Mono, Noto Sans SC (OFL). Icons: Lucide (ISC) + Oracle Vector.	Del av Oracle. MIT OR Apache-2.0. Typsnitt: Source Sans 3, Inter, JetBrains Mono, Noto Sans SC (OFL). Ikoner: Lucide (ISC) + Oracle Vector.
 	Pattern Swatches	Mönsterfärgrutor
 	Pen	Penna
 	Pentagram	Pentagram

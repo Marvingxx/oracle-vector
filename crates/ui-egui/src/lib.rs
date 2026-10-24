@@ -889,7 +889,7 @@ impl OracleVectorApp {
         r
     }
 
-    /// Open a link in the browser (Help → Discord, website, GitHub…).
+    /// Open a link in the browser (Help → GitHub…).
     pub fn open_url(&mut self, url: &str) {
         match self.services.open_url.as_mut() {
             Some(open) => open(url),

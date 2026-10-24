@@ -12,7 +12,6 @@
 	About Oracle Vector	Over Oracle Vector
 	Align to Path	Uitlijnen op pad
 	Cut Path at Selected Anchor Points	Pad knippen op geselecteerde ankerpunten
-	Join Our Discord	Word lid van onze Discord
 	Language	Taal
 	UI Brightness	UI-helderheid
 	Dark	Donker
@@ -665,8 +664,6 @@
 	Save Swatch Library…	Staalenbibliotheek opslaan…
 	Symbol Libraries	Symboolbibliotheken
 	Help	Help
-	ArtCraft Website	ArtCraft-website
-	Oracle Vector on getartcraft.com	Oracle Vector op getartcraft.com
 	Oracle Vector on GitHub	Oracle Vector op GitHub
 	Search Commands…	Opdrachten zoeken…
 	Oracle Vector Help…	Oracle Vector-help…
@@ -1841,8 +1838,8 @@ lighting	Light	Licht
 	Select All Bound Objects	Alle gekoppelde objecten selecteren
 	Multiple objects	Meerdere objecten
 	Graphics: {adapter}	Grafisch: {adapter}
-	Part of ArtCraft. MIT OR Apache-2.0. Fonts: Source Sans 3, Inter, JetBrains Mono (OFL). Icons: Lucide (ISC) + Oracle Vector.	Onderdeel van ArtCraft. MIT OR Apache-2.0. Lettertypen: Source Sans 3, Inter, JetBrains Mono (OFL). Pictogrammen: Lucide (ISC) + Oracle Vector.
-	Part of ArtCraft. MIT OR Apache-2.0. Fonts: Source Sans 3, Inter, JetBrains Mono, Noto Sans SC (OFL). Icons: Lucide (ISC) + Oracle Vector.	Onderdeel van ArtCraft. MIT OR Apache-2.0. Lettertypen: Source Sans 3, Inter, JetBrains Mono, Noto Sans SC (OFL). Pictogrammen: Lucide (ISC) + Oracle Vector.
+	Part of Oracle. MIT OR Apache-2.0. Fonts: Source Sans 3, Inter, JetBrains Mono (OFL). Icons: Lucide (ISC) + Oracle Vector.	Onderdeel van Oracle. MIT OR Apache-2.0. Lettertypen: Source Sans 3, Inter, JetBrains Mono (OFL). Pictogrammen: Lucide (ISC) + Oracle Vector.
+	Part of Oracle. MIT OR Apache-2.0. Fonts: Source Sans 3, Inter, JetBrains Mono, Noto Sans SC (OFL). Icons: Lucide (ISC) + Oracle Vector.	Onderdeel van Oracle. MIT OR Apache-2.0. Lettertypen: Source Sans 3, Inter, JetBrains Mono, Noto Sans SC (OFL). Pictogrammen: Lucide (ISC) + Oracle Vector.
 	Version {version} — open-source vector illustration in pure Rust.	Versie {version} — open-source vectorillustratie in pure Rust.
 	Align to Page	Uitlijnen op pagina
 	Smooth Color	Vloeiende kleur
@@ -3551,10 +3548,6 @@ effect	Regular	Regelmatig
 	Recent Files	Recente bestanden
 	Vector illustration — fast, open, scriptable.	Vectorillustratie — snel, open, scriptbaar.
 	Welcome to Oracle Vector	Welkom bij Oracle Vector
-	ArtCraft website	Website van ArtCraft
-	Discord	Discord
-	Join our Discord	Word lid van onze Discord
-	Join the ArtCraft community on Discord (discord.gg/artcraft)	Word lid van de ArtCraft-community op Discord (discord.gg/artcraft)
 	Source code on GitHub	Broncode op GitHub
 	All Tools	Alle gereedschappen
 	Draw	Tekenen

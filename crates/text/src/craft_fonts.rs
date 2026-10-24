@@ -1,4 +1,4 @@
-//! Fonts from the optional craft-fonts build input (<https://github.com/storytold/craft-fonts>).
+//! Fonts from the optional craft-fonts build input (<https://github.com/Marvingxx/craft-fonts>).
 //!
 //! Built with `CRAFT_FONTS_DIR=<craft-fonts checkout>`, [`CRAFT_FONTS`] holds every font in its
 //! manifest (Japanese UI and document fonts, Arabic fonts and Noto Sans Thai); built without it,

@@ -1,12 +1,10 @@
-Oracle Vector app icon (oracle-vector.svg, oracle-vector-small.svg and every file derived from them in this
-directory: oracle-vector-1024.png, oracle-vector-macos-512.png, oracle-vector.icns, oracle-vector.ico, hicolor/).
+Oracle Vector app icon (oracle-vector.svg, oracle-vector-small.svg and every file derived from them in this directory).
 
-Original artwork made for this project by the project owner, drawn in ArtCraft and vectorised for
-Oracle Vector (no third-party material). Licensed like the rest of Oracle Vector, under either of
+Original artwork made for this project: the Oracle app tile, drawn by Oracle-suite/tools/make_app_icon.py
+(the letters are Archivo outlines, SIL Open Font License 1.1). Licensed like the rest of Oracle Vector,
+under either of
 
   * Apache License, Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0)
   * MIT license (https://opensource.org/licenses/MIT)
 
 at your option.
-
-Regenerate the derived files with packaging/icons.sh.

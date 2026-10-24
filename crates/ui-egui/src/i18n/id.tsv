@@ -12,7 +12,6 @@
 	About Oracle Vector	Tentang Oracle Vector
 	Align to Path	Sejajarkan ke jalur
 	Cut Path at Selected Anchor Points	Potong jalur pada titik jangkar terseleksi
-	Join Our Discord	Gabung ke Discord kami
 	Language	Bahasa
 	UI Brightness	Kecerahan UI
 	Dark	Gelap
@@ -651,8 +650,6 @@
 	Save Swatch Library…	Simpan pustaka sampel warna…
 	Symbol Libraries	Pustaka simbol
 	Help	Bantuan
-	ArtCraft Website	Situs web ArtCraft
-	Oracle Vector on getartcraft.com	Oracle Vector di getartcraft.com
 	Oracle Vector on GitHub	Oracle Vector di GitHub
 	Search Commands…	Cari perintah…
 	Oracle Vector Help…	Bantuan Oracle Vector…
@@ -1827,8 +1824,8 @@ lighting	Light	Cahaya
 	Select All Bound Objects	Pilih semua objek terikat
 	Multiple objects	Beberapa objek
 	Graphics: {adapter}	Grafis: {adapter}
-	Part of ArtCraft. MIT OR Apache-2.0. Fonts: Source Sans 3, Inter, JetBrains Mono (OFL). Icons: Lucide (ISC) + Oracle Vector.	Bagian dari ArtCraft. MIT OR Apache-2.0. Font: Source Sans 3, Inter, JetBrains Mono (OFL). Ikon: Lucide (ISC) + Oracle Vector.
-	Part of ArtCraft. MIT OR Apache-2.0. Fonts: Source Sans 3, Inter, JetBrains Mono, Noto Sans SC (OFL). Icons: Lucide (ISC) + Oracle Vector.	Bagian dari ArtCraft. MIT OR Apache-2.0. Font: Source Sans 3, Inter, JetBrains Mono, Noto Sans SC (OFL). Ikon: Lucide (ISC) + Oracle Vector.
+	Part of Oracle. MIT OR Apache-2.0. Fonts: Source Sans 3, Inter, JetBrains Mono (OFL). Icons: Lucide (ISC) + Oracle Vector.	Bagian dari Oracle. MIT OR Apache-2.0. Font: Source Sans 3, Inter, JetBrains Mono (OFL). Ikon: Lucide (ISC) + Oracle Vector.
+	Part of Oracle. MIT OR Apache-2.0. Fonts: Source Sans 3, Inter, JetBrains Mono, Noto Sans SC (OFL). Icons: Lucide (ISC) + Oracle Vector.	Bagian dari Oracle. MIT OR Apache-2.0. Font: Source Sans 3, Inter, JetBrains Mono, Noto Sans SC (OFL). Ikon: Lucide (ISC) + Oracle Vector.
 	Version {version} — open-source vector illustration in pure Rust.	Versi {version} — ilustrasi vektor sumber terbuka dalam Rust murni.
 	Align to Page	Ratakan ke halaman
 	Smooth Color	Warna mulus
@@ -3537,10 +3534,6 @@ effect	Regular	Reguler
 	Recent Files	File terkini
 	Vector illustration — fast, open, scriptable.	Ilustrasi vektor — cepat, terbuka, mendukung skrip.
 	Welcome to Oracle Vector	Selamat datang di Oracle Vector
-	ArtCraft website	Situs web ArtCraft
-	Discord	Discord
-	Join our Discord	Gabung ke Discord kami
-	Join the ArtCraft community on Discord (discord.gg/artcraft)	Bergabunglah dengan komunitas ArtCraft di Discord (discord.gg/artcraft)
 	Source code on GitHub	Kode sumber di GitHub
 	All Tools	Semua alat
 	Draw	Menggambar

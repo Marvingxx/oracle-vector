@@ -60,7 +60,7 @@ and no draft release is created.
 
 `oracle-vector --version` and `oracle-vector-cli --version` print the version from `Cargo.toml`.
 
-**Fonts.** Every build job checks out [craft-fonts](https://github.com/storytold/craft-fonts) at a
+**Fonts.** Every build job checks out [craft-fonts](https://github.com/Marvingxx/craft-fonts) at a
 pinned commit (the `ref:` of its craft-fonts checkout step) and builds with `CRAFT_FONTS_DIR` and
 `CRAFT_FONTS_REQUIRED=1`, so releases embed its Japanese fonts and fail rather than ship without
 them (the web build embeds only the UI font, BIZ UDPGothic Regular, to stay small). The packages carry each embedded font's licence as `OFL-<family>.txt`

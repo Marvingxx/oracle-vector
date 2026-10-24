@@ -119,7 +119,7 @@ The window runs natively on Wayland (eframe's `wayland` feature) and on X11. On 
 ## Fonts: craft-fonts (optional build input)
 
 Font files are never committed to this repository. Fonts shared by the Crafting Apps live in
-[storytold/craft-fonts](https://github.com/storytold/craft-fonts); the rules are in craftrules
+[storytold/craft-fonts](https://github.com/Marvingxx/craft-fonts); the rules are in craftrules
 [`standards/fonts.md`](https://github.com/storytold/craftrules/blob/main/standards/fonts.md). To add
 a font, add it there. (The Latin fonts in `assets/fonts/` predate the rule and stay.)
 
@@ -128,7 +128,7 @@ for UI text, Shippori Mincho and BIZ UDMincho for document text), point the `CRA
 option at a checkout:
 
 ```sh
-git clone https://github.com/storytold/craft-fonts ../craft-fonts
+git clone https://github.com/Marvingxx/craft-fonts ../craft-fonts
 CRAFT_FONTS_DIR="$PWD/../craft-fonts" cargo run --release -p oracle-vector
 CRAFT_FONTS_DIR="$PWD/../craft-fonts" cargo xtask ci   # also runs the Japanese-glyph tests
 ```

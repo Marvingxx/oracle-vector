@@ -223,8 +223,6 @@
 	Artboard {number}	Çalışma yüzeyi {number}
 	Artboard:	Çalışma yüzeyi:
 	Artboards	Çalışma Yüzeyleri
-	ArtCraft Website	ArtCraft Web Sitesi
-	ArtCraft website	ArtCraft web sitesi
 	Artwork Colors	Sanat Eseri Renkleri
 	As Multiple Assets	Çoklu Varlıklar Olarak
 	As Single Asset	Tek Varlık Olarak
@@ -740,7 +738,6 @@
 	Discard Recovered Documents	Kurtarılan Belgeleri Atın
 	Discard White Overprint in Output	Çıktıdaki Beyaz Üst Baskıyı At
 	Discarded {} recovered document(s)	Kurtarılan {} belge atıldı
-	Discord	Discord
 	Discretionary Hyphen	İsteğe Bağlı Kısa Çizgi
 	Discretionary Ligatures	İsteğe Bağlı Bitişik Harfler
 	Display All Blacks Accurately	Tüm Siyahları Doğru Şekilde Görüntüleyin
@@ -1417,9 +1414,6 @@
 	Italian	İtalyan
 	Japanese	Japonca
 	Join	Katıl
-	Join Our Discord	Discord'umuza Katılın
-	Join our Discord	Discord'umuza katılın
-	Join the ArtCraft community on Discord (discord.gg/artcraft)	Discord'daki ArtCraft topluluğuna katılın (discord.gg/artcraft)
 	Join the lines of each paragraph	Her paragrafın satırlarını birleştirin
 	Join Tool	Birleştirme Aracı
 	Justification…	İki Yana Yaslama…
@@ -2063,7 +2057,7 @@
 	Paragraph Style Options	Paragraf Stili Seçenekleri
 	Paragraph Styles	Paragraf Stilleri
 	Paragraph Symbol	Paragraf Sembolü
-	Part of ArtCraft. MIT OR Apache-2.0. Fonts: Source Sans 3, Inter, JetBrains Mono (OFL). Icons: Lucide (ISC) + Oracle Vector.	ArtCraft'ın bir parçası. MIT VEYA Apache-2.0. Yazı Tipleri: Source Sans 3, Inter, JetBrains Mono (OFL). Simgeler: Lucide (ISC) + Oracle Vector.
+	Part of Oracle. MIT OR Apache-2.0. Fonts: Source Sans 3, Inter, JetBrains Mono (OFL). Icons: Lucide (ISC) + Oracle Vector.	Oracle'ın bir parçası. MIT VEYA Apache-2.0. Yazı Tipleri: Source Sans 3, Inter, JetBrains Mono (OFL). Simgeler: Lucide (ISC) + Oracle Vector.
 	Password	Şifre
 	Paste	Yapıştır
 	Paste in Back	Arkaya Yapıştır
@@ -3334,7 +3328,6 @@
 	Vector illustration — fast, open, scriptable.	Vektör illüstrasyonu — hızlı, açık, yazılabilir.
 	Oracle Vector didn't quit normally last time. These documents had unsaved changes:	Oracle Vector geçen sefer normal şekilde kapanmamıştı. Bu belgelerde kaydedilmemiş değişiklikler vardı:
 	Oracle Vector Help…	Oracle Vector Yardımı…
-	Oracle Vector on getartcraft.com	Getartcraft.com'da Oracle Vector
 	Oracle Vector on GitHub	GitHub'da Oracle Vector
 	Vectors	Vektörler
 	Version {version} — open-source vector illustration in pure Rust.	Sürüm {version} — saf Rust'ta açık kaynaklı vektör çizimi.
@@ -4677,7 +4670,7 @@ lighting	Light	Işık
 	PDF/X-4:2010	PDF/X-4:2010
 	PRs	PR'ler
 	Page Cover 1640×624	Sayfa Kapağı 1640×624
-	Part of ArtCraft. MIT OR Apache-2.0. Fonts: Source Sans 3, Inter, JetBrains Mono, Noto Sans SC (OFL). Icons: Lucide (ISC) + Oracle Vector.	ArtCraft'ın bir parçası. MIT VEYA Apache-2.0. Yazı Tipleri: Source Sans 3, Inter, JetBrains Mono, Noto Sans SC (OFL). Simgeler: Lucide (ISC) + Oracle Vector.
+	Part of Oracle. MIT OR Apache-2.0. Fonts: Source Sans 3, Inter, JetBrains Mono, Noto Sans SC (OFL). Icons: Lucide (ISC) + Oracle Vector.	Oracle'ın bir parçası. MIT VEYA Apache-2.0. Yazı Tipleri: Source Sans 3, Inter, JetBrains Mono, Noto Sans SC (OFL). Simgeler: Lucide (ISC) + Oracle Vector.
 	Pattern Swatches	Desen Örnekleri
 	Pen	Kalem
 	Pentagram	Pentagram
