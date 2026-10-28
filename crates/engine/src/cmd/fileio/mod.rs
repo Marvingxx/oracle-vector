@@ -71,6 +71,10 @@ pub use load::{losses_summary, overwrite_losses};
 pub use naming::{NameParts as FileNameParts, parse_date as parse_file_date, render as render_file_name};
 pub(crate) use native::preview_png;
 pub use native::with_compression_pref;
+/// Atomic file writes (a temporary file renamed over the target: a failed write never damages the
+/// file it replaces), for the apps' own writers too.
+#[cfg(not(target_arch = "wasm32"))]
+pub use oracle_vector_format::write_atomic;
 pub use pdfimport::{LoadOptions, page_document};
 pub(crate) use save::job_for;
 pub use save::{
@@ -86,10 +90,6 @@ pub(crate) use screens::{
     store_settings as store_screen_settings,
 };
 pub use svg::options_map as svg_options;
-/// Atomic file writes (a temporary file renamed over the target: a failed write never damages the
-/// file it replaces), for the apps' own writers too.
-#[cfg(not(target_arch = "wasm32"))]
-pub use oracle_vector_format::write_atomic;
 
 use super::*;
 use crate::EngineError;
@@ -734,8 +734,8 @@ pub const RTF_EXTS: &[&str] = &["rtf"];
 pub const DOCX_EXTS: &[&str] = &["docx"];
 
 /// Documents of the other Oracle apps File → Place reads, drawn by them (`oracle_files`): Oracle
-/// Edit's `.oracle-edit` (`.pcraft` before the rename). Placed, not opened.
-pub const ORACLE_EXTS: &[&str] = &["oracle-edit", "pcraft"];
+/// Edit's `.oracle-edit` (legacy `.pcraft`) and Layout's `.oracle-layout` (legacy `.oracle-guide`). Placed, not opened.
+pub const ORACLE_EXTS: &[&str] = &["oracle-edit", "pcraft", "oracle-layout", "oracle-guide"];
 
 /// Every extension File → Place reads: [`OPEN_EXTS`], [`ORACLE_EXTS`], [`TEXT_EXTS`], [`RTF_EXTS`]
 /// and [`DOCX_EXTS`].
@@ -773,6 +773,8 @@ pub const PLACE_EXTS: &[&str] = &[
     "afpub",
     "oracle-edit",
     "pcraft",
+    "oracle-layout",
+    "oracle-guide",
     "txt",
     "rtf",
     "docx",

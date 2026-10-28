@@ -1365,7 +1365,10 @@ impl OracleVectorApp {
         crate::brand_swatches::poll(self, ctx);
         // The Oracle Library window; what is dragged out of it arrives as dropped files.
         #[cfg(not(target_arch = "wasm32"))]
-        self.oracle_library.ui(ctx, i18n::current().code() == "fr");
+        if self.oracle_library.update_docked(ctx) {
+            let _ = crate::panel_docking::open_library(self);
+            ctx.request_repaint();
+        }
     }
 
     /// Files dropped on the window: documents, libraries, presets, plug-ins and shortcut sets

@@ -5420,9 +5420,53 @@ axis	Y Axis	Axe Y
 	Add to Oracle Library	Ajouter à la Bibliothèque Oracle
 @msg	Opened in {name}: save it there to update it here	Ouvert dans {name} : enregistrez-le là-bas pour le mettre à jour ici
 	Send to Oracle Edit	Envoyer vers Oracle Edit
-	Send to Oracle Brand Guide	Envoyer vers Oracle Brand Guide
+	Send to Oracle Layout	Envoyer vers Oracle Layout
 @msg	Sent to {name}	Envoyé vers {name}
 @msg	the document couldn't be stored in the Oracle Library	Le document n'a pas pu être rangé dans la Bibliothèque Oracle
 	Send to Oracle Motion	Envoyer vers Oracle Motion
 	Update Brand Colors	Mettre à jour les couleurs de la marque
 	Brands	Marques
+# Oracle : grilles de marque (panneau Grilles de marque, commandes brand.*).
+	Brand Grids	Grilles de marque
+	Base	Base
+	Construction	Construction
+	Clearspace	Zone de protection
+	Lockups	Déclinaisons
+	Bento	Bento
+	Isometric	Isométrique
+	Golden Ratio	Nombre d'or
+	Steps	Étapes
+	Live Update	Mise à jour en direct
+	Horizontals	Horizontales
+	Verticals	Verticales
+	Diagonals	Diagonales
+	Circles	Cercles
+	Measurements	Cotes
+	Angle Tolerance	Tolérance d'angle
+	Sensitivity	Sensibilité
+	Circle Size	Taille des cercles
+	Big	Grands
+	Spacing Markers	Repères d'espacement
+	Extent	Étendue
+	Logo	Logo
+	Clean	Nettoyer
+	Unit	Unité
+	Logomark	Symbole
+	Invert Components	Inverser les composants
+	Fill Boxes	Remplir les unités
+	Min. Print Size	Taille min. impression
+	Min. Screen Size	Taille min. écran
+	Condensed	Condensée
+	Partner	Partenaire
+	Centered	Centré
+	Sections	Sections
+	Numbers	Numéros
+	Shuffle	Mélanger
+	Construction Grid	Grille de construction
+	Base Grid	Grille de base
+	Bento Grid	Grille bento
+	Lockup	Déclinaison
+	Update	Mettre à jour
+	A grid over the artboard of the selection (or the first artboard).	Une grille sur le plan de travail de la sélection (ou le premier).
+	Select the logo: one object for the mark, one for the logotype.	Sélectionnez le logo : un objet pour le symbole, un pour le logotype.
+	Select a rectangle to divide, or a bento grid to change.	Sélectionnez un rectangle à diviser, ou une grille bento à modifier.

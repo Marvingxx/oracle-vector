@@ -1,8 +1,8 @@
 //! Documents of the other Oracle apps in Oracle Vector, without an export step.
 //!
-//! An Oracle Edit `.oracle-edit` is placed as the picture Oracle Edit draws of it (PNG): a linked image
-//! whose link is the `.oracle-edit` itself, so the link watch sees it change when Oracle Edit saves it
-//! and Update Links reads it again through a new drawing. The drawing is
+//! Oracle Edit `.oracle-edit` and Brand Guide `.oracle-layout` documents are placed as PNG previews
+//! (the first page for a guide). The image links to the native document, so the link watch sees
+//! saved changes and Update Links reads a fresh preview. The drawing is
 //! `oracle_suite_link::render`, cached per version of the file.
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -10,10 +10,11 @@ use crate::EngineError;
 use crate::Result;
 
 /// Whether `name` (a path or file name) is a document another Oracle app draws as a picture for
-/// Oracle Vector (an Oracle Edit `.oracle-edit`, or `.pcraft` from before the rename).
+/// Oracle Vector (Oracle Edit `.oracle-edit` / legacy `.pcraft`, or Brand Guide `.oracle-layout`).
 #[cfg(not(target_arch = "wasm32"))]
 pub fn is_foreign_picture(name: &str) -> bool {
-    oracle_suite_link::oracle_format(std::path::Path::new(name)).is_some_and(|f| f.app == oracle_suite_link::App::Edit)
+    oracle_suite_link::oracle_format(std::path::Path::new(name))
+        .is_some_and(|f| matches!(f.app, oracle_suite_link::App::Edit | oracle_suite_link::App::Layout))
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -21,7 +22,7 @@ pub fn is_foreign_picture(_name: &str) -> bool {
     false
 }
 
-/// For an Oracle Edit `.oracle-edit` at `path`: the picture (PNG) Oracle Edit draws of it. `None` for
+/// For a supported Oracle document at `path`: the PNG preview its app draws of it. `None` for
 /// any other file (and on the web, where no app can draw).
 #[cfg(not(target_arch = "wasm32"))]
 pub fn foreign_picture(path: &str) -> Option<Result<Vec<u8>>> {
@@ -29,7 +30,7 @@ pub fn foreign_picture(path: &str) -> Option<Result<Vec<u8>>> {
         return None;
     }
     let drawn = oracle_suite_link::render(std::path::Path::new(path), oracle_suite_link::Preview::Png).map_err(EngineError::Other);
-    // A stale drawing (Oracle Edit is missing) still shows the picture as last drawn.
+    // A stale drawing (the source app is missing) still shows the picture as last drawn.
     Some(drawn.and_then(|d| std::fs::read(&d.path).map_err(|e| EngineError::Other(format!("{}: {e}", d.path.display())))))
 }
 
@@ -44,6 +45,16 @@ mod tests {
     use serde_json::json;
 
     use crate::Session;
+
+    #[test]
+    fn guide_pictures_are_placeable_but_not_openable_as_vector_documents() {
+        assert!(super::is_foreign_picture("C:/brands/Charte.ORACLE-GUIDE"));
+        assert!(crate::cmd::fileio::PLACE_EXTS.contains(&"oracle-layout"));
+        assert!(crate::cmd::fileio::ORACLE_EXTS.contains(&"oracle-layout"));
+        assert!(!crate::cmd::fileio::OPEN_EXTS.contains(&"oracle-layout"));
+        assert!(!super::is_foreign_picture("charte.pdf"));
+        assert!(!super::is_foreign_picture("logo.oracle-vector"));
+    }
 
     /// Oracle Edit saving a `w`×`h` picture of `rgb` as the `.oracle-edit` at `doc` (a real save).
     fn save_in_edit(doc: &std::path::Path, w: u32, h: u32, rgb: [u8; 3]) -> Option<()> {

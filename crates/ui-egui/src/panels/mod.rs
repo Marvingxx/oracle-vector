@@ -18,6 +18,7 @@ pub mod color_themes;
 pub mod css_properties;
 pub mod doc_info;
 pub mod flattener_preview;
+pub mod brand_grids;
 pub mod glyphs;
 pub mod gradient;
 pub mod graphic_styles;
@@ -171,6 +172,7 @@ pub fn show_icon_panel(app: &mut OracleVectorApp, ui: &mut Ui, id: &str) {
         "magicWand" => magic_wand::show(app, ui),
         "tabs" => tabs::show(app, ui),
         flattener_preview::ID => flattener_preview::show(app, ui),
+        brand_grids::ID => brand_grids::show(app, ui),
         "attributes" => attributes::show(app, ui),
         svg_interactivity::ID => svg_interactivity::show(app, ui),
         variables::ID => variables::show(app, ui),
@@ -220,6 +222,7 @@ pub fn panel_menu_items(app: &mut OracleVectorApp, ui: &mut Ui, id: &str) -> boo
         "tabs" => tabs::menu(app, ui),
         "libraries" => libraries::menu(app, ui),
         flattener_preview::ID => flattener_preview::menu(app, ui),
+        brand_grids::ID => brand_grids::menu(app, ui),
         "attributes" => attributes::menu(app, ui),
         svg_interactivity::ID => svg_interactivity::menu(app, ui),
         "colorThemes" => color_themes::menu(app, ui),

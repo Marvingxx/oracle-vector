@@ -5003,7 +5003,7 @@ axis	Y Axis	Y-Achse
 	Add to Oracle Library	Zur Oracle-Bibliothek hinzufügen
 @msg	Opened in {name}: save it there to update it here	In {name} geöffnet: dort speichern, um es hier zu aktualisieren
 	Send to Oracle Edit	An Oracle Edit senden
-	Send to Oracle Brand Guide	An Oracle Brand Guide senden
+	Send to Oracle Layout	An Oracle Layout senden
 @msg	Sent to {name}	An {name} gesendet
 @msg	the document couldn't be stored in the Oracle Library	Das Dokument konnte nicht in der Oracle-Bibliothek gespeichert werden
 	Send to Oracle Motion	An Oracle Motion senden

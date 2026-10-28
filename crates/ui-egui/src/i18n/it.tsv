@@ -5037,7 +5037,7 @@ axis	Y Axis	Asse Y
 	Add to Oracle Library	Aggiungi alla libreria Oracle
 @msg	Opened in {name}: save it there to update it here	Aperto in {name}: salvalo lì per aggiornarlo qui
 	Send to Oracle Edit	Invia a Oracle Edit
-	Send to Oracle Brand Guide	Invia a Oracle Brand Guide
+	Send to Oracle Layout	Invia a Oracle Layout
 @msg	Sent to {name}	Inviato a {name}
 @msg	the document couldn't be stored in the Oracle Library	Impossibile salvare il documento nella libreria Oracle
 	Send to Oracle Motion	Invia a Oracle Motion

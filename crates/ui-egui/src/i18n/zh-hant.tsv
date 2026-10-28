@@ -5056,7 +5056,7 @@ axis	Y Axis	Y 軸
 	Add to Oracle Library	加入 Oracle 資源庫
 @msg	Opened in {name}: save it there to update it here	已在 {name} 中開啟：在那裡儲存即可在此更新
 	Send to Oracle Edit	傳送到 Oracle Edit
-	Send to Oracle Brand Guide	傳送到 Oracle Brand Guide
+	Send to Oracle Layout	傳送到 Oracle Layout
 @msg	Sent to {name}	已傳送到 {name}
 @msg	the document couldn't be stored in the Oracle Library	無法將文件存入 Oracle 資源庫
 	Send to Oracle Motion	傳送到 Oracle Motion

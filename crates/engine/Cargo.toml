@@ -44,6 +44,8 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
 log = { workspace = true }
+# Logo grids and bento layouts shared by the Oracle apps (brandgrids.rs); pure geometry, wasm too.
+oracle-brandtools = { path = "../../../oracle-library/brandtools", default-features = false }
 
 # Documents of the other Oracle apps, drawn by them (oracle_files.rs).
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]

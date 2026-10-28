@@ -185,6 +185,7 @@ pub const ICON_PANELS: &[(&str, &str, &str)] = &[
     ("imageTrace", "Image Trace", "image"),
     ("magicWand", "Magic Wand", "wand-sparkles"),
     (crate::panels::flattener_preview::ID, "Flattener Preview", "eye"),
+    (crate::panels::brand_grids::ID, "Brand Grids", "layout-grid"),
     ("attributes", "Attributes", "settings"),
     (crate::panels::svg_interactivity::ID, "SVG Interactivity", "spline-pointer"),
     ("colorThemes", "Color Themes", "sun"),
@@ -325,6 +326,8 @@ pub struct UiState {
     /// Icon panel currently popped out of the collapsed column (also `properties`, `layers` or
     /// `libraries` while the dock is collapsed).
     pub open_panel: Option<String>,
+    #[serde(skip)]
+    pub library_local: bool,
     pub control_bar: bool,
     pub toolbar: bool,
     pub toolbar_double: bool,
@@ -818,6 +821,7 @@ impl Default for UiState {
             dock_tab_order: Vec::new(),
             dock_collapsed: false,
             open_panel: None,
+            library_local: false,
             control_bar: false,
             toolbar: true,
             toolbar_double: false,

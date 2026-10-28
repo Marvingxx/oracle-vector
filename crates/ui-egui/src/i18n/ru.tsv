@@ -5033,7 +5033,7 @@ axis	Y Axis	Ось Y
 	Add to Oracle Library	Добавить в библиотеку Oracle
 @msg	Opened in {name}: save it there to update it here	Открыто в {name}: сохраните там, чтобы обновить здесь
 	Send to Oracle Edit	Отправить в Oracle Edit
-	Send to Oracle Brand Guide	Отправить в Oracle Brand Guide
+	Send to Oracle Layout	Отправить в Oracle Layout
 @msg	Sent to {name}	Отправлено в {name}
 @msg	the document couldn't be stored in the Oracle Library	Не удалось сохранить документ в библиотеке Oracle
 	Send to Oracle Motion	Отправить в Oracle Motion

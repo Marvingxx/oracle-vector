@@ -226,9 +226,9 @@ fn body(app: &mut OracleVectorApp, ui: &mut Ui, cols: usize, floating: Option<eg
                     let (rect, resp) = ui.allocate_exact_size(vec2(36.0, PITCH - 1.0), Sense::click_and_drag());
                     let well = egui::Rect::from_center_size(rect.center(), vec2(30.0, 27.5));
                     if is_active {
-                        ui.painter().rect_filled(well, CornerRadius::same(6), t.tool_active);
+                        ui.painter().rect_filled(well, CornerRadius::same(t.radius), t.tool_active);
                     } else if resp.hovered() {
-                        ui.painter().rect_filled(well, CornerRadius::same(6), t.hover);
+                        ui.painter().rect_filled(well, CornerRadius::same(t.radius), t.hover);
                     }
                     let ir = egui::Rect::from_center_size(rect.center(), vec2(18.0, 18.0));
                     icons::paint(ui, icons::tool_icon(shown.icon), ir, if is_active { t.text_strong } else { t.icon });
@@ -699,9 +699,9 @@ fn tool_strip(ui: &mut Ui, t: &Tokens, active: &str, tools: &[String]) -> Option
         let (r, resp) = ui.allocate_exact_size(STRIP_BUTTON, Sense::click());
         let well = r.shrink(1.0);
         if active == tool.id {
-            ui.painter().rect_filled(well, CornerRadius::same(6), t.tool_active);
+            ui.painter().rect_filled(well, CornerRadius::same(t.radius), t.tool_active);
         } else if resp.hovered() {
-            ui.painter().rect_filled(well, CornerRadius::same(6), t.hover);
+            ui.painter().rect_filled(well, CornerRadius::same(t.radius), t.hover);
         }
         let ir = egui::Rect::from_center_size(r.center(), vec2(18.0, 18.0));
         icons::paint(ui, icons::tool_icon(tool.icon), ir, if active == tool.id { t.text_strong } else { t.icon });

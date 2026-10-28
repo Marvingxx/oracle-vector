@@ -20,6 +20,9 @@ bundled-fonts = ["oracle-vector-engine/bundled-fonts"]
 interface-fonts = []
 
 [dependencies]
+oracle-style = { path = "../../../oracle-library/style" }
+# Brand grid settings, shared with the engine's brand.* commands.
+oracle-brandtools = { path = "../../../oracle-library/brandtools", default-features = false }
 craft-ui = { workspace = true }
 oracle-vector-geom = { workspace = true }
 oracle-vector-color = { workspace = true }

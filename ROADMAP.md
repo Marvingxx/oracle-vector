@@ -1,5 +1,7 @@
 # Oracle Vector Roadmap
 
+2026-10-24 · Local integration: place `.oracle-layout` as a linked first-page PNG preview, following native saves. A picture received from Oracle Guide or Edit creates an artboard at its natural size when no document is open. This source change is not packaged or installed yet; validation is recorded in `../docs/audit-2026-10-24/guide-vector.md`.
+
 - PDF.R1: editable PDF import uses the shared reader, scans page content in windows, and rejects known incomplete input before returning a document.
 - PDF.W1: PDF export and print composition use the shared optional writer for configuration, metadata, font preparation and guarded finalization; drawing and output policy remain app-owned.
 

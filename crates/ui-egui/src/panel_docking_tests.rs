@@ -1130,3 +1130,34 @@ fn a_group_beside_another_does_not_collapse() {
     crate::panel_docking::prune_collapsed(&mut app.ui);
     assert!(app.ui.docking_collapsed.is_empty());
 }
+
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+fn oracle_library_menu_opens_a_docked_tab_and_drag_detaches_and_redocks_it() {
+    let mut app = app();
+
+    crate::menus::run_ui_command(&mut app, "window.oracleLibrary", &json!({})).unwrap().unwrap();
+    let panel = "libraries".to_string();
+    let layout = app.ui.docking.as_ref().unwrap();
+    assert!(layout.contains(&panel));
+    assert!(layout.floating.iter().all(|g| !g.panels.contains(&panel)));
+    assert!(!app.oracle_library.open, "the menu must not open the legacy window");
+    let before = layout.panels().len();
+    crate::menus::run_ui_command(&mut app, "window.oracleLibrary", &json!({})).unwrap().unwrap();
+    assert_eq!(app.ui.docking.as_ref().unwrap().panels().len(), before);
+    app.run("window.panel.close", json!({"panel":panel})).unwrap();
+    crate::menus::run_ui_command(&mut app, "window.oracleLibrary", &json!({})).unwrap().unwrap();
+    assert!(app.ui.docking.as_ref().unwrap().floating.iter().all(|g| !g.panels.contains(&panel)));
+    let mut h = harness(app, vec2(1280.0, 800.0));
+    let id = egui::Id::new("oracle-vector-panel-docking");
+    let source = h.ctx.read_response(id.with(("tab", &panel))).expect("library tab must be visible").rect.center();
+    assert!(source.x > 640.0, "library belongs on the right: {source:?}");
+    drag(&mut h, source, egui::pos2(160.0, 140.0));
+    assert!(h.state().ui.docking.as_ref().unwrap().floating.iter().any(|g| g.panels.contains(&panel)));
+    let source = h.ctx.read_response(id.with(("tab", &panel))).unwrap().rect.center();
+    let destination = h.ctx.read_response(id.with(("tab", &"properties".to_string()))).expect("Properties remains available").rect.center();
+    drag(&mut h, source, destination);
+    let layout = h.state().ui.docking.as_ref().unwrap();
+    assert!(layout.floating.iter().all(|g| !g.panels.contains(&panel)));
+    assert!(valid(layout));
+}

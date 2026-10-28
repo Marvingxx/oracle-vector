@@ -5377,7 +5377,7 @@ axis	Y Axis	Y-axel
 	Add to Oracle Library	Lägg till i Oracle-biblioteket
 @msg	Opened in {name}: save it there to update it here	Öppnad i {name}: spara där för att uppdatera här
 	Send to Oracle Edit	Skicka till Oracle Edit
-	Send to Oracle Brand Guide	Skicka till Oracle Brand Guide
+	Send to Oracle Layout	Skicka till Oracle Layout
 @msg	Sent to {name}	Skickat till {name}
 @msg	the document couldn't be stored in the Oracle Library	Dokumentet kunde inte sparas i Oracle-biblioteket
 	Send to Oracle Motion	Skicka till Oracle Motion

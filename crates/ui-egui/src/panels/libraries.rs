@@ -125,6 +125,21 @@ impl Items<'_> {
 }
 
 pub fn show(app: &mut OracleVectorApp, ui: &mut Ui) {
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        let fr = crate::i18n::current().code() == "fr";
+        let mut local = app.ui.library_local;
+        ui.horizontal_wrapped(|ui| {
+            ui.selectable_value(&mut local, false, if fr { "Bibliothèque Oracle" } else { "Oracle Library" });
+            ui.selectable_value(&mut local, true, if fr { "Styles Vector" } else { "Vector Styles" });
+        });
+        app.ui.library_local = local;
+        ui.separator();
+        if !local {
+            app.oracle_library.panel_ui(ui, fr);
+            return;
+        }
+    }
     let t = Tokens::get(ui.ctx());
     let fill_active = app.session.fill_active;
     let has_doc = app.session.active().is_some();

@@ -376,9 +376,9 @@ pub const UI_COMMANDS: &[(&str, &str, &str, &str)] = &[
     ("view.rotateReset", "Reset Rotate View", "Cmd+Shift+1", "{}"),
     ("window.control", "Control", "", "{}"),
     ("window.toolbar", "Tools", "", "{}"),
-    ("window.oracleLibrary", "Oracle Library", "", "{} show or hide the Oracle Library window: the asset folder, searchable, dragged onto the artboard"),
+    ("window.oracleLibrary", "Oracle Library", "", "{} activate the Oracle Library dock tab: searchable assets to drag onto the artboard"),
     ("file.sendToEdit", "Send to Oracle Edit", "", "{} the active document, placed linked in Oracle Edit's open document (Oracle Edit is started if needed): a vector smart object that follows its saves"),
-    ("file.sendToGuide", "Send to Oracle Brand Guide", "", "{} the active document, placed linked in the Brand Guide's open document (started if needed)"),
+    ("file.sendToGuide", "Send to Oracle Layout", "", "{} the active document, placed linked in the Brand Guide's open document (started if needed)"),
     ("file.sendToMotion", "Send to Oracle Motion", "", "{} the active document, imported into Oracle Motion's open composition (started if needed): it follows its saves"),
     ("file.addToLibrary", "Add to Oracle Library", "", "{} the active document, as it is now, into the Oracle Library (its \"Mes créations\" folder): the other Oracle apps place it linked"),
     (
@@ -1506,13 +1506,13 @@ pub fn run_ui_command(app: &mut OracleVectorApp, id: &str, p: &Value) -> Option<
         "window.control" => flag(&mut app.ui.control_bar),
         "window.toolbar" => flag(&mut app.ui.toolbar),
         #[cfg(not(target_arch = "wasm32"))]
-        "window.oracleLibrary" => flag(&mut app.oracle_library.open),
+        "window.oracleLibrary" => crate::panel_docking::open_library(app),
         #[cfg(not(target_arch = "wasm32"))]
         "file.addToLibrary" => crate::library_send::add_active(app).map(|()| Value::Null),
         #[cfg(not(target_arch = "wasm32"))]
         "file.sendToEdit" => crate::send_to::send_active(app, oracle_suite_link::App::Edit),
         #[cfg(not(target_arch = "wasm32"))]
-        "file.sendToGuide" => crate::send_to::send_active(app, oracle_suite_link::App::Guide),
+        "file.sendToGuide" => crate::send_to::send_active(app, oracle_suite_link::App::Layout),
         #[cfg(not(target_arch = "wasm32"))]
         "file.sendToMotion" => crate::send_to::send_active(app, oracle_suite_link::App::Motion),
         "window.toolbarColumns" => opt_bool(p, "double").map(|on| {
@@ -1963,7 +1963,7 @@ pub fn checked(app: &OracleVectorApp, id: &str, p: &Value) -> Option<bool> {
         "window.control" => app.ui.control_bar,
         "window.toolbar" => app.ui.toolbar,
         #[cfg(not(target_arch = "wasm32"))]
-        "window.oracleLibrary" => app.oracle_library.open,
+        "window.oracleLibrary" => app.ui.docking.as_ref().is_some_and(|layout| layout.contains(&"libraries".to_string())),
         "window.toolbarAdvanced" => app.ui.toolbar_advanced,
         "window.toolbarColumns" => app.ui.toolbar_double,
         "window.editToolbar" => app.ui.tools_drawer,
@@ -2559,7 +2559,7 @@ pub fn menu_tree_named(english_names: bool) -> Vec<(&'static str, Vec<Item>)> {
                 c("Save a Copy…", "file.saveCopy"),
                 c("Add to Oracle Library", "file.addToLibrary"),
                 c("Send to Oracle Edit", "file.sendToEdit"),
-                c("Send to Oracle Brand Guide", "file.sendToGuide"),
+                c("Send to Oracle Layout", "file.sendToGuide"),
                 c("Send to Oracle Motion", "file.sendToMotion"),
                 c("Save as Template…", "file.saveAsTemplate"),
                 c("Save as PDF…", "file.export.pdf"),
@@ -3132,6 +3132,7 @@ pub fn menu_tree_named(english_names: bool) -> Vec<(&'static str, Vec<Item>)> {
                 panel("Asset Export", crate::panels::asset_export::ID),
                 panel("Attributes", "attributes"),
                 panel("Blend", crate::panels::blend::ID),
+                panel("Brand Grids", crate::panels::brand_grids::ID),
                 panel("Brushes", "brushes"),
                 panel("Color", "color"),
                 panel("Color Guide", "colorGuide"),

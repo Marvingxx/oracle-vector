@@ -310,7 +310,7 @@ Oracle Vector is part of **Oracle**, a personal creative suite, free and local:
 | **Oracle Edit** | Image editing | [oracle-edit](https://github.com/Marvingxx/oracle-edit) |
 | **Oracle Vector** | Vector illustration | [oracle-vector](https://github.com/Marvingxx/oracle-vector) |
 | **Oracle Brand Kit** · **Oracle Mockup Studio** | Brand identities and client deliveries · 2D mockups | [oracle-brand](https://github.com/Marvingxx/oracle-brand) |
-| **Oracle Brand Guide** | Brand guidelines and page layout | [oracle-guide](https://github.com/Marvingxx/oracle-guide) |
+| **Oracle Layout** | Brand guidelines and page layout | [oracle-layout](https://github.com/Marvingxx/oracle-guide) |
 
 
 ## Sources

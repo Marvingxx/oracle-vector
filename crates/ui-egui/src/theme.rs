@@ -37,8 +37,8 @@ impl Brightness {
     }
 }
 
-/// User Interface › Accent Color: the one colour for what is on, chosen or focused. Oracle red,
-/// the default, is the suite's brand colour (#d31c3b).
+/// User Interface › Accent Color: the one colour for what is on, chosen or focused.
+/// The default follows Oracle Vector's orange icon (#ff6a3d).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum Accent {
     #[default]
@@ -67,12 +67,10 @@ impl Accent {
     pub fn parse(s: &str) -> Option<Self> {
         Self::ALL.into_iter().find(|a| a.id().eq_ignore_ascii_case(s))
     }
-    /// (accent, accent_strong) on dark panels and on light ones; the strong one fills buttons
-    /// with white lettering.
+    /// (accent, accent_strong) on dark panels and on light ones.
     fn colors(self, dark: bool) -> (u32, u32) {
         match (self, dark) {
-            (Accent::Oracle, true) => (0xf0566f, 0xd31c3b),
-            (Accent::Oracle, false) => (0xb8152f, 0xd31c3b),
+            (Accent::Oracle, _) => (0xff6a3d, 0xff6a3d),
             (Accent::Coral, true) => (0xf06a52, 0xe8573f),
             (Accent::Coral, false) => (0xd9472f, 0xd14a33),
             (Accent::Blue, true) => (0x5b96ff, 0x2f74f0),
@@ -174,7 +172,7 @@ impl Tokens {
     pub fn for_brightness(b: Brightness) -> Self {
         let hex = |s: u32| Color32::from_rgb((s >> 16) as u8, (s >> 8) as u8, s as u8);
         // The Craft look: cool slate greys, flat faces with soft corners, and one accent (the app
-        // icon's coral) for what is on, chosen or focused. The four brightness levels share the
+        // icon's orange) for what is on, chosen or focused. The four brightness levels share the
         // style and differ only in their greys.
         let base = Tokens {
             dark: true,
@@ -191,8 +189,8 @@ impl Tokens {
             icon: hex(0xc9d0dc),
             hover: hex(0x262b35),
             tool_active: hex(0x2f3541),
-            accent: hex(0xf0566f),
-            accent_strong: hex(0xd31c3b),
+            accent: hex(0xff6a3d),
+            accent_strong: hex(0xff6a3d),
             row_selected: hex(0x3a2a2c),
             pasteboard: hex(0x101217),
             ruler: hex(0x13161c),
@@ -207,7 +205,7 @@ impl Tokens {
             button_border: hex(0x4a5363),
             selection: hex(0x4f80ff),
             anchor_selected: hex(0x3d82ff),
-            flyout_active: hex(0xff8a74),
+            flyout_active: hex(0xff6a3d),
             font_size: 13.0,
             caption_close: hex(0xc42b1c),
             caption_close_text: Color32::WHITE,
@@ -219,7 +217,7 @@ impl Tokens {
             axis_y: hex(0x45af63),
             axis_z: hex(0x378ef0),
         };
-        match b {
+        let mut t = match b {
             Brightness::Dark => base,
             // Charcoal, the default.
             Brightness::MediumDark => Tokens {
@@ -263,9 +261,9 @@ impl Tokens {
                 icon: hex(0x272c36),
                 hover: hex(0xc5ccd6),
                 tool_active: hex(0xb6bec9),
-                accent: hex(0xd9472f),
-                accent_strong: hex(0xd14a33),
-                flyout_active: hex(0xc23e28),
+                accent: hex(0xff6a3d),
+                accent_strong: hex(0xff6a3d),
+                flyout_active: hex(0xff6a3d),
                 row_selected: hex(0xe7c4bd),
                 pasteboard: hex(0xb9c0cb),
                 ruler: hex(0xccd2db),
@@ -292,9 +290,9 @@ impl Tokens {
                 icon: hex(0x2a303b),
                 hover: hex(0xe3e7ed),
                 tool_active: hex(0xd5dbe3),
-                accent: hex(0xd9472f),
-                accent_strong: hex(0xd14a33),
-                flyout_active: hex(0xc23e28),
+                accent: hex(0xff6a3d),
+                accent_strong: hex(0xff6a3d),
+                flyout_active: hex(0xff6a3d),
                 row_selected: hex(0xf8d9d2),
                 pasteboard: hex(0xdfe3e9),
                 ruler: hex(0xeceff3),
@@ -304,7 +302,45 @@ impl Tokens {
                 button_border: hex(0xa4abb8),
                 ..base
             },
+        };
+        // Edit supplies the neutral surfaces; the application keeps its own accent.
+        let mut p = oracle_style::Palette::for_dark(matches!(b, Brightness::Dark | Brightness::MediumDark)).with_accent(t.accent);
+        match b {
+            Brightness::Dark => {
+                p.void = p.void.lerp_to_gamma(Color32::BLACK, 0.28);
+                p.ink = p.ink.lerp_to_gamma(Color32::BLACK, 0.28);
+            }
+            Brightness::MediumLight => {
+                p.void = p.void.lerp_to_gamma(Color32::BLACK, 0.08);
+                p.ink = p.ink.lerp_to_gamma(Color32::BLACK, 0.04);
+            }
+            _ => {}
         }
+        t.app_bar = p.void;
+        t.panel = p.ink;
+        t.panel_darker = p.void;
+        t.input = if p.dark { p.void } else { p.steel };
+        t.input_border = p.line_strong;
+        t.border = p.line;
+        t.divider = p.line;
+        t.text = p.text;
+        t.text_strong = p.text;
+        t.text_dim = p.text_dim;
+        t.text_disabled = p.text_faint;
+        t.icon = p.text;
+        t.hover = p.steel;
+        t.tool_active = p.accent_soft;
+        t.row_selected = p.accent_soft;
+        t.pasteboard = p.void;
+        t.ruler = p.ink;
+        t.ruler_tick = p.text_faint;
+        t.button = p.void;
+        t.radius = 0;
+        t.tab_strip = p.void;
+        t.font_size = 12.0;
+        t.button_border = p.line_strong;
+        t.measure_bg = p.ink;
+        t
     }
 
     /// The Classic colour scheme at brightness `b`: neutral greys with a blue accent, a dark
@@ -450,8 +486,20 @@ impl Tokens {
         }
     }
 
+    /// Legible lettering on filled accent controls, including Vector's bright orange.
+    pub fn on_accent(&self) -> Color32 {
+        let linear = |v: u8| {
+            let v = f32::from(v) / 255.0;
+            if v <= 0.04045 { v / 12.92 } else { ((v + 0.055) / 1.055).powf(2.4) }
+        };
+        let c = self.accent_strong;
+        let luminance = 0.2126 * linear(c.r()) + 0.7152 * linear(c.g()) + 0.0722 * linear(c.b());
+        if luminance > 0.179 { Color32::BLACK } else { Color32::WHITE }
+    }
+
     pub fn get(ctx: &egui::Context) -> Tokens {
-        ctx.data(|d| d.get_temp::<Tokens>(egui::Id::NULL)).unwrap_or_else(|| Tokens::for_brightness(Brightness::default()))
+        ctx.data(|d| d.get_temp::<Tokens>(egui::Id::NULL))
+            .unwrap_or_else(|| Tokens::for_brightness(Brightness::default()).with_accent(Accent::Oracle))
     }
     pub fn cr(&self) -> CornerRadius {
         CornerRadius::same(self.radius)
@@ -508,7 +556,7 @@ pub fn mono(size: f32) -> FontId {
 /// the families are egui's built-in fonts (and craft-fonts' faces in a build with them), which lack
 /// some symbols the panels show (→ ▾ ● ✓).
 pub fn install_fonts(ctx: &egui::Context) {
-    install_fonts_with(ctx, UiFont::Inter);
+    install_fonts_with(ctx, UiFont::Lexend);
 }
 
 /// User Interface › Interface Font: the face the panels and dialogs are set in.
@@ -559,7 +607,7 @@ fn interface_faces(fonts: &mut FontDefinitions) -> (Vec<&'static str>, Vec<&'sta
     // Inter is drawn a little smaller than its size: its letters are wider than Source Sans's, and
     // the panels are laid out for those.
     let inter =
-        |bytes: &'static [u8]| Arc::new(FontData::from_static(bytes).tweak(egui::epaint::text::FontTweak { scale: 0.92, ..Default::default() }));
+        |bytes: &'static [u8]| Arc::new(FontData::from_static(bytes).tweak(egui::epaint::text::FontTweak { scale: 1.0, ..Default::default() }));
     fonts.font_data.insert("Inter".to_owned(), inter(include_bytes!("../../../assets/fonts/Inter-Regular.ttf")));
     fonts.font_data.insert("Inter-SemiBold".to_owned(), inter(include_bytes!("../../../assets/fonts/Inter-SemiBold.ttf")));
     add(fonts, "SourceSans3-Semibold", include_bytes!("../../../assets/fonts/SourceSans3-Semibold.ttf"));
@@ -631,8 +679,8 @@ pub fn apply_with(ctx: &egui::Context, b: Brightness, accent: Accent, scheme: Sc
     v.window_stroke = Stroke::new(1.0, t.border);
     v.window_corner_radius = CornerRadius::same(10);
     v.menu_corner_radius = CornerRadius::same(8);
-    v.selection.bg_fill = t.accent.gamma_multiply(0.55);
-    v.selection.stroke = Stroke::new(1.0, t.accent);
+    v.selection.bg_fill = t.accent;
+    v.selection.stroke = Stroke::new(1.0, oracle_style::Palette::for_dark(t.dark).with_accent(t.accent).on_accent);
     v.hyperlink_color = t.accent;
     v.override_text_color = Some(t.text);
     v.popup_shadow = egui::epaint::Shadow { offset: [0, 4], blur: 14, spread: 0, color: Color32::from_black_alpha(if t.dark { 120 } else { 60 }) };
@@ -664,6 +712,7 @@ pub fn apply_with(ctx: &egui::Context, b: Brightness, accent: Accent, scheme: Sc
         .into();
         s.animation_time = 0.08;
     });
+    oracle_style::chrome::finish(ctx, true);
 }
 
 #[cfg(test)]

@@ -114,7 +114,12 @@ fn restore_float_fallback(layout: &mut Layout<String>, panel: Option<String>) ->
 }
 
 fn ensure(layout: &mut Layout<String>, panel: &str) -> Result<(), String> {
-    let anchor = first_root(layout, panel);
+    let root = Layout { root: layout.root.clone(), floating: Vec::new() };
+    let anchor = if panel == "libraries" && root.contains(&"properties".to_string()) {
+        Some("properties".to_string())
+    } else {
+        first_root(layout, panel)
+    };
     layout.apply(Action::Open { panel: panel.into(), anchor }).map_err(|e| e.to_string())
 }
 
@@ -513,6 +518,13 @@ fn collapse_node(
     }
 }
 
+/// Window > Oracle Library reveals the dock tab, preserving an explicitly detached tab.
+#[cfg(not(target_arch = "wasm32"))]
+pub(crate) fn open_library(app: &mut OracleVectorApp) -> Result<Value, String> {
+    app.ui.library_local = false;
+    change(app, "activate", &json!({"panel": "libraries"}))
+}
+
 fn change(app: &mut OracleVectorApp, operation: &str, params: &Value) -> Result<Value, String> {
     let panel = params.get("panel").and_then(Value::as_str).and_then(normalize).ok_or("panel must name a registered panel")?;
     if operation == "move" && params.get("before").is_some() {
@@ -560,7 +572,7 @@ fn change(app: &mut OracleVectorApp, operation: &str, params: &Value) -> Result<
     if icon_panel && !layout.contains(&panel.to_string()) {
         icons.insert(panel.to_string());
     }
-    if operation == "activate" && icon_panel && !layout.contains(&panel.to_string()) {
+    if operation == "activate" && panel != "libraries" && icon_panel && !layout.contains(&panel.to_string()) {
         app.ui.open_panel = if app.ui.open_panel.as_deref() == Some(panel) { None } else { Some(panel.into()) };
         return Ok(json!({"panel": panel, "open": app.ui.open_panel}));
     }
@@ -721,7 +733,7 @@ fn change(app: &mut OracleVectorApp, operation: &str, params: &Value) -> Result<
     }
     let group = layout.floating.iter().find(|group| group.panels.iter().any(|id| id == panel));
     let result = json!({"panel": panel, "floating": group.is_some(), "group": group.map(|g| &g.panels), "pos": group.map(|g| [g.rect[0], g.rect[1]]), "layout": layout});
-    if matches!(operation, "move" | "dock") && (Layout { root: layout.root.clone(), floating: Vec::new() }).contains(&panel.to_string()) {
+    if (matches!(operation, "move" | "dock") || (operation == "activate" && panel == "libraries")) && (Layout { root: layout.root.clone(), floating: Vec::new() }).contains(&panel.to_string()) {
         icons.remove(panel);
     }
     app.ui.docking = Some(layout);

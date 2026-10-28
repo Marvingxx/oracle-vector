@@ -36,11 +36,11 @@ mod text;
 
 use std::sync::Arc;
 
-use serde_json::{Value, json};
 use oracle_vector_color::Paint;
 use oracle_vector_doc::{Appearance, Document, ImageObject, LinkInfo, Node, NodeId, NodeKind, Scaling, SymbolBoxes};
 use oracle_vector_geom::{Affine, Point, Rect, shapes};
 use oracle_vector_pdf::CropTo;
+use serde_json::{Value, json};
 
 use super::fileio::{self, Format, RasterImage};
 use super::*;
@@ -142,7 +142,7 @@ pub(crate) fn pt_per_px(ppi: Option<(f64, f64)>) -> (f64, f64) {
 fn load(p: &Value, cmd: &str, board: Option<Rect>) -> Result<Loaded> {
     let src = fileio::source(p, cmd)?;
     let name = fileio::file_name(src.name);
-    // An Oracle Edit document: the picture Oracle Edit draws of it, linked to the document itself.
+    // An Oracle Edit or Brand Guide document: its PNG preview, linked to the native document.
     if let Some(path) = src.path
         && let Some(picture) = crate::oracle_files::foreign_picture(path)
         && let Some(format) = fileio::format("png")

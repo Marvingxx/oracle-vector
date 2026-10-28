@@ -5000,7 +5000,7 @@ axis	Y Axis	Y축
 	Add to Oracle Library	Oracle 라이브러리에 추가
 @msg	Opened in {name}: save it there to update it here	{name}에서 열었습니다: 거기서 저장하면 여기서도 업데이트됩니다
 	Send to Oracle Edit	Oracle Edit로 보내기
-	Send to Oracle Brand Guide	Oracle Brand Guide로 보내기
+	Send to Oracle Layout	Oracle Layout로 보내기
 @msg	Sent to {name}	{name}(으)로 보냈습니다
 @msg	the document couldn't be stored in the Oracle Library	문서를 Oracle 라이브러리에 저장할 수 없습니다
 	Send to Oracle Motion	Oracle Motion으로 보내기

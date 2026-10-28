@@ -269,7 +269,7 @@ pub const PREF_SPECS: &[PrefSpec] = &[
         choice(&[("dark", "Dark"), ("mediumDark", "Medium Dark"), ("mediumLight", "Medium Light"), ("light", "Light")])
     ),
     p!("uiColorScheme", "User Interface", "", "Color Scheme", choice(&[("modern", "Modern"), ("classic", "Classic")])),
-    p!("uiFont", "User Interface", "", "Interface Font", choice(&[("lexend", "Lexend (Oracle)"), ("inter", "Inter")])),
+    p!("uiFont", "User Interface", "", "Interface Font", choice(&[("lexend", "Lexend"), ("inter", "Inter")])),
     p!(
         "uiAccent",
         "User Interface",

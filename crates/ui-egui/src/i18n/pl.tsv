@@ -5273,7 +5273,7 @@ axis	Y Axis	Oś Y
 	Add to Oracle Library	Dodaj do biblioteki Oracle
 @msg	Opened in {name}: save it there to update it here	Otwarto w {name}: zapisz tam, aby zaktualizować tutaj
 	Send to Oracle Edit	Wyślij do Oracle Edit
-	Send to Oracle Brand Guide	Wyślij do Oracle Brand Guide
+	Send to Oracle Layout	Wyślij do Oracle Layout
 @msg	Sent to {name}	Wysłano do {name}
 @msg	the document couldn't be stored in the Oracle Library	Nie udało się zapisać dokumentu w bibliotece Oracle
 	Send to Oracle Motion	Wyślij do Oracle Motion
